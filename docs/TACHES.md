@@ -65,7 +65,7 @@
 - [ ] T46 — Lettre de candidature spontanée générée par LLM (si on trouve une clé ; sinon, modèle à trous)
 - [ ] T15 — Collecteur ATS (Greenhouse, Lever, SmartRecruiters) pour le top des entreprises
 - [ ] T47 — Temps de trajet en transports en commun (GTFS) au lieu de la distance à vol d'oiseau
-- [ ] T51 — 🔗T48 _(très optionnel, seulement si tout le reste est fini)_ **Base des comptes hébergée (Supabase, région UE)** : comptes, profils et historique partagés par toute l'équipe et sauvegardés (aujourd'hui : un fichier SQLite par pod, L17). Adapter `radar/accounts.py` à PostgreSQL (URL de connexion dans le `.env`), **garder SQLite en repli automatique** si Supabase ne répond pas (la démo ne doit pas en dépendre) ; vérifier d'abord que le SSP Cloud laisse sortir vers le port 5432/6543. En option : Supabase Auth pour « mot de passe oublié » (L18). Mettre à jour `docs/SECURITE.md` (données chez un tiers). Sinon : à présenter comme perspective au pitch
+- [ ] T52 — 🔗T48 _(très optionnel, seulement si tout le reste est fini)_ **Base des comptes hébergée (Supabase, région UE)** : comptes, profils et historique partagés par toute l'équipe et sauvegardés (aujourd'hui : un fichier SQLite par pod, L17). Adapter `radar/accounts.py` à PostgreSQL (URL de connexion dans le `.env`), **garder SQLite en repli automatique** si Supabase ne répond pas (la démo ne doit pas en dépendre) ; vérifier d'abord que le SSP Cloud laisse sortir vers le port 5432/6543. En option : Supabase Auth pour « mot de passe oublié » (L18). Mettre à jour `docs/SECURITE.md` (données chez un tiers). Sinon : à présenter comme perspective au pitch
 
 ## 🎤 Pitch (en continu, une personne référente)
 

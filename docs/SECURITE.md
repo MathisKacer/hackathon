@@ -51,7 +51,7 @@ Navigateur ──(internet, proxy Onyxia …/proxy/8501/)──► service VS Co
 | **Supprimer le service** sur Onyxia | **est perdue** (avec tout le dossier `work`) |
 | Ouvrir l'app depuis le pod d'un coéquipier | **c'est une autre base** : chaque pod a la sienne |
 
-Conséquence pour la démo : créer les comptes de démonstration **sur le pod qui sert à la présentation**. Comparaison : aujourd'hui, c'est un fichier Excel sur un ordinateur ; une base hébergée (Supabase, PostgreSQL) serait l'équivalent d'un Google Sheets partagé et sauvegardé (tâche T51, très optionnelle).
+Conséquence pour la démo : créer les comptes de démonstration **sur le pod qui sert à la présentation**. Comparaison : aujourd'hui, c'est un fichier Excel sur un ordinateur ; une base hébergée (Supabase, PostgreSQL) serait l'équivalent d'un Google Sheets partagé et sauvegardé (tâche T52, très optionnelle).
 
 ## Connexion
 
@@ -69,7 +69,7 @@ Conséquence pour la démo : créer les comptes de démonstration **sur le pod q
 
 | Manque | Risque | Ce qu'il faudrait en production |
 |---|---|---|
-| Base locale au service Onyxia (L17) | Comptes perdus si le service est supprimé ; un compte n'existe que sur le pod où il a été créé ; pas de sauvegarde | Base hébergée avec sauvegardes (Supabase : tâche T51, très optionnelle) |
+| Base locale au service Onyxia (L17) | Comptes perdus si le service est supprimé ; un compte n'existe que sur le pod où il a été créé ; pas de sauvegarde | Base hébergée avec sauvegardes (Supabase : tâche T52, très optionnelle) |
 | Pas de « mot de passe oublié » (L18) | Mot de passe perdu = nouveau compte | Récupération par e-mail (donc collecter un e-mail) |
 | Pas de « se souvenir de moi » (L18) | Recharger la page déconnecte | Cookie de session signé, avec expiration |
 | Le message de blocage révèle qu'un compte existe (L19) | Un attaquant peut tester si un identifiant existe en provoquant un blocage | Bloquer aussi les identifiants inconnus, ou limiter par adresse IP |
