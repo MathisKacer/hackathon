@@ -36,12 +36,10 @@
 - [ ] T42 — 🔗T40 **Curseurs de poids** → recalcul du score en direct
 
 **Intégration**
-- [ ] T50 — 🔗T11/T12,T20,T30 **Pipeline `scripts/build_all.py`** : brut → `offres.parquet` → `scores.parquet` ; brancher l'app sur les vraies données (**jalon V1**)
 
 ## 🟡 P2 — Valeur ajoutée (H+8 → H+16)
 
 **Lever les limites connues (voir `docs/LIMITES.md`)**
-- [ ] T25 — 🔗T21 **Rattrapage du rapprochement** (L6, L9) : pour les noms non rapprochés (~1 200), API Recherche d'entreprises (`/search?q=<nom>` + proximité ; gère sigles et noms commerciaux, ~7 req/s) + table d'alias manuelle pour les 30 plus gros émetteurs (SFR, EY, Pennylane…) ; objectif : SFR & co ne sortent plus en orange
 - [ ] T26 — 🔗T21 **Familles de marque** (L7) : une entreprise ETI/GE dont une entité a des offres du domaine → ses autres entités (même début de nom) sont exclues de la couche orange (`a_offre_groupe`)
 - [ ] T27 — 🔗T21 **Revue des intermédiaires** (L8) : passer en revue les plus gros émetteurs + `volume_suspect`, compléter `INTERMEDIARIES` ; à refaire à chaque nouvelle source (LBA)
 - [ ] T28 — 🔗T30 **`c_embauche` réel** (L11) : La Bonne Boîte v2 (codes ROME data × départements, ≤ 1 req/s, SIRET fourni) + recruteurs potentiels LBA (T17) ; remplace le proxy
@@ -80,6 +78,8 @@
 
 ## 🔵 En cours
 
+- [ ] T25 — 🔗T21 **Rattrapage du rapprochement** (L6, L9) : pour les noms non rapprochés (~1 200), API Recherche d'entreprises (`/search?q=<nom>` + proximité ; gère sigles et noms commerciaux, ~7 req/s) + table d'alias manuelle pour les 30 plus gros émetteurs (SFR, EY, Pennylane…) ; objectif : SFR & co ne sortent plus en orange — @mathis
+- [ ] T50 — 🔗T11/T12,T20,T30 **Pipeline `scripts/build_all.py`** : brut → `offres.parquet` → `scores.parquet` ; brancher l'app sur les vraies données (**jalon V1**) — @mathis
 - [ ] T17 — 🔗T11 **Partager les données LBA sur S3** (`offres_raw/lba.parquet`, `lba_recruteurs.parquet`) : relancer `scripts/collect_lba.py` sur Onyxia puis `scripts/share_s3.py` — @maxence
 
 ## ✅ Fait
