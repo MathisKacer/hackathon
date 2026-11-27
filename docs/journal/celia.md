@@ -19,6 +19,7 @@
 
 **Problèmes / points d'attention pour l'équipe :**
 - Relancer `extract_sirene.py` puis `collect_bodacc.py` (ou `build_all.py --sirene`).
+- Bug trouvé en vérifiant : Explorer plante avec les données factices depuis T26 (colonnes `*_siren` absentes des scores factices) → **T75**, signalé à Maxence (numéro T74 déjà pris par Emma).
 
 ---
 

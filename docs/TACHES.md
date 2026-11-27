@@ -70,6 +70,7 @@
   - **Entreprises en difficulté** (BODACC) : 2,7 % des établissements en alerte ; score **pénalisé selon le contrat visé**, pas supprimés (D24).
   - **Comptes facultatifs** : démo sans compte ; mots de passe hachés (scrypt), **règles CNIL**, blocage après 5 échecs ; pas d'e-mail collecté (`SECURITE.md`).
   - **Recherche d'entreprises** sur ~406 000 établissements, fautes de frappe tolérées ; **fiche entreprise** (toute l'entreprise, SIREN) et **fiche site** (SIRET) reliées ; limite : filiales d'un groupe non reliées (L24, T26).
+  - **Effectifs honnêtes** : SIRENE ne donne que des fourchettes ; on affiche la taille officielle de l'entreprise et celle de chaque site, sans inventer de total (T73).
   - **Favoris** avec case « Candidaté » et note : premier pas vers un suivi de candidatures qui fournirait un jour de **vraies réponses** pour remplacer les simulées.
 - [ ] T61 — Scénario de démo (2 ou 3 recherches qui montrent de bons résultats, dont une hors Bretagne)
 - [ ] T62 — 🔗H+18 Cache de démo figé + vidéo de secours
