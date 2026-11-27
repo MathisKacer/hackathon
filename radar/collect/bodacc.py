@@ -151,3 +151,20 @@ def enrich_entreprises(ent: pd.DataFrame, proc: pd.DataFrame) -> pd.DataFrame:
     out.loc[out["procedure_type"].eq("fin"), cols] = None  # procédure terminée : pas d'alerte
     out["procedure_collective"] = out["procedure_type"].isin(ALERT_TYPES)
     return out
+
+
+def run(refresh: bool = False) -> pd.DataFrame:
+    """Ajoute la situation BODACC à data/processed/entreprises.parquet (en place).
+
+    Télécharge les annonces si le cache est absent (ou si `refresh`), ~1 min.
+    """
+    from radar.config import FILES  # import local : FILES n'est utile qu'ici
+
+    raw = download() if refresh or not RAW_FILE.exists() else load_raw()
+    ent = enrich_entreprises(pd.read_parquet(FILES["entreprises"]), procedures_by_siren(raw))
+    ent.to_parquet(FILES["entreprises"], index=False)
+    counts = ent["procedure_type"].value_counts().to_dict()
+    log.info(
+        "%s établissements en alerte %s", f"{int(ent['procedure_collective'].sum()):,}", counts
+    )
+    return ent

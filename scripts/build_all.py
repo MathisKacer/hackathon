@@ -6,6 +6,7 @@
 
 Ordre (D10, D13) :
   1. extract_sirene   → data/processed/entreprises.parquet   (si absent ou --sirene)
+     collect_bodacc   → + situation BODACC (T23 : procédures collectives, cache data/raw/)
   2. classify_offres  → data/processed/offres.parquet        (T13 : domaine, contrat, SIRET source)
   3. match_offres     → offres.parquet complété              (T21 : SIRET par nom + position)
   4. build_scores     → data/processed/scores.parquet        (T30 : gamma-Poisson)
@@ -53,6 +54,14 @@ def sirene(force: bool) -> None:
         from radar.collect.sirene import extract, save
 
         save(extract())
+    check_columns(pd.read_parquet(FILES["entreprises"]), "entreprises")
+
+
+@step("1 bis. Procédures collectives BODACC (T23)")
+def procedures() -> None:
+    from radar.collect.bodacc import run
+
+    run()  # télécharge les annonces si le cache data/raw/bodacc_collectives.parquet manque
     check_columns(pd.read_parquet(FILES["entreprises"]), "entreprises")
 
 
@@ -118,6 +127,7 @@ def main() -> None:
 
     t0 = time.monotonic()
     sirene(args.sirene)
+    procedures()
     classify()
     match()
     scores()
