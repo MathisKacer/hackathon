@@ -60,6 +60,10 @@
 - [ ] T43 — **Fiche entreprise** : décomposition du score, intervalle crédible, offres récentes, effectif, CA, lien vers l'Annuaire des entreprises
 - [ ] T44 — Affichage du **niveau de preuve** (nombre d'offres observées) et du taux de rapprochement global
 
+**Comptes (optionnels, D14) : le mode démo anonyme reste le parcours par défaut**
+- [ ] T48 — 🔗T40,T41,T42 **Connexion facultative + profil** : bouton « Se connecter / Créer un compte » dans la barre latérale (`streamlit-authenticator`, mots de passe hachés bcrypt), « Continuer sans compte » par défaut. Profil enregistré = domaine, contrat visé, adresse, rayon, filtres, poids ; rechargé à la connexion. Stockage SQLite `data/app/radar.db` (hors Git). Bouton « Supprimer mon compte » (RGPD)
+- [ ] T49 — 🔗T48 **Historique des recherches** (connecté seulement) : chaque recherche enregistrée (date, paramètres, nombre de résultats, top 5 SIRET) ; liste « Mes recherches » avec bouton « Relancer » ; en anonyme, rien n'est écrit (`st.session_state` seulement)
+
 ## 🟢 P3 — Bonus (seulement si le P2 est fini)
 
 - [ ] T45 — Dépôt du CV (PDF) → compétences → composante d'adéquation
