@@ -14,6 +14,14 @@
 
 ---
 
+### D20 — Filtres de l'app : domaines de `domains.yaml`, taille en 4 tranches, secteur = section NAF (2026-11-27, @maxence)
+**Contexte :** T41 : filtrer par domaine, contrat, taille et secteur.
+**Décision :** liste des domaines lue dans `radar/domains.yaml` (ajouter un domaine = l'ajouter au fichier, T9) ; les offres 🔵 sont classées dans l'app par le même classifieur que T13 (`radar.domains.classify`, ROME + titre), à la place du filtre « data » v0 par mots-clés ; le score 🟠 est celui du domaine choisi. Taille : 4 tranches lisibles (10–49, 50–249, 250–999, 1 000 et plus) regroupant les codes INSEE ; secteur : **section NAF** (21 lettres), prise dans `naf_section` ou déduite du code NAF. Choix multiples, liste vide = pas de filtre ; taille/secteur inconnus écartés dès qu'on filtre. Code : `radar/filters.py`. Réglages enregistrés dans le profil (`tailles`, `secteurs`).
+**Alternatives écartées :** divisions NAF (88, liste trop longue dans une barre latérale) ; catégorie PME/ETI/GE (3 valeurs, presque tout est PME) ; lire `offres.parquet` dans l'app pour le domaine des offres (l'app lit encore les offres brutes).
+**Conséquences :** taille et secteur ne filtrent que la couche 🟠 (L20). Les profils enregistrés avec l'ancien domaine « Data » retombent sur le domaine par défaut.
+
+---
+
 ### D19 — Couche orange : « sans offre correspondante » = domaine × contrat visé, au niveau SIREN (2026-11-27, @maxence)
 **Contexte :** T40 doit afficher les entreprises proches sans offre correspondante (D8), classées par score (D13), sur toute la France.
 **Décision :** `radar/spontaneous.py`. Lecture DuckDB de `scores.parquet` ⋈ `entreprises.parquet` sur le **rectangle** du rayon (pas de chargement de la France entière), puis distance haversine ≤ rayon. Exclusion : offres du domaine **du contrat visé** (stage → `n_stage_domaine`, alternance → `n_alternance_domaine`, emploi → le reste, Tous → toutes), comptées au niveau **SIREN** quand le score réel les fournit (`*_siren`), sinon au niveau SIRET (données factices) ; `volume_suspect` écarté. Une entreprise qui recrute en emploi data mais sans stage reste donc orange pour un étudiant en stage : c'est l'opportunité cachée. Score v0 = √(`c_intensite` × `c_embauche`) (D13), en attendant les poids de T42. Géocodage : API Géoplateforme (BAN, sans clé) avec cache disque ; adresse introuvable ou réseau coupé → message, l'app continue. Carte : 300 meilleures entreprises au plus (la liste garde tout). La couche bleue est filtrée par le même rayon.

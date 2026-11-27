@@ -4,6 +4,30 @@
 
 ---
 
+## 2026-11-27 — T41 : filtres domaine, contrat, taille, secteur
+
+**Fait :**
+- **Domaine** : la liste vient de `radar/domains.yaml` (data, informatique, finance, marketing, RH ; un domaine ajouté par T9 apparaîtra tout seul). Les offres 🔵 sont classées dans l'app par le même classifieur que T13 (code ROME + titre) au lieu du filtre « data » v0 ; le score 🟠 est celui du domaine choisi. Le bouton « Seulement les offres data » devient « Seulement les offres du domaine ».
+- **Contrat** : déjà là (T40), inchangé.
+- **Taille** (4 tranches : 10–49, 50–249, 250–999, 1 000 et plus) et **secteur** (21 sections NAF) : choix multiples dans un bloc « Entreprises 🟠 » de la barre latérale, appliqués à la couche orange. Nouveau module `radar/filters.py`.
+- Consignes comptes respectées : clés `tailles` / `secteurs` dans `PROFILE_KEYS` et `PROFILE_LABELS`, créées après `account_sidebar`.
+- Décision **D20**, limite **L20** (taille/secteur ne filtrent pas les offres bleues).
+
+**Fichiers touchés :**
+- `radar/filters.py` (nouveau), `tests/test_filters.py` (nouveau, 7 tests), `radar/spontaneous.py` (colonnes `naf`, `naf_section` lues), `app/streamlit_app.py`, `docs/DECISIONS.md`, `docs/LIMITES.md`, `docs/ARCHITECTURE.md`, `docs/TACHES.md`
+
+**Résultats / chiffres clés :**
+- 210 tests OK, ruff OK. Parcours vérifié avec AppTest (Rennes, 20 km, données factices) : 236 entreprises 🟠 → 45 en 50–249 salariés → 8 en plus dans le secteur J ; domaine « finance » : 6 offres 🔵 et 11 entreprises 🟠.
+
+**Problèmes / points d'attention pour l'équipe :**
+- Les profils enregistrés avec l'ancien domaine « Data » retombent sur le domaine par défaut (data) : rien à faire.
+- Pour les offres 🔵, le domaine est recalculé dans l'app (les offres brutes, pas `offres.parquet`) : si T13 change de classifieur, l'app suit automatiquement puisqu'elle appelle `radar.domains.classify`.
+
+**Prochaine étape :**
+- T42 (curseurs de poids), T51 (recruteurs LBA dans la couche orange).
+
+---
+
 ## 2026-11-27 — T40 : couche orange « Candidature spontanée »
 
 **Fait :**

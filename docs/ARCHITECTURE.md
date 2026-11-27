@@ -38,6 +38,7 @@ hackathon/
 │   ├── domains.yaml            # T6 : domaines (data, informatique, finance, marketing, rh) → codes ROME 4.0 + mots-clés
 │   ├── domains.py              # chargement de domains.yaml + classify(titre, code_rome) → domaine (base de T13)
 │   ├── geocode.py              # T40 : adresse → lat/lon (Géoplateforme IGN, sans clé, cache disque PATHS.cache)
+│   ├── filters.py              # T41 : filtres taille (4 tranches) et secteur (section NAF) des entreprises (D20)
 │   ├── spontaneous.py          # T40 : couche orange — entreprises du rayon sans offre correspondante, classées (D19)
 │   ├── collect/                # un module par source : adzuna.py, lba.py, ats.py, sirene.py, bodacc.py…
 │   ├── process/
