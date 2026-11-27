@@ -57,13 +57,13 @@ hackathon/
 
 ## Données et formats intermédiaires (contrat entre coéquipiers)
 
-Tous les fichiers sont en parquet dans `data/processed/` (copie sur S3), sauf les offres brutes, dans `data/raw/offres_raw/<source>.parquet`. **Ne pas changer un schéma sans prévenir l'équipe et mettre à jour ce tableau ET `radar/schemas.py`** (vérification : `check_columns(df, "<nom>")`).
+Tous les fichiers sont en parquet dans `data/processed/` (copie sur S3), sauf les offres brutes, dans `data/raw/offres_raw/<source>.parquet`. **Ne jamais partager `data/cache/`** (cache HTTP). **Ne pas changer un schéma sans prévenir l'équipe et mettre à jour ce tableau ET `radar/schemas.py`** (vérification : `check_columns(df, "<nom>")`).
 
 Données factices pour développer sans la collecte : `uv run python scripts/make_fake_data.py` (T5). Elles produisent tous les fichiers ci-dessous ; le script refuse d'écraser des fichiers existants sans `--force`.
 
 | Fichier | Produit par | Utilisé par | Colonnes clés |
 |---|---|---|---|
-| `offres_raw/<source>.parquet` | collect/* | process | `source, offre_id, date_collecte, date_publication, titre, description, entreprise_nom, commune, code_postal, lat, lon, contrat_brut, code_rome, url, siret (si fourni)` |
+| `data/raw/offres_raw/<source>.parquet` | collect/* | process | `source, offre_id, date_collecte, date_publication, titre, description, entreprise_nom, commune, code_postal, lat, lon, contrat_brut, code_rome, url, siret (si fourni)` — ces 15 colonnes en premier, dans cet ordre ; une source peut ajouter ses propres colonnes après (ex. Adzuna : `contrat_temps, categorie, salaire_min, salaire_max, salaire_predit, zone, requete, region_requete`) |
 | `offres.parquet` | process | score, app | ci-dessus + `domaine: str` (clé de `domains.yaml` ou `autre`), `contrat: stage/alternance/emploi`, `siret_match, match_score, match_methode` |
 | `entreprises.parquet` | collect/sirene… | process, score, app | `siret, siren, nom, naf, naf_libelle, tranche_effectif, categorie, lat, lon, commune, ca_n, ca_n_1, procedure_collective: bool, lbb_proba` |
 | `scores.parquet` | score | app | **une ligne par (`siret`, `domaine`)** : composantes dans [0, 1] (`c_intensite, c_dynamisme, c_embauche…`) + `n_offres, n_offres_domaine, n_stage_domaine, n_alternance_domaine, intensite_post, intensite_ic_bas, intensite_ic_haut` |
