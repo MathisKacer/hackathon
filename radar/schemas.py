@@ -53,6 +53,7 @@ SCHEMAS: dict[str, list[str]] = {
         "site_web",
         "opco",
         "idcc",
+        "code_rome",
         "url",
     ],
     "entreprises": [

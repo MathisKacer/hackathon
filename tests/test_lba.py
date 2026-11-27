@@ -58,9 +58,23 @@ def test_split_address():
     assert split_address(None) == (None, None)
 
 
+# Forme réelle dans l'export : le recruteur a un bloc `offer` factice.
+EXPORT_RECRUITER = {
+    "identifier": {"id": "r2", "partner_label": "recruteurs_lba", "partner_job_id": "1"},
+    "workplace": WORKPLACE,
+    "offer": {"title": "recruteurs_lba", "rome_codes": ["M1405", "M1811"]},
+}
+
+
 def test_split_items_both_shapes():
     assert split_items({"jobs": [JOB], "recruiters": [RECRUITER]}) == ([JOB], [RECRUITER])
     assert split_items([JOB, RECRUITER]) == ([JOB], [RECRUITER])
+    assert split_items([JOB, EXPORT_RECRUITER]) == ([JOB], [EXPORT_RECRUITER])
+
+
+def test_recruiter_keeps_rome_codes():
+    row = lba.recruiter_to_row(EXPORT_RECRUITER, "t")
+    assert row["code_rome"] == "M1405,M1811" and row["siret"] == "12345678900011"
 
 
 def test_collect_from_export_file(tmp_path):

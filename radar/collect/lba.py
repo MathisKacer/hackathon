@@ -243,6 +243,8 @@ def recruiter_to_row(r: dict, collected_at: str) -> dict:
         "site_web": w["site_web"],
         "opco": w["opco"],
         "idcc": w["idcc"],
+        # Métiers pour lesquels l'entreprise recruterait (export uniquement) → domaine (T13).
+        "code_rome": ",".join(_get(r, "offer", "rome_codes") or []) or None,
         "url": _get(r, "apply", "url"),
     }
 
@@ -250,8 +252,9 @@ def recruiter_to_row(r: dict, collected_at: str) -> dict:
 def split_items(payload) -> tuple[list[dict], list[dict]]:
     """Sépare offres et recruteurs, quelle que soit la forme du JSON.
 
-    Formes acceptées : {"jobs": [...], "recruiters": [...]} (réponse de /search) ou une liste
-    plate d'opportunités (export) — une opportunité sans bloc `offer` est un recruteur.
+    Formes acceptées : {"jobs": [...], "recruiters": [...]} (réponse de /search) ou la liste
+    plate de l'export, où les recruteurs ont aussi un bloc `offer` factice (titre
+    « recruteurs_lba ») : on les reconnaît à `identifier.partner_label == "recruteurs_lba"`.
     """
     if isinstance(payload, dict):
         if "jobs" in payload or "recruiters" in payload:
@@ -262,9 +265,19 @@ def split_items(payload) -> tuple[list[dict], list[dict]]:
                 break
     if not isinstance(payload, list):
         raise ValueError(f"Format d'export LBA inattendu : {type(payload).__name__}")
-    jobs = [x for x in payload if isinstance(x, dict) and x.get("offer")]
-    recruiters = [x for x in payload if isinstance(x, dict) and not x.get("offer")]
+    jobs: list[dict] = []
+    recruiters: list[dict] = []
+    for x in payload:
+        if isinstance(x, dict):
+            (recruiters if is_recruiter(x) else jobs).append(x)
     return jobs, recruiters
+
+
+RECRUITER_LABEL = "recruteurs_lba"
+
+
+def is_recruiter(item: dict) -> bool:
+    return _get(item, "identifier", "partner_label") == RECRUITER_LABEL or not item.get("offer")
 
 
 def to_frames(
@@ -300,6 +313,13 @@ def collect_from_export(
     collected_at = datetime.fromtimestamp(path.stat().st_mtime, UTC).isoformat(timespec="seconds")
     offres, recs = to_frames(jobs, recruiters, collected_at)
     offres.attrs["fichier"] = str(path)
+    offres.attrs["sandbox"] = bool(recs["url"].str.contains("-recette.", na=False).any())
+    if offres.attrs["sandbox"]:
+        log.warning(
+            "Export issu de l'environnement de RECETTE (clé « sandbox ») : données de test, "
+            "pas de production. Créer une clé « production » sur "
+            "https://api.apprentissage.beta.gouv.fr/compte/profil"
+        )
     return offres, recs
 
 
