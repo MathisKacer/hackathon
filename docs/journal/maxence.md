@@ -4,6 +4,18 @@
 
 ---
 
+## 2026-11-27 — T78 : candidature spontanée dans les fiches, même sans ville
+
+**Fait :**
+- Demande : la fiche disait seulement « choisis une ville dans Explorer » ; je voulais l'info directement.
+- `radar/candidature.py` : verdict selon les offres du domaine pour le contrat visé (« publie déjà N offres d'alternance → postule via ses offres » / « recrute en data mais aucune offre de stage : opportunité cachée » / « aucune offre : candidature possible »), besoin data et besoin attendu en mots (avec le rang en %), recruteur d'alternants LBA, groupe.
+- `app/fiche_ui.py` (Celia) : bloc affiché dans la fiche site et la fiche entreprise quand il n'y a pas de ville ou que l'entreprise n'est pas dans les résultats ; palier et distance restent réservés à une recherche avec ville.
+- Décision **D38**, tâche T78 ajoutée et faite.
+
+**Résultats :** Thales Simulation sans ville, en stage : « Candidature spontanée possible… », besoin data élevé (73 %), besoin attendu élevé (82 %), « Groupe Thales : 48 offres déjà publiées ». 364 tests OK (4 nouveaux), ruff OK.
+
+---
+
 ## 2026-11-27 — Fiche site : candidature spontanée toujours expliquée (complément de T76)
 
 **Fait :**

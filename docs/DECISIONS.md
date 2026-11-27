@@ -14,6 +14,14 @@
 
 ---
 
+### D38 — Fiches : la candidature spontanée renseignée même sans ville (2026-11-27, @maxence)
+**Contexte :** T78 : sans ville choisie dans Explorer (cas fréquent : arrivée directe sur « Entreprises », redémarrage de l'app), les fiches renvoyaient seulement vers Explorer.
+**Décision :** `radar/candidature.py`. Ce qui ne dépend pas du lieu est affiché dans le bloc « Candidature spontanée » des fiches site et entreprise : **verdict** selon les offres du domaine **pour le contrat visé** (au niveau de l'entreprise : « publie déjà N offres d'alternance → postule via ses offres » / « recrute en data mais aucune offre de stage : opportunité cachée » / « aucune offre : candidature possible »), **besoin dans le domaine** (`c_intensite`) et **besoin attendu** (`c_embauche`) en mots (faible / moyen / élevé / très élevé, avec le rang en %), **recruteur d'alternants LBA** (alternance et « Tous »), **groupe** (D36). Fiche entreprise : site au meilleur besoin attendu. Le palier (D32) et la distance restent réservés à une recherche avec ville (ils dépendent des entreprises autour de soi) : une ligne invite à choisir sa ville.
+**Alternatives écartées :** un palier « national » sans ville (il faudrait classer toute la France à chaque fiche, et le palier n'aurait pas le même sens que dans Explorer).
+**Conséquences :** contrat pris dans le réglage courant (« Tous » par défaut).
+
+---
+
 ### D37 — Adéquation avec le CV : liste fermée de compétences, comparée à ce que demande le secteur (2026-11-27, @emma)
 **Contexte :** T45. L'étudiant peut déposer son CV pour mieux classer les entreprises. Mais les entreprises de la couche orange n'ont presque jamais d'offre à comparer au CV.
 **Décision :** `radar/competences.py`. (1) Une **liste fermée d'environ 85 compétences** (`SKILLS` : langages, outils, méthodes, finance, marketing, RH, anglais…) est repérée par expressions dans le texte du PDF (`pypdf`) et dans les offres du domaine (titre + description). L'étudiant corrige la liste (multisélection « Tes compétences »). (2) Pour chaque offre du domaine qui cite au moins une compétence : part de ses compétences que l'étudiant possède. (3) Adéquation d'une entreprise = moyenne de ces parts sur les offres de **son secteur** (division NAF, rétrécie vers l'ensemble du domaine, pseudo-effectif 10), puis sur **ses propres offres** si elle en a (pseudo-effectif 3). (4) La composante `c_adequation` est le **rang** de cette part dans la recherche (0 à 1, comme l'intensité), poids par défaut 2 ; elle est **ignorée** tant qu'aucune compétence n'est indiquée (`weighted_score` ignore désormais toute composante absente ou vide). (5) Explication : « les offres data de son secteur demandent Python, SQL » quand le rang est ≥ 0,7. (6) Le PDF n'est **jamais écrit** sur le disque ; seule la liste des compétences est un réglage du profil (choix d'Emma).
