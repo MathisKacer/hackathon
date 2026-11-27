@@ -4,6 +4,25 @@
 
 ---
 
+## 2026-11-27 — T55 (suite) : effacer la ville, codes postaux regroupés
+
+**Fait :**
+- **On ne pouvait pas effacer la ville** pour en choisir une autre : Streamlit n'affiche la croix d'effacement que si la liste est créée avec `index=None` (vérifié dans le code du composant). Ajouté dans `app/vues/explorer.py` (fichier de Celia, une ligne + le texte d'aide).
+- **Une ligne par ville** avec tous ses codes postaux entre parenthèses : « Rennes (35000, 35200, 35700) », « Paris (75001, …, 75020, 75116) ». On peut aussi taper un code postal pour trouver sa ville. 34 964 choix au lieu de 35 493.
+- D28 et T55 mises à jour.
+
+**Fichiers touchés :**
+- `radar/communes.py` (colonne `codes_postaux` au lieu de `code_postal`), `tests/test_communes.py`, `app/vues/explorer.py`, `app/commun.py` (docstring), `docs/DECISIONS.md`, `docs/TACHES.md`
+
+**Résultats / chiffres clés :**
+- AppTest : Rennes → liste des entreprises affichée ; effacer → retour à vide sans erreur ; Nantes (44000, 44100, 44200, 44300) → liste affichée. Tous les tests OK, ruff OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- **@celia** : j'ai touché `app/vues/explorer.py` (le `selectbox` de la ville seulement : `index=None` + placeholder).
+- Les villes enregistrées dans un profil ou un historique avec l'ancien libellé (« Rennes (35000) ») ne sont plus reconnues : il faut les rechoisir une fois.
+
+---
+
 ## 2026-11-27 — T55 : suggesteur de ville
 
 **Fait :**
