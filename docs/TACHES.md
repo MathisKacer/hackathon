@@ -46,11 +46,10 @@
 
 **Modèle de réponse (démonstrateur, réponses simulées)**
 
-- [ ] T32 — Explication automatique par entreprise (« recommandée car… ») à partir des contributions au score
+- [ ] T32 — Explication automatique par entreprise (« recommandée car… ») à partir des contributions au score — prise par @mathis _(signalé par @celia)_ ; voir la coordination T32 / T43 dans « En cours » (colonne `explication`, popup de la carte)
 - [ ] T34 — **Validation sans vérité terrain** : stabilité du classement (bootstrap), sensibilité aux poids, cohérence avec La Bonne Boîte et la tension du marché → graphiques pour les slides
 - [ ] T22 — Enrichissement finances (CA N et N-1, via Recherche d'entreprises ou les ratios INPI) → composante dynamisme (L10 : privilégier les ratios INPI en masse, pas 276 000 appels d'API)
 - [ ] T24 — La Bonne Boîte (si l'accès est obtenu) → composante probabilité d'embauche
-- [ ] T43 — **Fiche entreprise** : décomposition du score, intervalle crédible, offres récentes, effectif, CA, lien vers l'Annuaire des entreprises
 - [ ] T44 — Affichage du **niveau de preuve** (nombre d'offres observées) et du taux de rapprochement global
 
 **Comptes (optionnels, D14) : le mode démo anonyme reste le parcours par défaut**
@@ -73,7 +72,8 @@
 
 ## 🔵 En cours
 
-- _…_
+- [ ] T43 — **Fiche entreprise** : décomposition du score, intervalle crédible, offres récentes, effectif, CA, lien vers l'Annuaire des entreprises — @celia
+  ⚠️ **Coordination T32 / T43** (pour travailler en parallèle sans conflit) : **T32 (@mathis)** = fonction `explain(ligne) -> str` dans `radar/explain.py`, qui ajoute une colonne **`explication`** au classement de la couche orange ; Mathis garde le **popup de la carte** (`_company_popup`) et la liste. **T43 (@celia)** = module `radar/fiche.py` + **panneau « Fiche entreprise » sous la liste** (on choisit une entreprise, on voit tout) ; ne touche pas au popup ; **affiche `explication` si la colonne existe**. Dans `app/streamlit_app.py` : popup = Mathis, panneau du bas = Celia.
 
 ## ✅ Fait
 
