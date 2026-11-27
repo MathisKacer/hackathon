@@ -4,6 +4,37 @@
 
 ---
 
+## 2026-11-27 — T28 : `c_embauche` réel avec La Bonne Boîte ✅
+
+**Fait :**
+- Exploration de l'API La Bonne Boîte v2. Champs utiles : `siret`, `rome`, `hiring_potential`, `naf`, position. Limites : `page_size` ≤ 100, `distance` ≤ 200 km. Découverte utile : on peut chercher **par région** et passer **plusieurs codes ROME dans une seule requête** (`rome` répété).
+- `radar/collect/lbb.py` + `scripts/collect_lbb.py` : collecte des codes ROME data (non ambigus) de `domains.yaml`, région par région, avec pagination et cache disque (`data/cache/lbb_http`). NAF remis au format SIRENE (`62.02A`). Le drapeau `email` n'est pas conservé.
+- `radar/score/embauche.py` : nouvelle règle de `c_embauche` (D27). Les établissements signalés par La Bonne Boîte passent devant, classés par `lbb_potentiel` ; les autres gardent l'ordre du proxy. Colonnes `c_embauche_source` et `lbb_potentiel`.
+- `radar/score/build.py` (@mathis) : branchement minimal (paramètre `lbb` facultatif, lecture de `data/raw/lbb.parquet` s'il existe, sinon comportement d'avant avec un avertissement). `lbb_potentiel` ajouté au schéma `scores_reels`.
+- `tests/test_embauche.py` : 6 tests sans réseau (ordre proxy conservé sans La Bonne Boîte, établissements listés devant, SIRET inconnus sans effet, format NAF, pagination, maximum sur les métiers).
+- Docs : D27, L11 mise à jour, ligne La Bonne Boîte de `SOURCES.md` complétée, `ARCHITECTURE.md`, commande dans `CLAUDE.md`, T28 et T24 en « Fait ».
+
+**Fichiers touchés :**
+- `radar/collect/lbb.py`, `scripts/collect_lbb.py`, `radar/score/embauche.py`, `radar/score/build.py`, `radar/schemas.py`, `tests/test_embauche.py`
+- `CLAUDE.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/LIMITES.md`, `docs/SOURCES.md`, `docs/TACHES.md`, `docs/journal/emma.md`
+
+**Résultats / chiffres clés :**
+- Collecte : **30 appels**, **1 736 établissements** (M1811 Data engineer 1 433 ; M1403 139 ; C1105 64 ; H1215 40 ; C1120 22 ; M1419 16 ; M1405 13 ; M1889 9). Île-de-France 669, Auvergne-Rhône-Alpes 226, Bretagne 64. Aucun résultat pour statisticien, BI, Chief Data Officer, etc.
+- Contrôle sur SIRENE (lecture à distance, sans rien écraser) : 100 % des SIRET connus, 99 % actifs, **77 % (1 331) dans notre référentiel** (actifs, ≥ 10 salariés). Les autres sont de petites structures. Ille-et-Vilaine : 33 dans le référentiel.
+- `hiring_potential` médian 2,8 (0,6 à 86). `is_high_potential` vrai pour **un seul** établissement : inutilisable.
+- `pytest` : 266/266 ; ruff OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- **@mathis :** sur ton pod (qui a la couverture Adzuna et les vraies données), lancer `uv run python scripts/collect_lbb.py` puis `uv run python scripts/build_all.py`, et repartager `scores.parquet`. Je n'ai pas pu recalculer les vrais scores sur mon pod : il me manque `adzuna_couverture.json`, `entreprises.parquet` réel et les vraies données LBA.
+- Le modèle de réponse simulé (T36) utilise `c_embauche` : ses coefficients vont changer au prochain `build_all`.
+- **@celia (fiche entreprise) / @maxence (app) :** `lbb_potentiel` et `c_embauche_source == "la_bonne_boite"` permettent d'afficher « signalée par La Bonne Boîte (France Travail) ».
+- Limite restante (L11) : 99,7 % des établissements restent notés par le proxy. La Bonne Boîte couvre mal les métiers data pointus, c'est elle qui le dit, pas nous.
+
+**Prochaine étape :**
+- Selon les besoins de l'équipe (voir les tâches libres dans `TACHES.md`).
+
+---
+
 ## 2026-11-27 — Décision d'équipe : focus sur les offres data
 
 **Fait :**

@@ -47,7 +47,6 @@
 - [ ] T32 — Explication automatique par entreprise (« recommandée car… ») à partir des contributions au score — prise par @mathis _(signalé par @celia)_ ; coordination avec T43 (faite) : écrire la phrase dans une colonne **`explication`** (la fiche de T43 l'affiche déjà si elle existe) ; Mathis garde le popup de la carte, le panneau « Fiche entreprise » (`app/fiche_ui.py`) est à Celia
 - [ ] T34 — **Validation sans vérité terrain** : stabilité du classement (bootstrap), sensibilité aux poids, cohérence avec La Bonne Boîte et la tension du marché → graphiques pour les slides
 - [ ] T22 — Enrichissement finances (CA N et N-1, via Recherche d'entreprises ou les ratios INPI) → composante dynamisme (L10 : privilégier les ratios INPI en masse, pas 276 000 appels d'API)
-- [ ] T24 — La Bonne Boîte (si l'accès est obtenu) → composante probabilité d'embauche
 - [ ] T44 — Affichage du **niveau de preuve** (nombre d'offres observées) et du taux de rapprochement global
 
 **Comptes (optionnels, D14) : le mode démo anonyme reste le parcours par défaut**
@@ -70,10 +69,11 @@
 
 ## 🔵 En cours
 
-- [ ] T28 — 🔗T30 **`c_embauche` réel** (L11) : La Bonne Boîte v2 (codes ROME data × départements, ≤ 1 req/s, SIRET fourni) + recruteurs potentiels LBA (T17) ; remplace le proxy — @emma — T51 faite : `radar/recruteurs.py` (`lba_recruiter_sirets`) est réutilisable
 
 ## ✅ Fait
 
+- [x] T28 — **`c_embauche` réel** : La Bonne Boîte v2 (`scripts/collect_lbb.py`, 1 736 établissements data, 30 appels) en tête, proxy pour les autres (`radar/score/embauche.py`, D27) — @emma
+- [x] T24 — La Bonne Boîte → composante probabilité d'embauche : faite dans T28 — @emma
 - [x] T43 — **Fiche entreprise** : panneau « 🔎 Fiche entreprise » sous la liste orange (`app/fiche_ui.py`, données `radar/fiche.py`) : identité, pourquoi elle est recommandée (colonne `explication` de T32 si présente + décomposition du score), besoin dans le domaine avec **niveau de preuve** et intervalle crédible à 90 %, offres récentes (par SIREN), historique BODACC, adresse et liens (Annuaire, carte, BODACC). Sélecteur de toute la liste avec recherche par nom — @celia
 - [x] T51 — 🔗T40,T17 **Recruteurs LBA dans la couche orange** — @maxence → `radar/recruteurs.py` (ROME non ambigus du domaine) + composante `c_recruteur_lba` (curseur, poids 2, alternance et « Tous » seulement) ; Rennes 20 km alternance : 206 entreprises marquées ; D26
 - [x] T14 — **Test de l'API ROMEO** sur 200 vrais titres Adzuna : **non retenue**, moins fiable que les mots-clés et instable (D25) — @emma

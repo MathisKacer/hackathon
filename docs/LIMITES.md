@@ -29,7 +29,7 @@
 | # | Limite | Impact | Réglable ? | Tâche | À dire au pitch |
 |---|---|---|---|---|---|
 | L10 | `c_dynamisme` neutre (0,5) : finances non chargées | Le dynamisme ne joue pas dans le classement | ✅ ratios financiers INPI en masse (data.economie.gouv.fr) plutôt que 276 000 appels d'API | T22 | — |
-| L11 | `c_embauche` = proxy (intensité × effectif local), pas une vraie probabilité d'embauche | Favorise les gros établissements des secteurs data | ✅ La Bonne Boîte v2 (codes ROME data × départements, ≤ 1 req/s) et recruteurs potentiels La bonne alternance | **T28** | — |
+| L11 | `c_embauche` = proxy (intensité × effectif local), pas une vraie probabilité d'embauche | Favorise les gros établissements des secteurs data | ✅ **T28 (D27)** : les établissements signalés par La Bonne Boîte pour un métier data passent devant, classés par `hiring_potential` ; proxy pour les autres. Recruteurs LBA déjà comptés à part (`c_recruteur_lba`, D26) | **T28** | 🟡 partiellement levée : La Bonne Boîte ne couvre que **1 736 établissements data** en France (1 331 dans le référentiel, 0,3 %) ; les autres restent au proxy |
 | L12 | Intensité calculée au niveau de l'entreprise (SIREN) et héritée par tous ses établissements | Un site de production d'un groupe très data hérite de son intensité | ⚠️ partiel : pondérer par la division NAF de l'établissement | T28 | — |
 | L13 | Divisions NAF sans offres (ex. 59 « cinéma ») : a priori proche de celui de leur section | Quelques secteurs légèrement surévalués | ✅ hiérarchie à 3 niveaux (classe NAF) ou a priori par division seulement si assez d'entreprises | (faible priorité) | — |
 | L14 | Effectifs SIRENE = tranches, millésime 2024 | Exposition approximative (moyenne géométrique de la tranche) | ❌ | — | — |
