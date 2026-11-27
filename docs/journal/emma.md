@@ -4,6 +4,40 @@
 
 ---
 
+## 2026-11-27 — T7 : recruteurs La bonne alternance factices ✅
+
+**Fait :**
+- `radar/fake_data.py` › `make_recruteurs` : recruteurs potentiels factices au schéma `recruteurs_lba` de Maxence. Ils sont tirés **en dernier**, donc les autres tables restent identiques pour une même graine.
+- `scripts/make_fake_data.py` écrit aussi `data/raw/lba_recruteurs.parquet`, au même endroit que le vrai collecteur, et refuse toujours d'écraser sans `--force`.
+- 2 tests de plus dans `tests/test_fake_data.py` (schéma, SIRET valides, aucun recruteur avec une offre d'alternance, codes ROME connus, reproductibilité).
+- Docs : T7 en « Fait », mention dans `ARCHITECTURE.md`.
+
+**Fichiers touchés :**
+- `radar/fake_data.py`, `scripts/make_fake_data.py`, `tests/test_fake_data.py`
+- `docs/TACHES.md`, `docs/ARCHITECTURE.md`, `docs/journal/emma.md`
+
+**Choix de réalisme :**
+- Un recruteur potentiel est une entreprise **sans offre d'alternance publiée** : on les tire parmi les entreprises factices qui n'en ont pas (les plus grosses plus souvent), et jamais parmi celles en procédure collective.
+- ~15 % de petites entreprises (tailles `0-0`, `1-2`, `3-5`, `6-9`) **absentes de `entreprises.parquet`**, comme dans le vrai export : ça permet de tester les jointures qui échouent.
+- Tailles au format texte de La bonne alternance (`10-19`…), NAF au format `62.01Z` (comme SIRENE et LBA).
+- `code_rome` : 1 à 4 **vrais** codes ROME 4.0 tirés de `domains.yaml` selon le secteur, donc les recruteurs data sont surtout dans l'informatique, le conseil et la finance. Les métiers hors des 5 domaines ne sont pas représentés, ce qui laisse `code_rome` vide pour ~25 % des recruteurs.
+- Adresses en « rue Factice », URL en `example.org`, OPCO et IDCC tirés dans des listes réelles.
+
+**Résultats / chiffres clés (graine 42) :**
+- 662 recruteurs (85 % dans le référentiel), dont 154 avec un code ROME data et 44 à Rennes.
+- Les autres tables sont inchangées (mêmes volumes qu'avant T7).
+- `pytest` : 104/104 ; ruff OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- **Pour @maxence (couche orange de la carte) :** `make_fake_data.py --force` donne maintenant des recruteurs pour développer sans les 382 180 vrais. ⚠️ `--force` écrase aussi les fichiers d'offres : à ne pas lancer sur un pod qui a les vraies données.
+- Vérification faite pendant T7 : la refonte de T21 par Mathis (`8dc3f96`) complète bien l'`offres.parquet` de T13 selon D10, et les SIRET d'école restent exclus. Rien à corriger.
+- Sur mon pod, j'ai relancé `make_fake_data.py --force` : tout y était factice (vérifié avant d'écraser).
+
+**Prochaine étape :**
+- T8 (titres anglais) dès que Mathis partage les vraies offres.
+
+---
+
 ## 2026-11-27 — T13 : classifieur d'offres ✅
 
 **Fait :**

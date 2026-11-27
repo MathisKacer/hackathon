@@ -1,8 +1,11 @@
-"""Construction de data/processed/offres.parquet (contrat « offres »).
+"""T21 — Complète data/processed/offres.parquet avec le rapprochement nom + position → SIRET.
 
-offres brutes (toutes sources) → domaine (radar.domains.classify, T6 d'Emma)
-                               → contrat (titre + champ contrat de la source)
-                               → rapprochement SIRET (T21)
+Conformément à D10 : T13 (`scripts/classify_offres.py`, @emma) écrit `offres.parquet`
+(domaine, contrat, SIRET fourni par la source). Ici, on relit ce fichier et on ne complète que
+les lignes `match_methode == "a_rapprocher"`. Les autres (`siret_source`, `siret_ecole_exclu`)
+ne sont pas modifiées, sauf l'ajout des colonnes communes (`siren_match`, `match_confiance`…).
+
+Pipeline : collecteurs → classify_offres.py → match_offres.py → score.
 """
 
 from __future__ import annotations
@@ -12,52 +15,41 @@ import logging
 import pandas as pd
 
 from radar.config import FILES
-from radar.domains import classify
+from radar.process.classify import MATCH_FROM_SOURCE, MATCH_TODO
 from radar.process.match_siret import match_offers, match_report
-from radar.process.quick_filter import contract_from_title, load_raw_offers
 from radar.schemas import check_columns
 
 log = logging.getLogger(__name__)
 
-
-def _contrat(titre: str | None, contrat_brut: str | None) -> str:
-    """stage / alternance / emploi. Le titre prime ; sinon le champ de la source."""
-    from_title = contract_from_title(titre)
-    if from_title != "emploi":
-        return from_title
-    brut = (contrat_brut or "").lower() if isinstance(contrat_brut, str) else ""
-    if "apprenti" in brut or "altern" in brut or "professionnalisation" in brut:
-        return "alternance"
-    if "stage" in brut or "intern" in brut:
-        return "stage"
-    return "emploi"
+MATCH_COLUMNS = ["siret_match", "match_score", "match_methode"]
 
 
-def build_offres(raw: pd.DataFrame, entreprises: pd.DataFrame) -> pd.DataFrame:
-    df = raw.drop_duplicates(["source", "offre_id"]).copy()
-    df["domaine"] = [classify(t, r) for t, r in zip(df["titre"], df["code_rome"], strict=True)]
-    df["contrat"] = [_contrat(t, c) for t, c in zip(df["titre"], df["contrat_brut"], strict=True)]
-    df = match_offers(df, entreprises)
-    # Une source qui fournit le SIRET (La bonne alternance) prime sur le rapprochement.
-    if "siret" in df:
-        has = df["siret"].notna()
-        df.loc[has, "siret_match"] = df.loc[has, "siret"]
-        df.loc[has, "siren_match"] = df.loc[has, "siret"].str[:9]
-        df.loc[has, ["match_methode", "match_confiance", "match_score"]] = [
-            "source",
-            "haute",
-            100.0,
-        ]
-    check_columns(df, "offres")
-    return df
+def complete_matches(offres: pd.DataFrame, entreprises: pd.DataFrame) -> pd.DataFrame:
+    todo = offres["match_methode"].eq(MATCH_TODO)
+    matched = match_offers(offres[todo].drop(columns=MATCH_COLUMNS), entreprises)
+
+    rest = offres[~todo].copy()
+    from_source = rest["match_methode"].eq(MATCH_FROM_SOURCE)
+    rest["siren_match"] = rest["siret_match"].astype("string").str[:9].where(from_source)
+    rest["match_confiance"] = pd.Series("haute", index=rest.index).where(from_source)
+    rest["match_distance_km"] = None
+    rest["intermediaire"] = False
+
+    out = pd.concat([matched, rest], ignore_index=True)
+    check_columns(out, "offres_rapprochees")
+    return out
 
 
 def run() -> pd.DataFrame:
-    raw = load_raw_offers()
-    if raw.empty:
-        raise RuntimeError("Aucune offre dans data/raw/offres_raw/ (lancer un collecteur).")
+    if not FILES["offres"].exists():
+        raise RuntimeError(
+            "offres.parquet absent : lancer d'abord scripts/classify_offres.py (T13)."
+        )
+    offres = pd.read_parquet(FILES["offres"])
+    if not offres["match_methode"].eq(MATCH_TODO).any():
+        log.warning("Aucune ligne « %s » : rapprochement déjà fait ?", MATCH_TODO)
     ent = pd.read_parquet(FILES["entreprises"])
-    df = build_offres(raw, ent)
-    df.to_parquet(FILES["offres"], index=False)
-    log.info("\n%s", match_report(df).to_string())
-    return df
+    out = complete_matches(offres, ent)
+    out.to_parquet(FILES["offres"], index=False)
+    log.info("\n%s", match_report(out).to_string())
+    return out

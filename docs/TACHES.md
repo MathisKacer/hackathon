@@ -29,8 +29,6 @@
 **Entreprises**
 
 **Score**
-- [ ] T30 — 🔗T5 **Score v0** sur données factices : composantes simples (part brute des offres du domaine, opportunité cachée, distance, taille) → `scores.parquet`
-- [ ] T31 — 🔗T30 **Rétrécissement bêta-binomial** : a priori par secteur NAF, a posteriori, intervalle crédible
 
 **App**
 - [ ] T40 — 🔗T4,T5 **Page de recherche + couche 2 « Candidature spontanée » (orange)** : adresse → géocodage (Géoplateforme) → rayon → même carte folium, entreprises **sans offre correspondante** classées par score ; légende des deux couches + deux listes triées
@@ -72,12 +70,14 @@
 
 ## 🔵 En cours
 
+- [ ] T31 — 🔗T30 **Rétrécissement bêta-binomial** : a priori par secteur NAF, a posteriori, intervalle crédible — @mathis
+- [ ] T30 — 🔗T5 **Score v0** sur données factices : composantes simples (part brute des offres du domaine, opportunité cachée, distance, taille) → `scores.parquet` — @mathis
 - [ ] T17 — 🔗T11 **Partager les données LBA sur S3** (`offres_raw/lba.parquet`, `lba_recruteurs.parquet`) : relancer `scripts/collect_lba.py` sur Onyxia puis `scripts/share_s3.py` — @maxence
-- [ ] T7 — 🔗T11 Ajouter des **recruteurs LBA factices** (`data/raw/lba_recruteurs.parquet`) au générateur T5 — @emma
 
 ## ✅ Fait
 
-- [x] T21 — 🔗T11,T12 **Rapprochement nom + commune → SIRET** pour les offres Adzuna (rapidfuzz sur le référentiel T20) ; mesurer le taux de rapprochement et le noter dans `SOURCES.md` — @mathis → **63 % des offres d'employeurs rapprochées** (50 % confiance haute), intermédiaires écartés (17 %) ; `scripts/build_offres.py` produit `offres.parquet`
+- [x] T7 — **Recruteurs LBA factices** : `make_fake_data.py` écrit aussi `data/raw/lba_recruteurs.parquet` (schéma `recruteurs_lba`, codes ROME réels de `domains.yaml`) — @emma
+- [x] T21 — 🔗T11,T12 **Rapprochement nom + commune → SIRET** pour les offres Adzuna (rapidfuzz sur le référentiel T20) ; mesurer le taux de rapprochement et le noter dans `SOURCES.md` — @mathis → **63 % des offres d'employeurs rapprochées** (50 % confiance haute), intermédiaires écartés (17 %) ; pipeline D10 : `classify_offres.py` (Emma) puis `match_offres.py` complète `offres.parquet`
 - [x] T13 — **Classifieur d'offres** : `uv run python scripts/classify_offres.py` → `offres.parquet` avec `domaine`, `contrat`, la règle qui a décidé et le SIRET donné par la source ; les offres Adzuna restent `a_rapprocher` pour T21 — @emma
 - [x] T11 — **Collecteur La bonne alternance** (export complet France) : `uv run python scripts/collect_lba.py` → `data/raw/offres_raw/lba.parquet` (12 748 offres) + `data/raw/lba_recruteurs.parquet` (382 180 recruteurs potentiels, dont 28 845 avec un ROME data) — @maxence
 - [x] T20 — **Référentiel SIRENE France** : stock parquet géolocalisé (data.gouv) → établissements actifs et employeurs, avec NAF, tranche d'effectif et lat/lon → `entreprises.parquet` (DuckDB) — @mathis et @celia (deux versions fusionnées, D11) : `uv run python scripts/extract_sirene.py [--dep 35]` → 406 266 établissements

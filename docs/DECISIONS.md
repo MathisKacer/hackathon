@@ -14,11 +14,17 @@
 
 ---
 
-### D11 — Référentiel SIRENE : fusion des deux versions de T20 (2026-11-27, @celia)
+### D12 — Référentiel SIRENE : fusion des deux versions de T20 (2026-11-27, @celia)
 **Contexte :** T20 a été réalisée deux fois en parallèle (@celia, puis @mathis, car le push de Celia était bloqué). Les deux versions lisaient les mêmes stocks SIRENE à distance avec DuckDB, avec le même filtre (actif, ≥ 10 salariés, `'NN'` exclu, NAF rév. 2) et donnaient 406 266 établissements.
 **Décision :** la base est la version de Mathis : T21 utilise déjà `effectif_estime` et le `nom` de l'unité légale, et `scripts/extract_sirene.py` appelle `extract()` / `save()`. Ajouts repris de la version de Celia : prénom + nom pour les entrepreneurs individuels sans dénomination, colonnes `tranche_libelle` et `adresse` (vide si diffusion partielle, comme lat/lon), option `--dep` pour tester sur un département, tests sur les tranches et la requête.
 **Alternatives écartées :** garder les deux modules (doublon) ; la table NAF en CSV versionné de Celia (le parquet NAF de data.gouv donne aussi section et division) ; `procedure_collective = False` par défaut (NA est plus juste tant que T23 n'est pas faite).
 **Conséquences :** un seul point d'entrée, `uv run python scripts/extract_sirene.py [--dep 35]`. `radar/naf_rev2.csv` et son exception dans `.gitignore` sont supprimés.
+
+### D11 — Rapprochement offres → SIRET : règles et intermédiaires (2026-11-27, @mathis)
+**Contexte :** Adzuna ne donne que le nom affiché de l'entreprise. Il faut un SIRET pour compter les offres par entreprise (score) et pour exclure de la couche orange les entreprises qui ont déjà une offre (D8). 17 % des offres viennent de plateformes, de sites d'emploi ou de cabinets (Collective.work, Free-Work, Michael Page, intérim).
+**Décision :** `radar/process/match_siret.py`, appelé par `scripts/match_offres.py` sur les lignes `a_rapprocher` seulement (D10). Ordre : intermédiaire (liste + motifs + NAF 78.*) → **pas de SIRET, voulu** ; puis `exact`, `sigle` (grandes entreprises seulement), `prefixe`, `flou` (seuil 94). On garde l'établissement le plus proche de l'offre. Au-delà de 50 km (`_loin`), on n'accepte que les noms distinctifs ou les ETI/GE ; `flou` lointain est refusé. Colonnes ajoutées : `siren_match`, `match_confiance` (haute / moyenne), `match_distance_km`, `intermediaire` — déclarées dans le schéma `offres_rapprochees` (D7).
+**Alternatives écartées :** rapprocher aussi les intermédiaires (ils deviendraient les entreprises « les plus data ») ; un rapprochement flou sans contrainte de distance (≈ 0/10 juste sur échantillon).
+**Conséquences :** 63 % des offres d'employeurs rapprochées (50 % en confiance haute). Le score peut se limiter à `match_confiance == "haute"`. L'app et le score filtrent `intermediaire == False`. La liste des intermédiaires est à compléter quand de nouvelles sources arrivent.
 
 ### D10 — offres.parquet : T13 classe, T21 rapproche (2026-11-27, @emma)
 **Contexte :** `offres.parquet` reçoit des colonnes de deux tâches menées en parallèle : `domaine`/`contrat` (T13, @emma) et `siret_match`/`match_score`/`match_methode` (T21, @mathis). Il ne faut pas que l'une écrase le travail de l'autre.

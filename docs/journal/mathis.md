@@ -6,7 +6,7 @@
 
 **Fait :**
 - `radar/process/match_siret.py` : intermédiaires écartés (liste + motifs + NAF 78.*), puis exact / sigle (GE seulement) / préfixe / flou ; établissement le plus proche ; règles « loin » (> 50 km) selon la taille et la longueur du nom ; `match_confiance`.
-- `radar/process/offres.py` + `scripts/build_offres.py` → `data/processed/offres.parquet` (domaine via `classify` d'Emma, contrat, SIRET). Ajout du **sigle** dans l'extraction SIRENE (EDF, CEA).
+- `radar/process/offres.py` + `scripts/match_offres.py` : relit l'`offres.parquet` d'Emma (T13) et complète seulement les lignes `a_rapprocher` (décision D10). J'avais d'abord refait la classification en double, corrigé. Ajout du **sigle** dans l'extraction SIRENE (EDF, CEA).
 - 8 tests sur un mini-référentiel (`tests/test_match_siret.py`) : Air France ≠ France Air, Capgemini → établissement le plus proche, EDF par sigle, homonyme lointain rejeté, intérim = intermédiaire.
 
 **Résultats / chiffres clés :**

@@ -3,7 +3,7 @@
 import pandas as pd
 
 from radar.process.match_siret import is_intermediary, match_offers, normalize
-from radar.process.offres import _contrat
+from radar.process.offres import complete_matches
 
 ENT = pd.DataFrame(
     {
@@ -73,7 +73,26 @@ def test_staffing_naf_is_intermediary():
     assert r.loc["Interim Plus", "intermediaire"]
 
 
-def test_contrat_title_then_source_field():
-    assert _contrat("Stage Data Analyst", None) == "stage"
-    assert _contrat("Data Analyst", "Apprentissage") == "alternance"
-    assert _contrat("Data Analyst", "permanent") == "emploi"
+def test_complete_matches_only_touches_rows_to_match():
+    offres = pd.DataFrame(
+        {
+            "offre_id": ["a", "b"],
+            "entreprise_nom": ["Capgemini", "Peu importe"],
+            "lat": [RENNES[0], RENNES[0]],
+            "lon": [RENNES[1], RENNES[1]],
+            "siret_match": [None, "99999999900011"],
+            "match_score": [None, 100.0],
+            "match_methode": ["a_rapprocher", "siret_source"],
+        }
+    )
+    # Colonnes du contrat « offres » non utilisées ici : valeurs factices
+    from radar.schemas import SCHEMAS
+
+    for c in SCHEMAS["offres"]:
+        if c not in offres:
+            offres[c] = None
+    out = complete_matches(offres, ENT).set_index("offre_id")
+    assert out.loc["a", "siret_match"] == "10000000000001"
+    assert out.loc["b", "siret_match"] == "99999999900011"  # SIRET de la source conservé
+    assert out.loc["b", "match_methode"] == "siret_source"
+    assert out.loc["b", "siren_match"] == "999999999"
