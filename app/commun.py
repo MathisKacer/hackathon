@@ -81,7 +81,7 @@ def get_offers() -> pd.DataFrame:
 
 @st.cache_data(show_spinner="Chargement de la liste des communes…", ttl=24 * 3600)
 def get_communes() -> pd.DataFrame:
-    """Communes de France « Nom (code postal) » pour le suggesteur de ville (T55)."""
+    """Communes de France « Nom (codes postaux) » pour le suggesteur de ville (T55)."""
     return load_communes()
 
 

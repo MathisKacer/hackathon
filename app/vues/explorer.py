@@ -88,12 +88,14 @@ st.caption(
 
 with st.container(border=True):
     c1, c2 = st.columns([3, 2], vertical_alignment="bottom")
-    # Suggesteur de ville (T55) : on tape le début du nom, on choisit « Ville (code postal) ».
+    # Suggesteur de ville (T55) : on tape le début du nom (ou un code postal) et on choisit
+    # « Ville (codes postaux) ». index=None : la croix permet d'effacer pour changer de ville.
     ville = c1.selectbox(
         "Où ?",
         get_communes()["label"].tolist(),
+        index=None,
         key="ville",
-        placeholder="Tape le nom de ta ville…",
+        placeholder="Tape le nom de ta ville ou un code postal…",
     )
     contrat = c2.segmented_control("Contrat", CONTRATS, key="contrat", required=True) or "Tous"
     c3, c4, c5 = st.columns([3, 1, 1], vertical_alignment="bottom")

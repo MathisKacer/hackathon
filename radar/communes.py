@@ -1,12 +1,13 @@
 """Liste des communes de France pour le suggesteur de ville (T55).
 
-    df = load_communes()            # label, nom, code_postal, code_insee, lat, lon, population
-    place = place_of("Rennes (35000)", df)
+    df = load_communes()      # label, nom, codes_postaux, code_insee, lat, lon, population
+    place = place_of("Rennes (35000, 35200, 35700)", df)
 
 Source : API Découpage administratif (geo.api.gouv.fr, sans clé), **un seul appel** pour toute
-la France, gardé 30 jours dans le cache disque (PATHS.cache). Une ligne par couple
-(commune, code postal), libellé « Nom (code postal) », triée par population décroissante pour
-que les grandes villes sortent en premier quand on tape. Réseau indisponible : repli sur les
+la France, gardé 30 jours dans le cache disque (PATHS.cache). **Une ligne par commune**, avec
+tous ses codes postaux entre parenthèses : « Rennes (35000, 35200, 35700) » (on peut donc aussi
+taper un code postal). Triée par population décroissante pour que les grandes villes sortent en
+premier quand on tape. Réseau indisponible : repli sur les
 communes du référentiel entreprises (`entreprises.parquet`).
 """
 
@@ -26,7 +27,7 @@ log = logging.getLogger(__name__)
 
 COMMUNES_URL = "https://geo.api.gouv.fr/communes"
 COMMUNES_PARAMS = {"fields": "nom,code,codesPostaux,centre,population", "format": "json"}
-COLUMNS = ["label", "nom", "code_postal", "code_insee", "lat", "lon", "population"]
+COLUMNS = ["label", "nom", "codes_postaux", "code_insee", "lat", "lon", "population"]
 
 
 def _session() -> requests.Session:
@@ -36,23 +37,23 @@ def _session() -> requests.Session:
 
 
 def parse_communes(payload: list[dict]) -> pd.DataFrame:
-    """Réponse JSON de geo.api.gouv.fr → une ligne par (commune, code postal)."""
+    """Réponse JSON de geo.api.gouv.fr → une ligne par commune (codes postaux regroupés)."""
     rows = []
     for c in payload:
         centre = (c.get("centre") or {}).get("coordinates")
-        if not centre:
+        codes = sorted(set(c.get("codesPostaux") or []))
+        if not centre or not codes:
             continue
-        for cp in c.get("codesPostaux") or []:
-            rows.append(
-                {
-                    "nom": c["nom"],
-                    "code_postal": cp,
-                    "code_insee": c.get("code"),
-                    "lat": float(centre[1]),
-                    "lon": float(centre[0]),
-                    "population": int(c.get("population") or 0),
-                }
-            )
+        rows.append(
+            {
+                "nom": c["nom"],
+                "codes_postaux": ", ".join(codes),
+                "code_insee": c.get("code"),
+                "lat": float(centre[1]),
+                "lon": float(centre[0]),
+                "population": int(c.get("population") or 0),
+            }
+        )
     return _finish(pd.DataFrame(rows))
 
 
@@ -64,8 +65,13 @@ def communes_from_companies(path=None) -> pd.DataFrame:
     cols = ["commune", "code_postal", "lat", "lon"]
     e = pd.read_parquet(path, columns=cols).dropna()
     g = (
-        e.groupby(["commune", "code_postal"])
-        .agg(lat=("lat", "mean"), lon=("lon", "mean"), population=("lat", "size"))
+        e.groupby("commune")
+        .agg(
+            codes_postaux=("code_postal", lambda s: ", ".join(sorted(set(map(str, s))))),
+            lat=("lat", "mean"),
+            lon=("lon", "mean"),
+            population=("lat", "size"),
+        )
         .reset_index()
         .rename(columns={"commune": "nom"})
     )
@@ -74,12 +80,12 @@ def communes_from_companies(path=None) -> pd.DataFrame:
 
 
 def _finish(df: pd.DataFrame) -> pd.DataFrame:
-    """Libellé « Nom (CP) » unique, tri par population décroissante."""
+    """Libellé « Nom (CP1, CP2…) » unique, tri par population décroissante."""
     if df.empty:
         return pd.DataFrame(columns=COLUMNS)
     df = df.sort_values(["population", "nom"], ascending=[False, True]).reset_index(drop=True)
-    df["label"] = df["nom"] + " (" + df["code_postal"].astype(str) + ")"
-    dup = df["label"].duplicated(keep=False)  # homonymes partageant un code postal (rare)
+    df["label"] = df["nom"] + " (" + df["codes_postaux"].astype(str) + ")"
+    dup = df["label"].duplicated(keep=False)  # homonymes avec les mêmes codes postaux (rare)
     df.loc[dup, "label"] = df.loc[dup, "label"] + " · " + df.loc[dup, "code_insee"].astype(str)
     return df.drop_duplicates("label")[COLUMNS].reset_index(drop=True)
 

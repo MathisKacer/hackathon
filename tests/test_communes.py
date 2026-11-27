@@ -29,7 +29,8 @@ PAYLOAD = [
 
 def test_parse_communes():
     df = parse_communes(PAYLOAD)
-    assert df["label"].tolist()[:3] == ["Rennes (35000)", "Rennes (35200)", "Bruz (35170)"]
+    # une ligne par commune, tous ses codes postaux entre parenthèses
+    assert df["label"].tolist()[:2] == ["Rennes (35000, 35200)", "Bruz (35170)"]
     assert "Sans centre (99999)" not in set(df["label"])
     assert df["label"].is_unique
     assert {"Moûtiers (73600) · 1", "Moûtiers (73600) · 2"} <= set(df["label"])
@@ -52,7 +53,7 @@ def test_offline_fallback_on_companies(tmp_path, monkeypatch):
     ent = pd.DataFrame(
         {
             "commune": ["RENNES", "RENNES", "BRUZ"],
-            "code_postal": ["35000", "35000", "35170"],
+            "code_postal": ["35000", "35200", "35170"],
             "lat": [48.10, 48.12, 48.02],
             "lon": [-1.68, -1.70, -1.74],
         }
@@ -60,7 +61,8 @@ def test_offline_fallback_on_companies(tmp_path, monkeypatch):
     path = tmp_path / "entreprises.parquet"
     ent.to_parquet(path)
     df = communes_from_companies(path)
-    assert df["label"].tolist() == ["Rennes (35000)", "Bruz (35170)"]
+    assert df["label"].tolist() == ["Rennes (35000, 35200)", "Bruz (35170)"]
     assert df.loc[0, "lat"] == 48.11
     monkeypatch.setitem(__import__("radar.config").config.FILES, "entreprises", path)
-    assert load_communes(session=_Down())["label"].tolist() == ["Rennes (35000)", "Bruz (35170)"]
+    offline = load_communes(session=_Down())["label"].tolist()
+    assert offline == ["Rennes (35000, 35200)", "Bruz (35170)"]
