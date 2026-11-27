@@ -83,7 +83,8 @@ geo AS (
 ul AS (
     SELECT siren,
            coalesce(denominationUniteLegale, denominationUsuelle1UniteLegale) AS nom_ul,
-           categorieEntreprise AS categorie
+           categorieEntreprise AS categorie,
+           sigleUniteLegale AS sigle
     FROM read_parquet('{ul}')
     WHERE siren IN (SELECT siren FROM etab)
 ),
@@ -96,7 +97,7 @@ SELECT
     e.siret, e.siren,
     coalesce(ul.nom_ul, e.nom_etablissement) AS nom,
     e.naf, naf.naf_libelle,
-    e.tranche_effectif, ul.categorie,
+    e.tranche_effectif, ul.categorie, ul.sigle,
     -- RGPD : pas de position pour les établissements à diffusion partielle
     CASE WHEN e.diffusion_partielle THEN NULL ELSE geo.lat END AS lat,
     CASE WHEN e.diffusion_partielle THEN NULL ELSE geo.lon END AS lon,

@@ -20,6 +20,12 @@ Sources : [data.gouv – API Offres d'emploi](https://www.data.gouv.fr/dataservi
 | Choisir le service public / place de l'emploi public | Site public, pas d'API documentée trouvée | Offres data du secteur public (INSEE, collectivités, CHU) | — | À vérifier | ❓ |
 | ~~LinkedIn, Indeed, Welcome to the Jungle, JobTeaser~~ | Exclus (CGU, pas d'API) | — | — | — | ❌ |
 
+## Rapprochement offres ↔ SIRET (T21, mesuré le 2026-11-27)
+
+- 10 776 offres Adzuna : **16,7 % d'intermédiaires** (Collective.work, Forums Talents Handicap, Free-Work, Direct Emploi, cabinets, intérim) écartés volontairement.
+- **63,4 % des offres d'employeurs rapprochées** d'un SIRET (50,5 % en confiance haute) ; pour les offres data : 67,1 %, soit **503 entreprises (622 établissements)** avec au moins une offre data, dont 130 avec un stage ou une alternance data.
+- Précision vérifiée à la main sur des échantillons : exact et préfixe ≈ justes ; « loin » (> 50 km) = souvent la bonne entreprise mais son siège ; flou lointain rejeté. Limites : homonymes résiduels, sigles non présents dans SIRENE (SFR, EY).
+
 ## 2. Référentiel entreprises
 
 | Source | Accès | Apport | Statut |

@@ -72,10 +72,10 @@
 
 ## 🔵 En cours
 
-- [ ] T21 — 🔗T11,T12 **Rapprochement nom + commune → SIRET** pour les offres Adzuna (rapidfuzz sur le référentiel T20) ; mesurer le taux de rapprochement et le noter dans `SOURCES.md` — @mathis
 
 ## ✅ Fait
 
+- [x] T21 — 🔗T11,T12 **Rapprochement nom + commune → SIRET** pour les offres Adzuna (rapidfuzz sur le référentiel T20) ; mesurer le taux de rapprochement et le noter dans `SOURCES.md` — @mathis → **63 % des offres d'employeurs rapprochées** (50 % confiance haute), intermédiaires écartés (17 %) ; `scripts/build_offres.py` produit `offres.parquet`
 - [x] T13 — **Classifieur d'offres** : `uv run python scripts/classify_offres.py` → `offres.parquet` avec `domaine`, `contrat`, la règle qui a décidé et le SIRET donné par la source ; les offres Adzuna restent `a_rapprocher` pour T21 — @emma
 - [x] T11 — **Collecteur La bonne alternance** (export complet France) : `uv run python scripts/collect_lba.py` → `data/raw/offres_raw/lba.parquet` (12 748 offres) + `data/raw/lba_recruteurs.parquet` (382 180 recruteurs potentiels, dont 28 845 avec un ROME data) — @maxence
 - [x] T20 — **Référentiel SIRENE France** : stock parquet géolocalisé (data.gouv) → établissements actifs et employeurs, avec NAF, tranche d'effectif et lat/lon → `entreprises.parquet` (DuckDB) — @mathis
