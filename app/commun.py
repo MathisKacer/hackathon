@@ -54,7 +54,6 @@ WIDGET_KEYS = [
     "rayon",
     "domaine",
     "contrat",
-    "regions",
     "query",
     "max_age",
     "only_data",
@@ -115,7 +114,6 @@ def get_nearby(lat: float, lon: float, radius_km: float, domaine: str) -> pd.Dat
 
 def filter_offers(
     df: pd.DataFrame,
-    regions: list[str],
     contrat: str,
     domaine: str | None,
     max_age: int,
@@ -132,8 +130,6 @@ def filter_offers(
     out = df
     if domaine:
         out = out[out["domaine"] == domaine]
-    if regions:
-        out = out[out["region_requete"].isin(regions)]
     if contrat != "Tous":
         out = out[out["contrat"] == contrat.lower()]
     out = out[out["age_jours"].fillna(0) <= max_age]
@@ -149,13 +145,16 @@ def filter_offers(
     return out
 
 
-def profile_keys(all_regions: list[str]) -> dict[str, list | None]:
-    """Réglages enregistrés dans le profil : clé du widget → options permises (None = libre)."""
+def profile_keys() -> dict[str, list | None]:
+    """Réglages enregistrés dans le profil : clé du widget → options permises (None = libre).
+
+    Plus de filtre « Régions » (T66) : la ville et le rayon le rendaient redondant ; une
+    ancienne valeur `regions` d'un profil ou d'une recherche enregistrée est simplement ignorée.
+    """
     commune_labels = get_communes()["label"].tolist()
     return {
         "domaine": DOMAINES,
         "contrat": CONTRATS,
-        "regions": all_regions,
         "query": None,
         "max_age": list(range(7, 61, 7)) + [60],
         "only_data": [True, False],
@@ -176,7 +175,6 @@ def profile_keys(all_regions: list[str]) -> dict[str, list | None]:
 PROFILE_LABELS = {
     "domaine": "Domaine",
     "contrat": "Contrat",
-    "regions": "Régions",
     "query": "Mot-clé",
     "max_age": "Moins de (jours)",
     "only_data": "Seulement le domaine",
@@ -191,10 +189,6 @@ PROFILE_LABELS = {
     "niveaux": "Niveau d'études",
     "niveau_inconnu": "Avec niveau non précisé",
 }
-
-
-def all_regions_of(offers: pd.DataFrame) -> list[str]:
-    return sorted(offers["region_requete"].dropna().unique()) if not offers.empty else []
 
 
 def init_defaults() -> None:

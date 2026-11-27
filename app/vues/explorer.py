@@ -28,7 +28,6 @@ from commun import (
     TRIS,
     WEIGHT_KEYS,
     WEIGHT_MAX,
-    all_regions_of,
     current_weights,
     filter_offers,
     get_coefficients,
@@ -78,7 +77,6 @@ def _n_filters_on() -> int:
     ss = st.session_state
     return sum(
         [
-            bool(ss.get("regions")),
             bool(str(ss.get("query", "")).strip()),
             ss.get("max_age", 60) != 60,
             not ss.get("only_data", True),
@@ -99,8 +97,7 @@ if offers.empty:
     st.caption("Équipe : lancer la collecte ou récupérer `data/raw/offres_raw/` (voir CLAUDE.md).")
     st.stop()
 
-all_regions = all_regions_of(offers)
-PROFILE_KEYS = profile_keys(all_regions)
+PROFILE_KEYS = profile_keys()
 
 # ------------------------------------------------------------------ recherche
 hero(
@@ -132,9 +129,6 @@ with st.container(border=True, key="carte_recherche"):
         f"Filtres ({n_on})" if n_on else "Filtres", width="stretch", icon=":material/tune:"
     ):
         st.markdown("**Offres**")
-        regions = st.multiselect(
-            "Régions", all_regions, key="regions", placeholder="Toutes les régions"
-        )
         query = st.text_input("Mot-clé", key="query", placeholder="ex. python, Arkéa…")
         max_age = st.slider("Publiées il y a moins de (jours)", 7, 60, step=7, key="max_age")
         only_data = st.toggle("Seulement les offres du domaine", key="only_data")
@@ -186,7 +180,6 @@ weights = current_weights()
 # ------------------------------------------------------------------ calculs
 view = filter_offers(
     offers,
-    regions,
     contrat,
     domaine if only_data else None,
     max_age,

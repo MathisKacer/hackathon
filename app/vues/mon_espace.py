@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import streamlit as st
-from commun import PAGES_DIR, PROFILE_LABELS, all_regions_of, get_offers, profile_keys
+from commun import PAGES_DIR, PROFILE_LABELS, get_offers, profile_keys
 from compte import _con, account_page, current_user
 from favoris import favorites, remove
 from fiche_ui import open_fiche
@@ -121,7 +121,7 @@ def favorites_section() -> None:
 
 
 account_page(
-    profile_keys(all_regions_of(get_offers())),
+    profile_keys(),
     PROFILE_LABELS,
     PAGES_DIR / "explorer.py",
     favorites_section,

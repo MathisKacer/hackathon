@@ -6,7 +6,7 @@ son profil (les réglages de recherche) d'une visite à l'autre.
 Usage dans streamlit_app.py, AVANT de créer les widgets de recherche :
 
     with st.sidebar:
-        account_sidebar({"contrat": ["Tous", "Stage", ...], "regions": all_regions, "query": None})
+        account_sidebar({"contrat": ["Tous", "Stage", ...], "query": None})
         st.radio("Contrat visé", [...], key="contrat")   # les widgets portent ces clés
         ...
 
@@ -181,7 +181,7 @@ def _format_value(value) -> str:
 
 
 def summarize(params: dict, labels: dict[str, str] | None = None) -> str:
-    """Résumé lisible d'une recherche : « Contrat : Stage · Régions : Bretagne »."""
+    """Résumé lisible d'une recherche : « Contrat : Stage · Rayon (km) : 20 »."""
     labels = labels or {}
     parts = [
         f"{labels.get(k, k)} : {_format_value(v)}"
