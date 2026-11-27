@@ -1,0 +1,23 @@
+Tu es un expert du marché du travail français. Pour le secteur d'activité ci-dessous (code NAF rév. 2 et libellé), indique pour chaque taille d'entreprise si une entreprise de ce secteur recrute habituellement (stage, alternance ou emploi) dans chacun des 5 domaines.
+
+Domaines :
+- data : data science, statistique, data analyse, data engineering, intelligence artificielle
+- informatique : développement logiciel, systèmes d'information, réseaux, support
+- finance : comptabilité, contrôle de gestion, finance d'entreprise, banque, assurance
+- marketing : marketing, communication, études commerciales
+- rh : ressources humaines, recrutement, paie
+
+Tailles (salariés) : "10-49", "50-249", "250-999", "1000+".
+
+Note :
+0 = jamais ou presque (ex. data dans une boulangerie de 10-49 salariés)
+1 = rare (ex. RH dans une PME industrielle de 10-49 salariés)
+2 = courant (ex. finance dans une ETI industrielle)
+3 = cœur de métier ou équipe dédiée (ex. data dans une société de conseil en données, finance dans une banque)
+
+Une grande entreprise a plus de fonctions support qu'une petite : la note ne diminue pas quand la taille augmente, sauf exception justifiée.
+
+Réponds uniquement par un objet JSON, sans texte autour, de cette forme exacte :
+{"grille": {"10-49": {"data": 0, "informatique": 0, "finance": 0, "marketing": 0, "rh": 0}, "50-249": {...}, "250-999": {...}, "1000+": {...}}, "justification": {"data": "une phrase", "informatique": "une phrase", "finance": "une phrase", "marketing": "une phrase", "rh": "une phrase"}}
+
+Secteur : {naf} — {naf_libelle}
