@@ -33,12 +33,14 @@ CONTRATS = ["Tous", "Stage", "Alternance", "Emploi"]
 WEIGHT_KEYS = {c: "poids_" + c.removeprefix("c_") for c in COMPONENTS}
 WEIGHT_MAX = 5
 # Classement des candidatures spontanées (T37) : score ou chance de réponse du démonstrateur.
-TRI_SCORE, TRI_P = "Score", "Chance de réponse (démo)"
+TRI_SCORE, TRI_P = "Score", "Chance de réponse"
 TRIS = [TRI_SCORE, TRI_P]
-SIMULATED_BANNER = (
-    "**Démonstration.** La chance de réponse vient d'un modèle entraîné sur des réponses "
-    "simulées : aucune donnée publique ne dit quelles entreprises répondent aux candidatures "
-    "spontanées. Les entreprises sont réelles, ces pourcentages ne le sont pas."
+# Mention discrète (info-bulles) : la chance de réponse vient d'un modèle entraîné sur des
+# réponses simulées (D6, D23) ; plus de bandeau à l'écran (T64, choix de l'équipe), dit au pitch.
+CHANCE_HELP = (
+    "Estimation de la probabilité que l'entreprise réponde à une candidature spontanée. "
+    "Modèle entraîné sur des réponses simulées : aucune donnée publique ne dit encore "
+    "quelles entreprises répondent."
 )
 DOMAINS = load_domains()  # radar/domains.yaml : clé → Domain (libellé, ROME, mots-clés)
 DOMAINES = list(DOMAINS)

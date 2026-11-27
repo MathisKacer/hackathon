@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-11-27 — Tâche T64 : « Chance de réponse » (D31)
+
+**Fait :**
+- « P(réponse) simulée » → « Chance de réponse » (liste, popup de la carte, fiche, classement) ; colonne toujours affichée quand le modèle couvre le contrat et le domaine.
+- Choix de Celia : plus de bandeau « Démonstration » ni de « (démo) » à l'écran ; la mention « réponses simulées » reste en info-bulle (`CHANCE_HELP`) et sera dite au pitch. D31 précise D6 / D23 sur l'affichage.
+
+**Fichiers touchés :**
+- `app/commun.py`, `app/vues/explorer.py`, `app/fiche_ui.py`, `app/carte.py`, `docs/*`
+
+**Résultats / chiffres clés :**
+- Vérifié avec une chance de réponse simulée de 34 % : colonne visible avec le classement par score, aucun bandeau. 305 tests OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- Au pitch, dire que les chances de réponse viennent de réponses simulées (D6, D31).
+
+---
+
 ## 2026-11-27 — Tâche T57 : entreprise (SIREN) et sites (SIRET)
 
 **Fait :**

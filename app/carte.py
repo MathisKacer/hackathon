@@ -122,11 +122,12 @@ def _procedure_html(r: pd.Series) -> str:
 
 
 def _p_reponse_html(r: pd.Series) -> str:
-    """P(réponse) du démonstrateur (T37), toujours marquée comme simulée."""
+    """Chance de réponse (T37, T64) : modèle entraîné sur des réponses simulées (D23)."""
     p = r.get("p_reponse")
     if p is None or pd.isna(p):
         return ""
-    return f"P(réponse) <i>simulée</i> : <b>{100 * float(p):.0f} %</b><br>"
+    # T64 : libellé clair ; mention « simulée » dans les info-bulles (liste, fiche)
+    return f"Chance de réponse : <b>{100 * float(p):.0f} %</b><br>"
 
 
 def _score_breakdown_html(r: pd.Series) -> str:

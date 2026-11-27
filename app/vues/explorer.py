@@ -11,6 +11,7 @@ import pandas as pd
 import streamlit as st
 from carte import build_map
 from commun import (
+    CHANCE_HELP,
     CONTRATS,
     DOMAINES,
     DOMAINS,
@@ -18,7 +19,6 @@ from commun import (
     PAGES_DIR,
     PROFILE_LABELS,
     RAYONS,
-    SIMULATED_BANNER,
     TRI_P,
     TRIS,
     WEIGHT_KEYS,
@@ -220,8 +220,6 @@ else:
         f"sans avoir publié d'offre, et **{n_off}** {_pl(n_off, 'offre')} "
         f"{'sont publiées' if n_off > 1 else 'est publiée'}."
     )
-    if tri == TRI_P:
-        st.info(SIMULATED_BANNER)
     if spontaneous.empty and not FILES["scores"].exists():
         st.caption("Équipe : `scores.parquet` manquant (lancer `scripts/build_all.py`).")
 
@@ -272,8 +270,9 @@ with tab_spont:
                 "Score": spontaneous["score"],
             }
         )
-        if tri == TRI_P and "p_reponse" in spontaneous:
-            table["Chance de réponse (démo)"] = spontaneous["p_reponse"]
+        # T64 : toujours affichée quand le modèle couvre le contrat et le domaine
+        if "p_reponse" in spontaneous and spontaneous["p_reponse"].notna().any():
+            table["Chance de réponse"] = spontaneous["p_reponse"]
         if not table["Autres sites"].astype(bool).any():
             table = table.drop(columns="Autres sites")
         if not table["★"].astype(bool).any():
@@ -298,7 +297,9 @@ with tab_spont:
                 "Score": st.column_config.ProgressColumn(
                     min_value=0.0, max_value=1.0, format="%.2f"
                 ),
-                "Chance de réponse (démo)": st.column_config.NumberColumn(format="percent"),
+                "Chance de réponse": st.column_config.NumberColumn(
+                    format="percent", help=CHANCE_HELP
+                ),
             },
         )
         st.caption("Clique sur une ligne pour ouvrir la fiche de l'entreprise.")

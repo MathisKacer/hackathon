@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import pandas as pd
 import streamlit as st
-from commun import get_place
+from commun import CHANCE_HELP, get_place
 from favoris import star_button
 
 from radar import fiche
@@ -126,7 +126,7 @@ def _why(r: pd.Series) -> None:
         c2.metric("Distance", f"{r['distance_km']:.1f} km")
     p = r.get("p_reponse")
     if p is not None and pd.notna(p):
-        c3.metric("P(réponse) simulée", f"{100 * float(p):.0f} %", help="Démonstrateur (D18).")
+        c3.metric("Chance de réponse", f"{100 * float(p):.0f} %", help=CHANCE_HELP)
     apports = [
         (label, float(r[f"apport_{k}"]), float(r[k]) if pd.notna(r.get(k)) else None, help_)
         for k, (label, help_) in COMPONENTS.items()

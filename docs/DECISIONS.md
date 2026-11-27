@@ -14,6 +14,12 @@
 
 ---
 
+### D31 — « Chance de réponse » : libellé clair, mention « simulée » en info-bulle (2026-11-27, @celia)
+**Contexte :** T64. L'app affichait « P(réponse) simulée », peu clair pour un étudiant, avec un bandeau « Démonstration » et « (démo) » dans les libellés ; la colonne n'apparaissait que si l'on classait par chance de réponse.
+**Décision :** libellé **« Chance de réponse »** partout (liste, fenêtre de la carte, fiche, classement dans « Filtres ») ; colonne toujours affichée quand le modèle couvre le contrat et le domaine. **Précise D6 / D23 sur l'affichage** : plus de bandeau ni de « (démo) » à l'écran ; la mention « modèle entraîné sur des réponses simulées » reste dans les **info-bulles** de la colonne et de la fiche (`CHANCE_HELP`, `app/commun.py`) et sera **dite au pitch**.
+**Alternatives écartées :** garder le bandeau (alourdit l'écran, choix de l'équipe) ; supprimer toute mention (une estimation simulée présentée comme une vraie statistique induirait en erreur un utilisateur réel).
+**Conséquences :** au pitch et dans les slides, dire clairement que les chances de réponse viennent de réponses simulées (D6). Les profils enregistrés avec l'ancien libellé de classement reviennent au classement par score.
+
 ### D30 — Interface en 3 pages, épurée (2026-11-27, @celia)
 **Contexte :** la barre latérale cumulait compte, 13 réglages et 5 curseurs ; les textes montraient du jargon interne (numéros de tâches, fichiers, commandes) et beaucoup d'emojis ; l'idée centrale n'était expliquée qu'en bas de la barre latérale.
 **Décision :** navigation en haut avec 3 pages (`st.navigation`) : **Explorer** (recherche en haut : ville, contrat, domaine, rayon ; le reste dans un panneau « Filtres » ; phrase de résultat ; carte ; onglets « Candidatures spontanées » / « Offres » ; clic sur une ligne → fiche dans une fenêtre `st.dialog`), **Entreprises** (barre de recherche sur les ~406 000 établissements, tolérante aux fautes, `radar/recherche.py`), **Mon espace** (compte, profil, historique avec « Relancer »). Code de la carte déplacé **sans modification** dans `app/carte.py`. Réglages conservés entre les pages (`persist_widget_state`). Thème sobre (`.streamlit/config.toml` : bleu nuit, police Inter) qui laisse au bleu et à l'orange de la carte leur sens. On garde les mots « Candidatures spontanées » et « Offres ».

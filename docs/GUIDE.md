@@ -38,10 +38,10 @@
 
 **Explorer, de haut en bas :**
 1. **La recherche** : « Où ? » (suggesteur de ville, T55 : on tape le début du nom et on choisit « Ville (code postal) »), « Contrat » (Tous / Stage / Alternance / Emploi), « Domaine », « Rayon ».
-2. **Le bouton « Filtres »** : un panneau avec les régions, le mot-clé, l'ancienneté des offres, la taille et le secteur des entreprises, « Afficher aussi les entreprises en liquidation », le classement (score ou chance de réponse, démo) et l'importance de chaque critère du score. Le bouton affiche le nombre de filtres actifs (« Filtres (2) »).
+2. **Le bouton « Filtres »** : un panneau avec les régions, le mot-clé, l'ancienneté des offres, la taille et le secteur des entreprises, « Afficher aussi les entreprises en liquidation », le classement (score ou chance de réponse) et l'importance de chaque critère du score. Le bouton affiche le nombre de filtres actifs (« Filtres (2) »).
 3. **Une phrase de résultat** : « Autour de Rennes (35000) (20 km) : 42 entreprises pourraient t'accueillir en alternance sans avoir publié d'offre, et 18 offres sont publiées. » Sans ville : un « Comment ça marche » en 3 étapes.
 4. **La carte** : offres en bleu, candidatures spontanées en orange (`app/carte.py`, inchangé).
-5. **Deux onglets** : « Candidatures spontanées » (Entreprise, Lieu, Distance, Taille, Situation, La Bonne Boîte ✔, Score) et « Offres » (lien vers chaque annonce).
+5. **Deux onglets** : « Candidatures spontanées » (Entreprise, Lieu, Distance, Autres sites, Taille, Situation, La Bonne Boîte ✔, Score, **Chance de réponse** — estimation issue de réponses simulées, expliquée en info-bulle, D31) et « Offres » (lien vers chaque annonce).
 6. **Un clic sur une ligne** de « Candidatures spontanées » ouvre la **fiche dans une fenêtre** par-dessus la page (section 10). Fermer la fenêtre permet d'en ouvrir une autre.
 
 **Principes.**
