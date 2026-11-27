@@ -36,7 +36,7 @@ def complete_matches(offres: pd.DataFrame, entreprises: pd.DataFrame) -> pd.Data
     rest["intermediaire"] = False
 
     out = pd.concat([matched, rest], ignore_index=True)
-    check_columns(out, "offres")
+    check_columns(out, "offres_rapprochees")
     return out
 
 

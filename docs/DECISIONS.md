@@ -14,6 +14,12 @@
 
 ---
 
+### D11 — Rapprochement offres → SIRET : règles et intermédiaires (2026-11-27, @mathis)
+**Contexte :** Adzuna ne donne que le nom affiché de l'entreprise. Il faut un SIRET pour compter les offres par entreprise (score) et pour exclure de la couche orange les entreprises qui ont déjà une offre (D8). 17 % des offres viennent de plateformes, de sites d'emploi ou de cabinets (Collective.work, Free-Work, Michael Page, intérim).
+**Décision :** `radar/process/match_siret.py`, appelé par `scripts/match_offres.py` sur les lignes `a_rapprocher` seulement (D10). Ordre : intermédiaire (liste + motifs + NAF 78.*) → **pas de SIRET, voulu** ; puis `exact`, `sigle` (grandes entreprises seulement), `prefixe`, `flou` (seuil 94). On garde l'établissement le plus proche de l'offre. Au-delà de 50 km (`_loin`), on n'accepte que les noms distinctifs ou les ETI/GE ; `flou` lointain est refusé. Colonnes ajoutées : `siren_match`, `match_confiance` (haute / moyenne), `match_distance_km`, `intermediaire` — déclarées dans le schéma `offres_rapprochees` (D7).
+**Alternatives écartées :** rapprocher aussi les intermédiaires (ils deviendraient les entreprises « les plus data ») ; un rapprochement flou sans contrainte de distance (≈ 0/10 juste sur échantillon).
+**Conséquences :** 63 % des offres d'employeurs rapprochées (50 % en confiance haute). Le score peut se limiter à `match_confiance == "haute"`. L'app et le score filtrent `intermediaire == False`. La liste des intermédiaires est à compléter quand de nouvelles sources arrivent.
+
 ### D10 — offres.parquet : T13 classe, T21 rapproche (2026-11-27, @emma)
 **Contexte :** `offres.parquet` reçoit des colonnes de deux tâches menées en parallèle : `domaine`/`contrat` (T13, @emma) et `siret_match`/`match_score`/`match_methode` (T21, @mathis). Il ne faut pas que l'une écrase le travail de l'autre.
 **Décision :** T13 (`radar/process/classify.py`) écrit `offres.parquet` à partir de toutes les offres brutes. Il remplit le SIRET seulement quand la source le donne (`siret_source`), retire celui des offres déléguées à une école (`siret_ecole_exclu`) et marque les autres `a_rapprocher`. T21 relit `offres.parquet` et ne complète que les lignes `a_rapprocher`, avec sa propre valeur de `match_methode`. Chaque classement garde la règle qui l'a décidé (`domaine_regle`, `contrat_regle`) pour pouvoir l'expliquer. Pour le contrat, le titre l'emporte sur le `contract_type` d'Adzuna (rarement rempli, et seulement permanent/contract).

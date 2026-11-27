@@ -100,6 +100,16 @@ SCHEMAS: dict[str, list[str]] = {
     "p_reponse": ["siret", "domaine", "contrat_vise", "p_reponse"],
 }
 
+# offres.parquet APRÈS le rapprochement T21 (D10) : ce que l'app et le score peuvent utiliser.
+# `intermediaire` = plateforme / cabinet / intérim (pas de SIRET, voulu) ; `siren_match` sert à
+# exclure de la couche « candidature spontanée » les entreprises qui ont déjà une offre (D8).
+SCHEMAS["offres_rapprochees"] = SCHEMAS["offres"] + [
+    "siren_match",
+    "match_confiance",
+    "match_distance_km",
+    "intermediaire",
+]
+
 CONTRATS = ("stage", "alternance", "emploi")
 
 
