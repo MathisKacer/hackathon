@@ -15,6 +15,7 @@ import math
 import folium
 import pandas as pd
 import streamlit as st
+from compte import account_sidebar  # app/compte.py (T48)
 from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
 
@@ -129,17 +130,41 @@ if offers.empty:
     )
     st.stop()
 
+DOMAINES = ["Data"]
+CONTRATS = ["Tous", "Stage", "Alternance", "Emploi"]
+all_regions = sorted(offers["region_requete"].dropna().unique())
+
+# Réglages enregistrés dans le profil quand on est connecté (T48) : clé du widget → options
+# permises (None = libre). Ajouter ici la clé de tout nouveau réglage (T40, T41, T42…).
+PROFILE_KEYS = {
+    "domaine": DOMAINES,
+    "contrat": CONTRATS,
+    "regions": all_regions,
+    "query": None,
+    "max_age": list(range(7, 61, 7)) + [60],
+    "only_data": [True, False],
+}
+# Valeurs par défaut posées dans session_state (et non via value=) pour qu'un profil chargé
+# puisse les remplacer sans avertissement de Streamlit.
+st.session_state.setdefault("max_age", 60)
+st.session_state.setdefault("only_data", True)
+
 with st.sidebar:
+    account_sidebar(PROFILE_KEYS)
+    st.divider()
     st.header("Ta recherche")
-    st.selectbox("Domaine", ["Data"], help="D'autres domaines arriveront avec T6.")
-    contrat = st.radio("Contrat visé", ["Tous", "Stage", "Alternance", "Emploi"], horizontal=True)
-    all_regions = sorted(offers["region_requete"].dropna().unique())
-    regions = st.multiselect("Régions", all_regions, placeholder="Toutes les régions collectées")
-    query = st.text_input("Mot-clé (titre ou entreprise)", placeholder="ex. python, Arkéa…")
-    max_age = st.slider("Publiées il y a moins de (jours)", 7, 60, 60, step=7)
+    st.selectbox("Domaine", DOMAINES, key="domaine", help="D'autres domaines arriveront avec T6.")
+    contrat = st.radio("Contrat visé", CONTRATS, horizontal=True, key="contrat")
+    regions = st.multiselect(
+        "Régions", all_regions, placeholder="Toutes les régions collectées", key="regions"
+    )
+    query = st.text_input(
+        "Mot-clé (titre ou entreprise)", placeholder="ex. python, Arkéa…", key="query"
+    )
+    max_age = st.slider("Publiées il y a moins de (jours)", 7, 60, step=7, key="max_age")
     only_data = st.toggle(
         "Seulement les offres data",
-        value=True,
+        key="only_data",
         help="Filtre v0 sur le titre, en attendant le classifieur T13. "
         "Désactivé : toutes les offres renvoyées par la recherche « data » d'Adzuna (bruitées).",
     )
