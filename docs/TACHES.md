@@ -52,6 +52,9 @@
 **Comptes (optionnels, D14) : le mode démo anonyme reste le parcours par défaut**
 - [ ] T19 — **Données factices vs vraies offres** : dans `fake_data`, `date_collecte` est une date alors que les offres Adzuna l'ont en texte → l'app plante sur les données factices (`offers['date_collecte'].max()[:10]`, dernière ligne de `streamlit_app.py`) et elles n'ont pas `region_requete`. Aligner l'un ou l'autre
 
+**Favoris**
+- [ ] T54 — 🔗T48,T40 **Mettre des offres en favoris** (connecté seulement, D14) : bouton ☆/★ sur chaque offre de la couche bleue (popup ou liste) et sur chaque entreprise de la couche orange ; table `favoris` dans la base des comptes (`radar/accounts.py` : utilisateur, type offre/entreprise, `offre_id` ou `siret`, date, note libre facultative) ; section « Mes favoris » dans la barre latérale (lien vers l'annonce, statut « candidaté » à cocher) ; en mode anonyme, favoris gardés dans `st.session_state` pour la session seulement. Une offre expirée reste en favori avec la mention « n'est plus en ligne ». « Supprimer mon compte » efface aussi les favoris. Tests dans `tests/test_accounts.py`. Bonus pour le pitch : le statut « candidaté » / « réponse reçue » est le début des **vrais retours** qui permettront de réentraîner le modèle de réponse (D6, L15)
+
 ## 🟢 P3 — Bonus (seulement si le P2 est fini)
 
 - [ ] T45 — Dépôt du CV (PDF) → compétences → composante d'adéquation
