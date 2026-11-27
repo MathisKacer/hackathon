@@ -74,10 +74,10 @@
 ## 🔵 En cours
 
 - [ ] T29 — 🔗T28, scores régénérés par @mathis (`collect_lbb.py` puis `build_all.py`) **App : `c_embauche` avec La Bonne Boîte** (D27). Dans `radar/spontaneous.py › COMPONENTS`, renommer le curseur « Besoin attendu » (ex. « Potentiel d'embauche ») et corriger l'explication : « établissements signalés par La Bonne Boîte (France Travail) en tête, classés par potentiel d'embauche ; sinon estimation à partir des offres et de l'effectif ». Dans la liste orange, petit badge « La Bonne Boîte » quand `c_embauche_source == "la_bonne_boite"` — @emma (reprise à la place de @maxence, qui ne l'avait pas commencée)
-- [ ] T55 — 🔗T40 **Suggesteur de ville** : on tape le nom de la ville et on la valide dans une liste déroulante « Ville (code postal) » (toutes les communes de France, geo.api.gouv.fr, cache disque ; repli sur les communes du référentiel hors ligne) au lieu d'une adresse libre — @maxence
 
 ## ✅ Fait
 
+- [x] T55 — 🔗T40 **Suggesteur de ville** : on tape le nom de la ville et on la valide dans une liste déroulante « Ville (code postal) » — @maxence → `radar/communes.py` (35 493 choix, geo.api.gouv.fr, cache 30 j, repli référentiel), clé de profil `ville` (remplace `adresse`) ; D28
 - [x] T28 — **`c_embauche` réel** : La Bonne Boîte v2 (`scripts/collect_lbb.py`, 1 736 établissements data, 30 appels) en tête, proxy pour les autres (`radar/score/embauche.py`, D27) — @emma
 - [x] T24 — La Bonne Boîte → composante probabilité d'embauche : faite dans T28 — @emma
 - [x] T43 — **Fiche entreprise** : panneau « 🔎 Fiche entreprise » sous la liste orange (`app/fiche_ui.py`, données `radar/fiche.py`) : identité, pourquoi elle est recommandée (colonne `explication` de T32 si présente + décomposition du score), besoin dans le domaine avec **niveau de preuve** et intervalle crédible à 90 %, offres récentes (par SIREN), historique BODACC, adresse et liens (Annuaire, carte, BODACC). Sélecteur de toute la liste avec recherche par nom — @celia

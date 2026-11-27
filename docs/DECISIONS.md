@@ -14,6 +14,14 @@
 
 ---
 
+### D28 — Suggesteur de ville : liste « Ville (code postal) » au lieu d'une adresse libre (2026-11-27, @maxence)
+**Contexte :** T55 : avec une adresse libre, une faute de frappe ou un homonyme (« Saint-Martin ») donnait un mauvais lieu ou « adresse introuvable ». On veut taper le nom de la ville et la **valider dans une liste déroulante** avec son code postal.
+**Décision :** `radar/communes.py`. Liste de **toutes les communes** via l'API Découpage administratif (geo.api.gouv.fr, sans clé) : **un seul appel** (≈ 4,8 Mo) gardé 30 jours dans le cache disque, une ligne par (commune, code postal) = 35 493 choix, libellé « Nom (CP) », triés par population (les grandes villes sortent en premier). Dans l'app, un `st.selectbox` où l'on **tape pour filtrer** (natif dans Streamlit), clé `ville` dans le profil (options = les libellés). Point de départ = **centre de la commune**. Réseau coupé → repli sur les communes du référentiel entreprises.
+**Alternatives écartées :** champ texte + liste de suggestions recalculée à chaque frappe via l'API de complétion de la Géoplateforme (un appel réseau par recherche et deux widgets à manipuler) ; garder l'adresse à la rue (précision inutile pour un rayon de 5 à 100 km, et source d'erreurs).
+**Conséquences :** l'ancienne clé de profil `adresse` disparaît (profils enregistrés : il faut rechoisir sa ville une fois). Paris, Lyon et Marseille : un seul centre pour tous les arrondissements. `radar/geocode.py` reste disponible mais l'app ne l'utilise plus.
+
+---
+
 ### D27 — `c_embauche` : La Bonne Boîte d'abord, proxy ensuite (2026-11-27, @emma)
 **Contexte :** T28 / L11. `c_embauche` était un proxy (intensité data × effectif local, D13) qui favorise les gros établissements. La Bonne Boîte v2 donne un vrai `hiring_potential` par SIRET et par métier, fondé sur les déclarations d'embauche. Mais pour les métiers data, elle ne connaît que 1 736 établissements en France (1 331 dans notre référentiel de 406 266, soit 0,3 %).
 **Décision :** `radar/score/embauche.py`. Un établissement signalé par La Bonne Boîte pour un code ROME **non ambigu** du domaine passe **devant** tous les autres (être listé est un signal d'embauche en soi), et ces établissements sont classés entre eux par `lbb_potentiel` (max sur les métiers). Les autres gardent l'ordre du proxy, dans la partie basse de l'échelle, dont la taille est la part d'établissements sans La Bonne Boîte. `c_embauche_source` indique la source ligne par ligne, et `lbb_potentiel` garde la valeur brute (pour la fiche entreprise). Collecte : `scripts/collect_lbb.py` (30 appels, cache disque), puis `build_all.py`. Sans `data/raw/lbb.parquet`, le comportement d'avant est conservé (proxy seul, avertissement).

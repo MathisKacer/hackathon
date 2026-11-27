@@ -4,6 +4,30 @@
 
 ---
 
+## 2026-11-27 — T55 : suggesteur de ville
+
+**Fait :**
+- Tâche ajoutée à ma demande (T55) : on tape le nom de la ville et on la **valide dans une liste déroulante « Ville (code postal) »**, au lieu d'une adresse libre.
+- `radar/communes.py` : toutes les communes de France via geo.api.gouv.fr (un seul appel, cache disque 30 jours), une ligne par (commune, code postal), triées par population ; homonymes partageant un code postal rendus uniques ; repli hors ligne sur les communes du référentiel.
+- App : `st.selectbox` « Ta ville » (on tape pour filtrer), clé de profil `ville` (remplace `adresse`), point de départ = centre de la commune ; textes « saisis ton adresse » remplacés.
+- Décision **D28**.
+
+**Fichiers touchés :**
+- `radar/communes.py` (nouveau), `tests/test_communes.py` (nouveau, 3 tests), `app/streamlit_app.py`, `docs/DECISIONS.md`, `docs/ARCHITECTURE.md`, `docs/TACHES.md`
+
+**Résultats / chiffres clés :**
+- 35 493 choix (34 969 communes). AppTest : premier affichage 13 s (téléchargement de la liste, ensuite en cache), Rennes (35000) → 64 offres, 4 346 entreprises 🟠 ; Lyon (69003) → 459 offres, 12 972 entreprises.
+- 269 tests OK, ruff OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- Les profils enregistrés avec une `adresse` doivent rechoisir leur ville une fois.
+- Paris, Lyon, Marseille : tous les codes postaux pointent sur le même centre (amélioration possible : arrondissements municipaux).
+
+**Prochaine étape :**
+- Choisir la tâche suivante (T26 familles de marque, T34 validation…).
+
+---
+
 ## 2026-11-27 — T51 : recruteurs LBA dans la couche orange
 
 **Fait :**
