@@ -219,6 +219,15 @@ if not spontaneous.empty:
     # T65 (D32) : palier de priorité en mots et en couleurs, parmi les résultats affichés.
     spontaneous = add_tiers(spontaneous)
 
+# T76 : candidatures de la recherche en cours, pour les fiches (site ou entreprise) ouvertes
+# depuis la recherche d'entreprises ou la liste des sites
+if place is not None:
+    st.session_state["_candidatures"] = spontaneous
+    st.session_state["_candidatures_ctx"] = {"lieu": place.label, "rayon": rayon}
+else:
+    st.session_state.pop("_candidatures", None)
+    st.session_state.pop("_candidatures_ctx", None)
+
 # Connecté : la recherche est enregistrée (« Mes recherches », page Mon espace).
 record_search(
     PROFILE_KEYS,

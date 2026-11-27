@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-11-27 — Tâche T76 : candidature spontanée dans les fiches
+
+**Fait :**
+- `offer_signal` sorti du popup de la carte (même texte) et affiché dans la fiche site (« Candidature spontanée · … »).
+- Explorer garde les candidatures de la recherche en cours (`_candidatures`, `_candidatures_ctx`) : une fiche site ouverte depuis la recherche ou la liste des sites retrouve palier, score, distance, explication.
+- Fiche entreprise : bloc « Candidature spontanée » (sites dans la recherche, le mieux classé, les suivants, bouton vers sa fiche, famille ; messages si aucun site ou pas de ville).
+
+**Fichiers touchés :**
+- `app/carte.py`, `app/fiche_ui.py`, `app/vues/explorer.py`, `tests/test_fiche.py`, `docs/*`
+
+**Résultats / chiffres clés :**
+- Orange autour de Rennes : 15 sites dans la recherche, le mieux classé « Cible prioritaire ». 349 tests OK.
+
+---
+
 ## 2026-11-27 — Tâche T73 : effectifs par site et par entreprise
 
 **Fait :**

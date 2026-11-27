@@ -17,6 +17,7 @@ from functools import partial
 
 import pandas as pd
 import streamlit as st
+from carte import _family_html, _tier_html, offer_signal
 from commun import CHANCE_HELP, get_place
 from favoris import star_button
 from style import LINK_STYLE
@@ -124,6 +125,7 @@ def _why(r: pd.Series) -> None:
     if r.get("score") is None or pd.isna(r.get("score")):
         return  # entreprise ouverte depuis la recherche : pas de score final (ni distance)
     st.markdown("#### Pourquoi elle est recommandée")
+    st.markdown(f"**Candidature spontanée** · {offer_signal(r)}")  # T76 : comme sur la carte
     explication = _value(r.get("explication"))  # T32 (@mathis), si disponible
     if explication:
         st.info(explication)
@@ -286,6 +288,8 @@ def fiche_content(siret: str, row: pd.Series | None = None, domaine: str | None 
     """
     c = _company(siret)
     c = c if c is not None else pd.Series(dtype=object)
+    if row is None:  # T76 : ouverte depuis la recherche ou la liste des sites
+        row = _candidature_row(siret)
     if row is None:
         s = fiche.load_scores(siret, domaine) if domaine else None
         parts = [x for x in (c, s) if x is not None and not x.empty]
@@ -345,6 +349,77 @@ def _on_site_click(siren: str, key: str) -> None:
         _go(("site", sirets[cells[0][0]]))
 
 
+# --- Candidature spontanée dans les fiches (T76) --------------------------------------------
+
+
+def _candidatures() -> pd.DataFrame:
+    """Candidatures spontanées de la recherche en cours (posées par la page Explorer)."""
+    df = st.session_state.get("_candidatures")
+    return df if isinstance(df, pd.DataFrame) else pd.DataFrame()
+
+
+def _candidature_row(siret: str) -> pd.Series | None:
+    df = _candidatures()
+    if df.empty or "siret" not in df:
+        return None
+    hit = df[df["siret"].astype(str) == str(siret)]
+    return hit.iloc[0] if not hit.empty else None
+
+
+def _company_candidature(siren: str) -> None:
+    """Fiche entreprise : ses sites dans la recherche en cours, le mieux classé, le signal."""
+    st.markdown("#### Candidature spontanée")
+    df, ctx = _candidatures(), st.session_state.get("_candidatures_ctx")
+    if df.empty or ctx is None:
+        st.caption(
+            "Choisis une ville dans Explorer pour voir si ses sites sont de bonnes cibles "
+            "de candidature spontanée autour de toi."
+        )
+        return
+    sirens = df["siren"] if "siren" in df else df["siret"].astype(str).str[:9]
+    mine = df[sirens.astype(str) == str(siren)]
+    if mine.empty:
+        st.caption(
+            f"Aucun de ses sites n'est une cible dans ta recherche ({ctx['lieu']}, "
+            f"{ctx['rayon']} km) : soit ils sont hors du rayon, soit l'entreprise a déjà "
+            "une offre pour ton contrat (voir l'onglet Offres)."
+        )
+        return
+    best = mine.iloc[0]
+    n = len(mine)
+    st.markdown(
+        f"**{n} site{'s' if n > 1 else ''}** dans ta recherche ({ctx['lieu']}, {ctx['rayon']} km)."
+        f" Le mieux classé : **{_site_label(best)}** · {_tier_html(best)} · {offer_signal(best)}",
+        unsafe_allow_html=True,
+    )
+    fam = _family_html(best)
+    if fam:
+        st.markdown(fam, unsafe_allow_html=True)
+    others = mine.iloc[1:6]
+    for _, o in others.iterrows():
+        st.markdown(
+            f"· {_site_label(o)} — {o['distance_km']:.1f} km · {_tier_html(o)}",
+            unsafe_allow_html=True,
+        )
+    if n > 6:
+        st.caption(f"… et {n - 6} autres sites dans ta recherche.")
+    st.button(
+        "Voir la fiche du mieux classé",
+        key=f"vers_meilleur_{siren}",
+        icon=":material/open_in_new:",
+        on_click=_go,
+        args=(("site", str(best["siret"])),),
+    )
+
+
+def _site_label(r: pd.Series) -> str:
+    etab = r.get("nom_etablissement")
+    commune = str(r.get("commune") or "").title()
+    if isinstance(etab, str) and etab and etab != r.get("nom"):
+        return f"{etab} ({commune})" if commune else etab
+    return f"site de {commune}" if commune else str(r.get("nom") or "site")
+
+
 def _company_headcount(s: dict) -> None:
     """Taille de l'entreprise entière (T73) : fourchette officielle SIRENE, tous sites."""
     if s.get("tranche_entreprise"):
@@ -399,6 +474,7 @@ def company_content(siren: str, domaine: str | None = None) -> None:
         },
         key=f"fav_entreprise_{siren}",
     )
+    _company_candidature(siren)
 
     st.markdown("#### Offres de l'entreprise (tous ses sites)")
     offers = _offers(siren, None)

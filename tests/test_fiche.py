@@ -349,3 +349,69 @@ open_fiche("11111111100029", None, "data")
     at.run()
     assert any(m.value.startswith("Fait partie de") for m in at.markdown)
     st.cache_data.clear()
+
+
+def test_candidature_info_in_fiches(tmp_path, monkeypatch):
+    """T76 : la fiche entreprise et une fiche site ouverte d'ailleurs reprennent la candidature
+    spontanée de la recherche en cours (palier, signal), comme la fenêtre de la carte."""
+    import streamlit as st
+    from streamlit.testing.v1 import AppTest
+
+    from radar import fiche
+
+    p = _sites_file(tmp_path)
+    real_sites = fiche.company_sites
+    monkeypatch.setattr(
+        fiche,
+        "company_sites",
+        lambda siren, lat=None, lon=None: real_sites(siren, lat, lon, path=p),
+    )
+    monkeypatch.setattr(
+        fiche,
+        "load_company",
+        lambda siret: pd.Series({"siret": siret, "siren": siret[:9], "nom": "ACME"}),
+    )
+    monkeypatch.setattr(fiche, "company_offers", lambda siren, siret: pd.DataFrame())
+    monkeypatch.setattr(fiche, "bodacc_history", lambda siren: pd.DataFrame())
+    st.cache_data.clear()
+    cands = pd.DataFrame(
+        {
+            "siret": ["11111111100029", "11111111100037"],
+            "siren": ["111111111", "111111111"],
+            "nom": ["ACME", "ACME"],
+            "nom_etablissement": ["AGENCE RENNES", "AGENCE BREST"],
+            "commune": ["RENNES", "BREST"],
+            "distance_km": [1.2, 30.0],
+            "score": [0.7, 0.4],
+            "palier": [1, 3],
+            "n_offres_domaine_siren": [2, 2],
+        }
+    )
+    script = """
+import sys
+from pathlib import Path
+import streamlit as st
+sys.path.insert(0, str(Path.cwd() / "app"))
+from fiche_ui import open_fiche
+open_fiche(st.session_state.get("s"), None, "data", siren=st.session_state.get("e"))
+"""
+    at = AppTest.from_string(script, default_timeout=30)
+    at.session_state["_candidatures"] = cands
+    at.session_state["_candidatures_ctx"] = {"lieu": "Rennes", "rayon": 20}
+    at.session_state["e"] = "111111111"
+    at.run()
+    assert not at.exception
+    assert any("**2 sites** dans ta recherche (Rennes, 20 km)" in m.value for m in at.markdown)
+    assert any(
+        "Cible prioritaire" in m.value and "aucune pour ton contrat" in m.value for m in at.markdown
+    )
+    site = AppTest.from_string(script, default_timeout=30)
+    site.session_state["_candidatures"] = cands
+    site.session_state["_candidatures_ctx"] = {"lieu": "Rennes", "rayon": 20}
+    site.session_state["s"] = "11111111100029"  # ouverte sans ligne de liste
+    site.run()
+    assert not site.exception
+    assert any(
+        m.value.startswith("**Candidature spontanée** · 2 offres du domaine") for m in site.markdown
+    )
+    st.cache_data.clear()

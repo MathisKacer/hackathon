@@ -67,6 +67,16 @@ def _tier_html(r: pd.Series) -> str:
     )
 
 
+def offer_signal(r: pd.Series) -> str:
+    """Signal de candidature spontanée (aussi affiché dans les fiches, T76)."""
+    n_dom = int(r.get("n_offres_domaine_siren", r.get("n_offres_domaine", 0)) or 0)
+    return (
+        f"{n_dom} offre{'s' if n_dom > 1 else ''} du domaine, mais aucune pour ton contrat"
+        if n_dom
+        else "aucune offre publiée : besoin estimé d'après le secteur et la taille"
+    )
+
+
 def _company_popup(r: pd.Series) -> str:
     """Fiche courte d'une entreprise de la couche orange (texte échappé)."""
     name = r.get("nom_etablissement") if pd.notna(r.get("nom_etablissement")) else None
@@ -78,12 +88,7 @@ def _company_popup(r: pd.Series) -> str:
     ]
     if pd.notna(r.get("tranche_effectif")):
         lines.append(f"Effectif : {html.escape(str(r['tranche_effectif']))}")
-    n_dom = int(r.get("n_offres_domaine_siren", r.get("n_offres_domaine", 0)) or 0)
-    signal = (
-        f"{n_dom} offre{'s' if n_dom > 1 else ''} du domaine, mais aucune pour ton contrat"
-        if n_dom
-        else "aucune offre publiée : besoin estimé d'après le secteur et la taille"
-    )
+    signal = offer_signal(r)
     url = html.escape(r["url_annuaire"], quote=True)
     return (
         f"<div style='font-family:sans-serif;font-size:13px'>"
