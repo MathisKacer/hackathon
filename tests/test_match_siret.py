@@ -96,3 +96,46 @@ def test_complete_matches_only_touches_rows_to_match():
     assert out.loc["b", "siret_match"] == "99999999900011"  # SIRET de la source conservé
     assert out.loc["b", "match_methode"] == "siret_source"
     assert out.loc["b", "siren_match"] == "999999999"
+
+
+# --- T25 : variantes de noms, cascade ------------------------------------------------------
+
+ENT2 = pd.DataFrame(
+    {
+        "siret": ["70000000000001", "71000000000001", "72000000000001", "73000000000001"],
+        "siren": ["700000000", "710000000", "720000000", "730000000"],
+        "nom": ["SOCIETE FRANCAISE DU RADIOTELEPHONE - S.F.R", "ATOS", "ATOS FRANCE",
+                "MOONGY"],
+        "nom_etablissement": [None, None, None, "AGAP2"],
+        "sigle": [None, None, None, None],
+        "categorie": ["GE", "PME", "GE", "GE"],
+        "naf": ["61.20Z", "62.02A", "62.02A", "71.12B"],
+        "effectif_estime": [5000, 14, 3000, 400],
+        "lat": [48.11, 43.0, 48.12, 48.11],  # la PME « ATOS » est à ~600 km
+        "lon": [-1.68, 3.0, -1.67, -1.68],
+    }
+)  # fmt: skip
+
+
+def _match2(name):
+    return match_offers(pd.DataFrame([_offer(name)]), ENT2).set_index("offre_id").loc[name]
+
+
+def test_alias_from_legal_name_part():
+    r = _match2("SFR")
+    assert r["siret_match"] == "70000000000001" and r["match_methode"] == "alias"
+
+
+def test_cascade_when_exact_homonym_is_rejected():
+    r = _match2("Atos")  # PME homonyme lointaine refusée → préfixe ATOS FRANCE
+    assert r["siret_match"] == "72000000000001" and r["match_methode"] == "prefixe"
+
+
+def test_enseigne():
+    assert _match2("agap2")["siret_match"] == "73000000000001"
+
+
+def test_dotted_acronyms_survive_normalization():
+    assert normalize("S.F.R") == "sfr"
+    assert normalize("E.T.A.I.") == "etai"
+    assert normalize("Ingénieur H/F") == "ingenieur h f".replace(" h f", "")

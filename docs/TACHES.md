@@ -78,12 +78,12 @@
 ## 🔵 En cours
 
 - [ ] T49 — 🔗T48 **Historique des recherches** (connecté seulement) : chaque recherche enregistrée (date, paramètres, nombre de résultats, top 5 SIRET) ; liste « Mes recherches » avec bouton « Relancer » ; en anonyme, rien n'est écrit (`st.session_state` seulement) — @celia
-- [ ] T25 — 🔗T21 **Rattrapage du rapprochement** (L6, L9) : pour les noms non rapprochés (~1 200), API Recherche d'entreprises (`/search?q=<nom>` + proximité ; gère sigles et noms commerciaux, ~7 req/s) + table d'alias manuelle pour les 30 plus gros émetteurs (SFR, EY, Pennylane…) ; objectif : SFR & co ne sortent plus en orange — @mathis
-- [ ] T50 — 🔗T11/T12,T20,T30 **Pipeline `scripts/build_all.py`** : brut → `offres.parquet` → `scores.parquet` ; brancher l'app sur les vraies données (**jalon V1**) — @mathis
 - [ ] T17 — 🔗T11 **Partager les données LBA sur S3** (`offres_raw/lba.parquet`, `lba_recruteurs.parquet`) : relancer `scripts/collect_lba.py` sur Onyxia puis `scripts/share_s3.py` — @maxence
 
 ## ✅ Fait
 
+- [x] T25 — 🔗T21 **Rattrapage du rapprochement** (L6, L9) : pour les noms non rapprochés (~1 200), API Recherche d'entreprises (`/search?q=<nom>` + proximité ; gère sigles et noms commerciaux, ~7 req/s) + table d'alias manuelle pour les 30 plus gros émetteurs (SFR, EY, Pennylane…) ; objectif : SFR & co ne sortent plus en orange — @mathis → local (cascade, alias, enseigne, sigles à points, préférence ETI/GE) : 63,4 % → 65,1 %, SFR/Atos/LCL/GMF/Geodis retrouvés ; API écartée (voir L6)
+- [x] T50 — 🔗T11/T12,T20,T30 **Pipeline `scripts/build_all.py`** : brut → `offres.parquet` → `scores.parquet` ; brancher l'app sur les vraies données (**jalon V1**) — @mathis → `uv run python scripts/build_all.py` (51 s, schémas vérifiés, `--sirene`, `--share`)
 - [x] T48 — **Connexion facultative + profil** (D14) : mode démo anonyme par défaut ; bloc compte dans la barre latérale (connexion, création, enregistrer le profil, déconnexion, suppression) ; `radar/accounts.py` + `app/compte.py`, SQLite `data/app/radar.db`, mots de passe scrypt. ⚠️ **T40/T41/T42** : donner une `key` à chaque nouveau réglage et l'ajouter à `PROFILE_KEYS` dans `app/streamlit_app.py` — @celia
 - [x] T33 — Modèle gamma-Poisson (nombre d'offres du domaine, avec l'effectif comme exposition) ; comparer au bêta-binomial → fait dans T30 (D13)
 - [x] T17 — 🔗T11 **Partager les données LBA sur S3** (`offres_raw/lba.parquet`, `lba_recruteurs.parquet`) : relancer `scripts/collect_lba.py` sur Onyxia puis `scripts/share_s3.py` — @maxence → déposés sur S3 (espace privé de Maxence, liens 24 h envoyés en MP) ; ⚠️ `share_s3.py` se lance avec `python3` (système Onyxia), pas `uv run` (botocore absent du venv)

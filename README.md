@@ -37,6 +37,12 @@ curl --create-dirs -o data/raw/offres_raw/adzuna.parquet "https://minio.lab.sspc
 - Lien expiré (erreur 403 ou fichier de quelques octets) → demander un nouveau lien à Mathis.
 - Ne jamais partager publiquement ces liens ni ces fichiers.
 
+## Reconstruire les données (si tu as les offres brutes)
+
+```bash
+uv run python scripts/build_all.py   # entreprises → offres classées et rapprochées → scores (~1 min)
+```
+
 ## Lancer l'application
 
 ```bash

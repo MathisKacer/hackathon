@@ -14,6 +14,12 @@
 
 ---
 
+### D15 — Pipeline en une commande et rattrapage local du rapprochement (2026-11-27, @mathis)
+**Contexte :** T50 (enchaîner les étapes sans erreur d'ordre) et T25 (L6 : des entreprises comme SFR apparaissaient « sans offre », donc à tort dans la couche orange).
+**Décision :** `scripts/build_all.py` enchaîne SIRENE (si absent) → `classify_offres` (T13) → `match_offres` (T21) → `build_scores` (T30) et vérifie chaque fichier contre son schéma ; la collecte reste à part (quotas). Rattrapage **local** dans `match_siret.py` : candidats en **cascade** (si un candidat est refusé, on essaie le suivant : « Atos » → PME homonyme lointaine refusée → ATOS FRANCE), noms sans espaces, **morceaux du nom légal** (« … - S.F.R »), **enseignes**, sigles à points recollés avant normalisation, préférence ETI/GE entre homonymes ; `alias`/`enseigne` refusés au-delà de 50 km (≈ 1 sur 2 juste), préfixe lointain refusé pour les noms de 3 lettres.
+**Alternatives écartées :** l'API Recherche d'entreprises pour les noms restants : ils correspondent surtout à des entreprises hors référentiel (< 10 salariés ou effectif inconnu), donc sans effet sur la couche orange ni sur le score, pour une dépendance réseau en plus.
+**Conséquences :** 65,1 % des offres d'employeurs rapprochées (63,4 % avant), 523 entreprises avec au moins une offre data (503 avant). Reste une erreur connue (Groupe Casino → Casino de Paris).
+
 ### D14 — Comptes facultatifs : démo anonyme par défaut, connexion pour garder profil et historique (2026-11-27, @celia)
 **Contexte :** l'équipe veut pouvoir se connecter pour retrouver son profil et ses recherches, sans casser la contrainte de `PROJET.md` : l'appli marche en démo **sans données saisies par les utilisateurs**.
 **Décision :** deux modes. **Anonyme** (par défaut) : aucune écriture, tout reste dans `st.session_state`. **Connecté** (facultatif) : comptes et profils dans une base SQLite `data/app/radar.db` (hors Git). Mots de passe hachés avec **scrypt** (bibliothèque standard, sel par compte, comparaison à temps constant). Code serveur dans `radar/accounts.py` (testable sans Streamlit), bloc de la barre latérale dans `app/compte.py`. Le **profil = les valeurs des widgets de recherche** listés dans `PROFILE_KEYS` (`app/streamlit_app.py`) : chaque widget porte une `key`, le profil est rechargé dans `st.session_state` à la connexion, et les valeurs devenues invalides (région disparue…) sont ignorées. T49 ajoutera une table `recherches`.

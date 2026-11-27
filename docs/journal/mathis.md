@@ -2,6 +2,21 @@
 
 ---
 
+## 2026-11-27 — T50 (pipeline) + T25 (rattrapage du rapprochement)
+
+**Fait :**
+- `scripts/build_all.py` : une commande, 51 s, schémas vérifiés à chaque étape ; `--sirene`, `--share`.
+- `match_siret.py` : cascade de candidats, alias (morceaux du nom légal), enseignes, noms sans espaces, sigles à points (« S.F.R » perdait son « F » avec les mots vides « H/F » : bug corrigé), préférence ETI/GE entre homonymes. Décision **D15**. 4 tests en plus (137 au total).
+
+**Résultats / chiffres clés :**
+- Rapprochement : 63,4 % → **65,1 %** ; entreprises avec offre data : 503 → **523**. SFR, Atos, LCL, GMF, Geodis, Rexel, Radio France retrouvés ; **SFR n'apparaît plus dans la couche orange**.
+- API Recherche d'entreprises testée puis écartée : les noms restants sont surtout hors référentiel (L6 mise à jour).
+
+**Points d'attention pour l'équipe :**
+- Après toute nouvelle collecte (LBA, Adzuna demain) : `uv run python scripts/build_all.py`.
+
+---
+
 ## 2026-11-27 — Limites connues + tâches pour les lever
 
 **Fait :**
