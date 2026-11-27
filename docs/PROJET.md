@@ -1,31 +1,59 @@
-# Projet
+# Projet — Radar
 
 > Document de référence : le « pourquoi » et le « quoi ». À relire quand on hésite sur une priorité.
 
 ## Équipe
 
-| Prénom | Rôle / spécialité | Journal |
+| Prénom | Rôle (voir `TACHES.md`) | Journal |
 |---|---|---|
 | Mathis | _TBD_ | [journal](journal/mathis.md) |
 | _…_ | | |
 
-## Contexte et problématique
+## Contexte
 
-_TBD — le pitch._
+Hackathon étudiant ENSAI, thème : **« une application qui change la vie des étudiants »**.
+Contrainte forte : l'appli doit marcher dès la démo **sans données saisies par les utilisateurs**. On n'utilise que l'open data, les API publiques ou les documents fournis par l'utilisateur lui-même (son CV).
 
-## Objectifs
+## Problème
 
-1. _TBD_
+Les stages data intéressants sont rarement publiés. Les étudiants candidatent sur les mêmes offres visibles, alors que beaucoup d'entreprises proches recrutent des profils data sans publier d'offre de stage. Ce sont les meilleures cibles pour une **candidature spontanée**, mais personne ne sait les trouver.
 
-## Livrables attendus
+## Solution : Radar
 
-- [ ] _TBD (ex. code, app/dashboard, slides, rapport)_
+Trouver les entreprises proches de l'étudiant qui ont un **besoin data** (elles recrutent ces profils) mais **pas d'offre de stage visible** → les classer et expliquer pourquoi.
+
+### Parcours utilisateur
+1. L'étudiant saisit une ville ou une adresse, un rayon, et éventuellement des secteurs et une taille d'entreprise (et, en option, il dépose son CV).
+2. Il obtient une carte et une liste d'entreprises classées par score.
+3. Chaque entreprise a une fiche : décomposition du score (pourquoi elle est recommandée), offres data récentes, effectif, croissance, liens.
+4. Bonus : génération d'une lettre de candidature spontanée personnalisée (LLM).
+
+### Cœur statistique (différenciation)
+- **Intensité data** : part des offres de l'entreprise qui sont des offres data, rétrécie vers la moyenne de son secteur NAF par un modèle bêta-binomial (bayésien empirique). Une entreprise avec 1 offre data sur 1 ne passe donc pas devant une entreprise avec 8 sur 10.
+- **Opportunité cachée** : recrute des profils data, mais aucune offre de stage visible.
+- **Dynamisme** : croissance (CA, effectif), probabilité d'embauche.
+- **Adéquation** : distance ou temps de trajet, secteur, taille, compétences du CV.
+- **Score** : combinaison pondérée, poids réglables par l'utilisateur, chaque contribution affichée. Pas de modèle supervisé (pas de vérité terrain), donc la transparence est assumée.
+
+### Ce qui nous distingue de La Bonne Boîte
+La Bonne Boîte prédit des embauches en CDI/CDD pour les demandeurs d'emploi, par métier, à partir des déclarations d'embauche. Elle ne mesure ni la **maturité data** d'une entreprise, ni les **stages**, et n'explique pas son score. Radar s'adresse aux étudiants, mesure le besoin data, explique chaque recommandation et peut utiliser La Bonne Boîte comme simple variable d'entrée.
+
+## Livrables
+
+- [ ] Application démo (Streamlit) fonctionnant sur un cache Bretagne pré-calculé
+- [ ] Slides de pitch (avec la méthodologie du score et ses limites)
+- [ ] Code reproductible (pipeline de collecte → scores)
 
 ## Données
 
-| Source | Description | Accès / emplacement |
-|---|---|---|
-| _TBD_ | | |
+Voir [`SOURCES.md`](SOURCES.md). ⚠️ L'API Offres d'emploi France Travail est actuellement suspendue.
+
+## Risques connus
+
+- Rapprochement offres ↔ SIRET approximatif (offres anonymes, cabinets) → appariement flou nom + commune, avec **taux de rapprochement affiché**.
+- Pas d'historique des offres → lancer une collecte quotidienne dès maintenant.
+- Signal partiel (les stages se publient surtout sur des plateformes sans API) → l'assumer au pitch et croiser plusieurs sources.
+- RGPD : pas d'e-mails ni de noms de personnes (les dirigeants sont dans SIRENE : ne pas les afficher), uniquement des sites et pages carrière.
 
 ## Critères d'évaluation du jury
 
@@ -36,7 +64,3 @@ _TBD — le pitch._
 | Échéance | Jalon |
 |---|---|
 | _TBD_ | |
-
-## Idées en vrac / pistes non retenues
-
-- _…_

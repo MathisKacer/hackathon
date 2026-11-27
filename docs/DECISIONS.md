@@ -14,6 +14,11 @@
 
 ---
 
+### D2 — Ne pas dépendre de l'API Offres d'emploi France Travail (2026-11-27, @mathis)
+**Contexte :** l'API n'est plus exposée sur francetravail.io (accès suspendu, à demander via un formulaire).
+**Décision :** le signal « offres » repose sur Adzuna (dont `top_companies`), l'API La bonne alternance (avec SIRET) et les ATS publics. On demande quand même l'accès à France Travail ; s'il arrive, c'est un bonus.
+**Conséquences :** quota Adzuna serré → collecte ciblée sur la Bretagne avec cache ; volume d'offres à valider dès qu'on a la clé.
+
 ### D1 — Coordination via fichiers Markdown dans le dépôt (2026-11-27, @mathis)
 **Contexte :** plusieurs personnes, chacune avec sa propre session Claude Code, sur le même dépôt.
 **Décision :** `CLAUDE.md` comme règles communes ; `docs/TACHES.md` pour se répartir le travail ; un journal par personne dans `docs/journal/` pour éviter les conflits Git.

@@ -4,10 +4,9 @@ Ce fichier est lu par **toutes** les sessions Claude Code de l'équipe. Plusieur
 
 ## Le projet en bref
 
-> À compléter après le pitch — voir `docs/PROJET.md` pour le détail.
+**Radar** : trouver les entreprises proches d'un étudiant qui ont un besoin data mais pas d'offre de stage visible, pour des candidatures spontanées. Score explicable (bayésien empirique), données ouvertes uniquement. Détails dans `docs/PROJET.md`.
 
-- **Sujet :** _TBD_
-- **Livrable final :** _TBD_
+- **Livrable final :** application Streamlit sur un cache Bretagne + slides de pitch
 - **Deadline :** _TBD_
 
 ## Où se trouve quoi
@@ -15,6 +14,7 @@ Ce fichier est lu par **toutes** les sessions Claude Code de l'équipe. Plusieur
 | Fichier | Rôle | Qui écrit |
 |---|---|---|
 | `docs/PROJET.md` | Pitch, objectifs, livrables, critères du jury | Toute l'équipe (rarement modifié) |
+| `docs/SOURCES.md` | Inventaire des API et données (accès, quotas, statut testé) | Quiconque teste une source |
 | `docs/ARCHITECTURE.md` | Structure technique : modules, données, flux, conventions | Quiconque change la structure |
 | `docs/TACHES.md` | Tableau des tâches (à faire / en cours / fait) avec responsable | Tout le monde, en continu |
 | `docs/DECISIONS.md` | Journal des décisions importantes et de leur justification | Quiconque tranche un choix |

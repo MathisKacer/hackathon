@@ -2,6 +2,23 @@
 
 ---
 
+## 2026-11-27 — T5 : pitch Radar + inventaire des sources
+
+**Fait :**
+- Pitch formalisé dans `docs/PROJET.md` ; architecture proposée et 4 rôles dans `ARCHITECTURE.md` / `TACHES.md`.
+- Inventaire des sources dans `docs/SOURCES.md`, avec de vrais appels sur les API ouvertes.
+
+**Résultats / chiffres clés :**
+- ⚠️ L'API Offres d'emploi France Travail est **suspendue** (plus exposée sur francetravail.io).
+- Recherche d'entreprises : `/near_point` fonctionne ; renvoie NAF, effectif, coordonnées et CA. Dans un rayon de 20 km autour de Rennes : 2 619 établissements en 62.01Z, 1 657 en 62.02A.
+- Géocodage Géoplateforme et BODACC : fonctionnent sans clé.
+- Ni Adzuna ni France Travail ne fournissent de SIRET → rapprochement nécessaire ; La bonne alternance en fournit.
+
+**Prochaine étape :**
+- Créer la clé Adzuna et le jeton La bonne alternance, puis mesurer le volume réel d'offres data dans le 35.
+
+---
+
 ## 2026-11-27 — T0 : mise en place de la coordination
 
 **Fait :**
