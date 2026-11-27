@@ -97,6 +97,10 @@ Voir **D13** dans `DECISIONS.md` (le bêta-binomial initialement prévu a été 
 - **Validation** : l'estimateur retrouve les paramètres sur données simulées (test) ; à faire pour les slides : stabilité du top-k par bootstrap, sensibilité aux poids.
 - **Code** : `radar/score/intensity.py` (modèle), `radar/score/embauche.py` (`c_embauche`, T28), `radar/score/build.py` (assemblage), `scripts/build_scores.py`.
 
+## Explication des recommandations (T32, D29)
+
+`radar/explain.py` → colonne `explication` ajoutée par `rank_spontaneous` (1 000 premières lignes) : « Recommandée car <opportunité cachée> ; <raisons classées par apport au score> » + mise en garde si la région n'est pas collectée. Lue par la fiche (`app/fiche_ui.py`, T43) et le popup orange (`app/streamlit_app.py`).
+
 ## Stack technique
 
 - Python ≥ 3.11, gestion des dépendances avec **uv**

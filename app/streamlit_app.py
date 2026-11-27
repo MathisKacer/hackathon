@@ -175,12 +175,21 @@ def _company_popup(r: pd.Series) -> str:
         f"<div style='font-family:sans-serif;font-size:13px'>"
         f"<b>{title}</b><br><span style='color:#555'>{'<br>'.join(lines)}</span><br>"
         f"<b style='color:{ORANGE}'>Score {r['score']:.2f}</b> · {signal}<br>"
+        f"{_explication_html(r)}"
         f"{_procedure_html(r)}"
         f"{_lbb_html(r)}"
         f"{_p_reponse_html(r)}"
         f"{_score_breakdown_html(r)}"
         f'<a href="{url}" target="_blank" rel="noopener">Annuaire des entreprises</a></div>'
     )
+
+
+def _explication_html(r: pd.Series) -> str:
+    """T32 : « Recommandée car … » (radar/explain.py), en italique, texte échappé."""
+    txt = r.get("explication")
+    if not isinstance(txt, str) or not txt:
+        return ""
+    return f"<i style='color:#333'>{html.escape(txt)}</i><br>"
 
 
 def _lbb_html(r: pd.Series) -> str:

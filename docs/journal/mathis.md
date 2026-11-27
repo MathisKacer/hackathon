@@ -2,6 +2,22 @@
 
 ---
 
+## 2026-11-27 — T32 : explication « Recommandée car … »
+
+**Fait :**
+- `radar/explain.py` (fonction pure, D29) ; une ligne dans `radar/spontaneous.py` (colonne `explication`) ; popup orange (`_explication_html`). La fiche de Celia l'affiche sans modification. 6 tests (`tests/test_explain.py`).
+- Vérification du pipeline après BODACC (Celia) et La Bonne Boîte (Emma) : `collect_lbb.py` + `build_all.py --share`, 6 étapes OK ; fichiers repartagés.
+
+**Résultats / chiffres clés :**
+- Exemple : « Recommandée car elle recrute des profils data (2 offres d'emploi en ligne) mais ne propose aucune offre de stage ; son besoin data, rapporté à sa taille, est parmi les plus élevés (top 1 % des entreprises) ; … ».
+- Paris 50 km : 76 702 entreprises, classement + explications en 0,9 s (4,0 s si on expliquait tout).
+
+**Points d'attention pour l'équipe :**
+- Nouvelle composante de score → ajouter sa raison dans `reasons()`.
+- `recruteur_lba` absent de mes données (pas de `lba_recruteurs.parquet` sur mon pod) : la raison LBA n'a été testée que sur données de test.
+
+---
+
 ## 2026-11-27 — T35/T36 : modèle de réponse démonstrateur
 
 **Fait :**

@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 
 from radar.config import FILES
+from radar.explain import add_explanations
 from radar.procedures import apply_procedures
 
 EARTH_RADIUS_KM = 6371.0
@@ -247,4 +248,5 @@ def rank_spontaneous(
         out = weighted_score(out, applicable_weights(weights, contrat))
     out = apply_procedures(out, contrat, show_liquidation)
     out["url_annuaire"] = out["siret"].map(lambda s: ANNUAIRE_URL.format(siret=s))
-    return out.sort_values(["score", "distance_km"], ascending=[False, True]).reset_index(drop=True)
+    out = out.sort_values(["score", "distance_km"], ascending=[False, True]).reset_index(drop=True)
+    return add_explanations(out, contrat)  # T32 : colonne `explication` (fiche T43, popup)

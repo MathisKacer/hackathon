@@ -72,10 +72,11 @@
 
 ## 🔵 En cours
 
-- [ ] T32 — Explication automatique par entreprise (« recommandée car… ») à partir des contributions au score — — @mathis _(signalé par @celia)_ ; coordination avec T43 (faite) : écrire la phrase dans une colonne **`explication`** (la fiche de T43 l'affiche déjà si elle existe) ; Mathis garde le popup de la carte, le panneau « Fiche entreprise » (`app/fiche_ui.py`) est à Celia
+- _…_
 
 ## ✅ Fait
 
+- [x] T32 — Explication automatique par entreprise (« recommandée car… ») à partir des contributions au score — — @mathis _(signalé par @celia)_ ; coordination avec T43 (faite) : écrire la phrase dans une colonne **`explication`** (la fiche de T43 l'affiche déjà si elle existe) ; Mathis garde le popup de la carte, le panneau « Fiche entreprise » (`app/fiche_ui.py`) est à Celia → `radar/explain.py` (D29), colonne `explication` dans `rank_spontaneous`, popup de la carte
 - [x] T29 — **App : La Bonne Boîte** — curseur « Potentiel d'embauche », colonne ✔ « La Bonne Boîte » dans la liste orange, ligne dans la fenêtre de la carte (D27) — @emma (reprise de @maxence)
 - [x] T55 — 🔗T40 **Suggesteur de ville** : on tape le nom de la ville et on la valide dans une liste déroulante « Ville (code postal) » — @maxence → `radar/communes.py` (35 493 choix, geo.api.gouv.fr, cache 30 j, repli référentiel), clé de profil `ville` (remplace `adresse`) ; D28
 - [x] T28 — **`c_embauche` réel** : La Bonne Boîte v2 (`scripts/collect_lbb.py`, 1 736 établissements data, 30 appels) en tête, proxy pour les autres (`radar/score/embauche.py`, D27) — @emma
