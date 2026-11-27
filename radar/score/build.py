@@ -6,8 +6,8 @@ data/raw/offres_raw/adzuna_couverture.json (couverture de la collecte par régio
 
 Composantes (v0, D13) :
 - c_intensite : rang centile de l'intensité a posteriori (offres du domaine / 100 salariés) ;
-- c_embauche  : rang centile du besoin attendu de l'établissement (intensité × effectif local),
-                en attendant La Bonne Boîte / recruteurs LBA (T24) → `c_embauche_source` ;
+- c_embauche  : La Bonne Boîte d'abord (`lbb_potentiel`), puis le proxy « besoin attendu »
+                (intensité × effectif local) pour les autres → `c_embauche_source` (T28, D27) ;
 - c_dynamisme : 0,5 (neutre) tant que les finances ne sont pas chargées (T22) →
                 `c_dynamisme_disponible`.
 Les établissements d'agences d'intérim / de placement (NAF 78.*) ne sont pas notés.
@@ -23,9 +23,12 @@ import logging
 import numpy as np
 import pandas as pd
 
+from radar.collect.lbb import OUT_FILE as LBB_FILE
+from radar.collect.lbb import best_by_siret
 from radar.config import FILES, PATHS
 from radar.geo import region_of
 from radar.schemas import check_columns
+from radar.score.embauche import embauche_component
 from radar.score.intensity import fit_priors, posterior
 
 log = logging.getLogger(__name__)
@@ -100,7 +103,13 @@ def _siret_counts(offres: pd.DataFrame, domain: str) -> pd.DataFrame:
     return out.fillna(0).astype(int).reset_index()
 
 
-def build_scores(ent: pd.DataFrame, offres: pd.DataFrame, cov: dict[str, float]) -> pd.DataFrame:
+def build_scores(
+    ent: pd.DataFrame,
+    offres: pd.DataFrame,
+    cov: dict[str, float],
+    lbb: pd.DataFrame | None = None,
+) -> pd.DataFrame:
+    """`lbb` : établissements La Bonne Boîte (data/raw/lbb.parquet, T28), ou None → proxy seul."""
     ent = ent[~ent["naf"].fillna("").str.startswith(EXCLUDED_NAF_PREFIX)]
     frames = []
     for domain in SCORED_DOMAINS:
@@ -123,8 +132,9 @@ def build_scores(ent: pd.DataFrame, offres: pd.DataFrame, cov: dict[str, float])
         # Besoin attendu au niveau de l'ÉTABLISSEMENT (intensité de l'entreprise × effectif local) :
         # au niveau entreprise, chaque bureau de La Poste hériterait de 250 000 salariés.
         s["besoin_attendu"] = s["intensite_post"] * s["effectif_estime"].fillna(0) / 100.0
-        s["c_embauche"] = pct_rank(s["besoin_attendu"])
-        s["c_embauche_source"] = "proxy_besoin_attendu"
+        # T28 (D27) : La Bonne Boîte devant, proxy pour les autres (radar/score/embauche.py).
+        lbb_best = best_by_siret(lbb, domain) if lbb is not None else None
+        s = embauche_component(s, lbb_best)
         s["c_dynamisme"] = 0.5
         s["c_dynamisme_disponible"] = False
         frames.append(s)
@@ -140,6 +150,9 @@ def run() -> pd.DataFrame:
     ent = pd.read_parquet(FILES["entreprises"])
     offres = pd.read_parquet(FILES["offres"])
     check_columns(offres, "offres_rapprochees")
-    out = build_scores(ent, offres, load_coverage())
+    lbb = pd.read_parquet(LBB_FILE) if LBB_FILE.exists() else None
+    if lbb is None:
+        log.warning("%s absent : c_embauche = proxy seul (lancer scripts/collect_lbb.py)", LBB_FILE)
+    out = build_scores(ent, offres, load_coverage(), lbb)
     out.to_parquet(FILES["scores"], index=False)
     return out

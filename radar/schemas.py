@@ -134,6 +134,7 @@ SCHEMAS["scores_reels"] = SCHEMAS["scores"] + [
     "volume_suspect",
     "c_embauche_source",
     "c_dynamisme_disponible",
+    "lbb_potentiel",  # T28 : hiring_potential La Bonne Boîte (NaN si absent de LBB)
 ]
 
 # Modèle de réponse RÉEL (T35/T36) : données SIMULÉES (D6), toujours signalées par
