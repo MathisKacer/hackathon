@@ -42,7 +42,6 @@
 
 **Modèle de réponse (démonstrateur, réponses simulées)**
 
-- [ ] T34 — **Validation sans vérité terrain** : stabilité du classement (bootstrap), sensibilité aux poids, cohérence avec La Bonne Boîte et la tension du marché → graphiques pour les slides
 - [ ] T22 — Enrichissement finances (CA N et N-1, via Recherche d'entreprises ou les ratios INPI) → composante dynamisme (L10 : privilégier les ratios INPI en masse, pas 276 000 appels d'API)
 - [ ] T44 — Affichage du **niveau de preuve** (nombre d'offres observées) et du taux de rapprochement global
 
@@ -68,6 +67,7 @@
 
 ## 🔵 En cours
 
+- [ ] T34 — **Validation sans vérité terrain** : stabilité du classement (bootstrap), sensibilité aux poids, cohérence avec La Bonne Boîte et la tension du marché → graphiques pour les slides — @emma
 - _…_
 
 ## ✅ Fait
