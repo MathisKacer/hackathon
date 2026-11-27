@@ -77,10 +77,10 @@
 ## 🔵 En cours
 
 - [ ] T12 — 🔗T10 **Collecteur Adzuna** France entière dans la limite du quota (offres « data » région par région, Bretagne et Île-de-France d'abord, offres de moins de 60 jours) + cache disque + compteur de quota → `data/raw/offres_raw/adzuna.parquet` — @mathis
-- [ ] T5 — **Générateur de données factices** qui respecte les schémas de `ARCHITECTURE.md` (pour que le score et l'app démarrent sans attendre la collecte) — @emma
 
 ## ✅ Fait
 
+- [x] T5 — **Générateur de données factices** : `uv run python scripts/make_fake_data.py` → tous les fichiers du contrat dans `data/` (voir `radar/fake_data.py`) — @emma
 - [x] T4 — **Squelette du dépôt** : `pyproject.toml` (uv), package `radar/`, `radar/config.py`, `.env.example`, ruff, `app/streamlit_app.py` vide — @mathis
 - [x] T0 — Structure de coordination (`CLAUDE.md`, `docs/`) — @mathis
 - [x] T00 — Inventaire et test des sources (`docs/SOURCES.md`), architecture proposée — @mathis

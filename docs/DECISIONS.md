@@ -14,6 +14,12 @@
 
 ---
 
+### D7 — Contrat de données vérifiable en code + données factices (2026-11-27, @emma)
+**Contexte :** T5 doit produire des données qui respectent les schémas de `ARCHITECTURE.md`, et chaque module doit pouvoir vérifier qu'il les respecte aussi.
+**Décision :** `radar/schemas.py` recopie en code les colonnes minimales du tableau de `ARCHITECTURE.md`, avec `check_columns(df, nom)` (les colonnes en plus sont permises). Les offres brutes vont dans `data/raw/offres_raw/<source>.parquet`, comme le prévoit T12. Le générateur factice (`radar/fake_data.py`) est reproductible (graine fixe) et ne décrit que des entreprises inventées : SIRET aléatoires mais valides (clé de Luhn), URL en `example.org`, descriptions marquées `[DONNÉE FACTICE]`.
+**Alternatives écartées :** un générateur sans vérification de schéma (les écarts n'apparaîtraient qu'au branchement des vraies données, à H+8).
+**Conséquences :** si on change un schéma, il faut mettre à jour **le tableau et `schemas.py`**. Les fichiers `scores`, `candidatures_simulees` et `p_reponse` factices ont les bonnes colonnes, mais leurs formules sont provisoires : T30/T31 et T35/T36 les remplaceront.
+
 ### D6 — Modèle de réponse entraîné sur des réponses simulées (2026-11-27, @mathis)
 **Contexte :** l'équipe veut un modèle « qui va répondre à une candidature spontanée », mais aucune donnée ouverte ne contient ces réponses. Le but pour le hackathon : montrer que la chaîne fonctionne.
 **Décision :** les entreprises et leurs variables sont réelles ; seule la réponse est simulée, selon une règle paramétrique (paramètres documentés dans `radar/response/params.yaml`). On entraîne un modèle et on montre la calibration, l'AUC et les paramètres retrouvés.
