@@ -2,6 +2,21 @@
 
 ---
 
+## 2026-11-27 — Accès France Travail
+
+**Fait :**
+- `.env.example` créé ; jeton France Travail OK après souscription aux API.
+- Scopes valides : La Bonne Boîte v2, ROME 4.0 Métiers, Marché du travail (non disponibles : Offres d'emploi, ROMEO, Fiches métiers).
+
+**Résultats / chiffres clés :**
+- La Bonne Boîte v2 renvoie le SIRET et un `hiring_potential` continu, mais elle couvre mal les métiers data fins (Rennes 30 km : 0 pour M1405 et M1419, 31 pour M1811). Limite de débit : erreur 429 à ~3 req/s.
+- Liste des codes ROME 4.0 data dans `SOURCES.md`.
+
+**Points d'attention pour l'équipe :**
+- Copier `FT_SCOPES` depuis `.env.example`/`SOURCES.md` dans votre propre `.env`.
+
+---
+
 ## 2026-11-27 — Modèle de réponse simulé
 
 **Fait :**
