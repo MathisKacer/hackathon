@@ -6,7 +6,7 @@ une entreprise de ce secteur recrute habituellement dans chacun des 5 domaines, 
 d'entreprise et ne voit aucun nom d'entreprise.
 
 Reproductibilité :
-- consigne versionnée (`prompts/grille_domaines_v1.txt`), température 0 ;
+- consigne versionnée (`prompts/grille_domaines_v<N>.txt`, `--consigne`), température 0 ;
 - une réponse par NAF, mise en cache dans `data/processed/llm_grille/<modèle>/<naf>.json` (hors
   Git) : relancer ne refait que les NAF manquants ou invalides ;
 - sortie validée (4 tailles × 5 domaines, notes entières 0–3), sinon nouvel essai.
@@ -31,8 +31,8 @@ from radar.filters import TAILLES
 
 log = logging.getLogger(__name__)
 
-PROMPT_VERSION = "v1"
-PROMPT_FILE = Path(__file__).parent / "prompts" / f"grille_domaines_{PROMPT_VERSION}.txt"
+PROMPT_VERSION = "v2"  # v1 : trop de 3 (fonctions support notées « cœur de métier »)
+PROMPT_DIR = Path(__file__).parent / "prompts"
 CACHE_DIR = PATHS.processed / "llm_grille"
 GRID_FILE = PATHS.processed / "grille_domaines.parquet"
 
@@ -55,7 +55,8 @@ def naf_table(ent: pd.DataFrame) -> pd.DataFrame:
 def build_prompt(naf: str, libelle: str) -> str:
     # str.replace et pas str.format : la consigne contient des accolades JSON
     return (
-        PROMPT_FILE.read_text(encoding="utf-8")
+        (PROMPT_DIR / f"grille_domaines_{PROMPT_VERSION}.txt")
+        .read_text(encoding="utf-8")
         .replace("{naf}", naf)
         .replace("{naf_libelle}", libelle)
     )

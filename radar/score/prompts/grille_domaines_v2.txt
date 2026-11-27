@@ -1,0 +1,32 @@
+Tu es un expert du marché du travail français. Pour le secteur d'activité ci-dessous (code NAF rév. 2 et libellé), estime, pour chaque taille d'établissement (site), si un établissement de ce secteur recrute (stage, alternance ou emploi) dans chacun des 5 domaines.
+
+Domaines :
+- data : data science, statistique, data analyse, data engineering, intelligence artificielle
+- informatique : développement logiciel, systèmes d'information, réseaux, support
+- finance : comptabilité, contrôle de gestion, finance d'entreprise, banque, assurance
+- marketing : marketing, communication, études commerciales
+- rh : ressources humaines, recrutement, paie
+
+Tailles d'établissement (salariés) : "10-49", "50-249", "250-999", "1000+".
+
+Note = à quel point il est fréquent qu'un établissement de ce secteur et de cette taille recrute dans le domaine, au cours d'une année :
+0 = presque jamais : la fonction est absente du site ou externalisée
+1 = parfois : la fonction existe, souvent tenue par une ou deux personnes, recrutements rares
+2 = souvent : fonction support bien présente, recrutements réguliers
+3 = presque toujours : le domaine est le CŒUR DU MÉTIER du secteur ou une équipe importante et dédiée
+
+Règles :
+- La note 3 est RARE. Une fonction support (finance, RH, marketing, informatique) d'un grand établissement vaut en général 2, pas 3, sauf si c'est le métier même du secteur (finance dans une banque, informatique dans une entreprise de logiciels, RH dans une agence d'intérim).
+- La note ne diminue pas quand la taille augmente.
+- Les domaines sont indépendants : un 0 en data n'impose rien pour l'informatique.
+- Data : les grands établissements de la banque, de l'assurance, du commerce de grande distribution, de l'énergie, des transports, de l'industrie et de la santé ont souvent des équipes data (1 ou 2) ; les petits établissements presque jamais (0).
+
+Exemples (notes dans l'ordre data, informatique, finance, marketing, rh) :
+- 62.02A Conseil en systèmes et logiciels informatiques : 10-49 = 2,3,1,1,1 ; 50-249 = 3,3,1,1,2 ; 250-999 = 3,3,2,2,2 ; 1000+ = 3,3,2,2,3
+- 25.62B Mécanique industrielle : 10-49 = 0,0,1,0,0 ; 50-249 = 0,1,1,1,1 ; 250-999 = 1,1,2,1,2 ; 1000+ = 1,2,2,1,2
+- 47.73Z Commerce de détail de produits pharmaceutiques en magasin spécialisé : 10-49 = 0,0,1,0,0 ; 50-249 = 0,0,1,1,1 ; 250-999 = 0,1,1,1,1 ; 1000+ = 0,1,2,1,2
+
+Réfléchis d'abord en une phrase par domaine (justification), puis donne la grille. Réponds uniquement par un objet JSON, sans texte autour, de cette forme exacte :
+{"justification": {"data": "une phrase", "informatique": "une phrase", "finance": "une phrase", "marketing": "une phrase", "rh": "une phrase"}, "grille": {"10-49": {"data": 0, "informatique": 0, "finance": 0, "marketing": 0, "rh": 0}, "50-249": {...}, "250-999": {...}, "1000+": {...}}}
+
+Secteur : {naf} — {naf_libelle}

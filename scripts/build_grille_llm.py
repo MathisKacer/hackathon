@@ -38,6 +38,7 @@ def main() -> None:
     p.add_argument("--naf-csv", type=Path, help="liste des NAF (au lieu d'entreprises.parquet)")
     p.add_argument("--cache-dir", type=Path, help="dossier du cache (ex. Google Drive)")
     p.add_argument("--out", type=Path, default=GRID_FILE, help="grille en sortie (parquet)")
+    p.add_argument("--consigne", default=llm_grid.PROMPT_VERSION, help="version de la consigne")
     p.add_argument("--export-naf", type=Path, help="écrire la liste des NAF en CSV et s'arrêter")
     a = p.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
@@ -51,6 +52,7 @@ def main() -> None:
         nafs.to_csv(a.export_naf, index=False)
         print(f"{len(nafs)} NAF → {a.export_naf}")
         return
+    llm_grid.PROMPT_VERSION = a.consigne
     if a.cache_dir:
         llm_grid.CACHE_DIR = a.cache_dir
     nafs = nafs.sort_values("n_etab", ascending=False)
