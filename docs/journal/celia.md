@@ -4,6 +4,17 @@
 
 ---
 
+## 2026-11-27 — Tâche T82 : Mes candidatures
+
+**Fait :**
+- Colonne `statut` dans la table `favoris` (migration automatique), `CANDIDATURE_STATUTS`, `update_favorite(statut=...)`.
+- Mon espace : onglet « Mes candidatures » (favoris cochés « Candidaté », statut modifiable). Textes de création de compte simplifiés (liste des règles du mot de passe) ; marge du haut rendue à Streamlit (la page commence sous la barre).
+
+**Résultats / chiffres clés :**
+- Vérifié dans l'app avec les vraies données ; tests comptes / favoris OK.
+
+---
+
 ## 2026-11-27 — Tâche T76 : candidature spontanée dans les fiches
 
 **Fait :**

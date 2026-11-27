@@ -26,6 +26,12 @@ def _save_candidate(kind: str, ref: str, key: str) -> None:
         accounts.update_favorite(_con(), user["id"], kind, ref, candidate=st.session_state[key])
 
 
+def _save_statut(kind: str, ref: str, key: str) -> None:
+    user = current_user()
+    if user is not None:
+        accounts.update_favorite(_con(), user["id"], kind, ref, statut=st.session_state[key])
+
+
 def _follow_up(f: dict, connected: bool) -> None:
     """Case « Candidaté » et note libre (seulement avec un compte)."""
     if not connected:
@@ -58,7 +64,14 @@ def favorites_section() -> None:
         return
     if not connected:
         st.caption("Favoris temporaires : crée un compte ou connecte-toi pour les garder.")
-    tab_c, tab_o = st.tabs([f"Entreprises ({len(companies)})", f"Offres ({len(offers_fav)})"])
+    applied = [f for f in companies + offers_fav if f["candidate"]]  # T82
+    tab_c, tab_o, tab_a = st.tabs(
+        [
+            f"Entreprises ({len(companies)})",
+            f"Offres ({len(offers_fav)})",
+            f"Mes candidatures ({len(applied)})",
+        ]
+    )
     to_open = None
     with tab_c:
         for f in companies:
@@ -112,6 +125,29 @@ def favorites_section() -> None:
                     width="stretch",
                 )
                 _follow_up(f, connected)
+    with tab_a:  # T82 : favoris cochés « Candidaté », avec leur statut
+        if not connected:
+            st.caption("Connecte-toi pour suivre tes candidatures.")
+        elif not applied:
+            st.write(
+                "Coche « Candidaté » sur un favori pour le retrouver ici et suivre sa réponse."
+            )
+        for f in applied:
+            with st.container(border=True):
+                left, right = st.columns([3, 2], vertical_alignment="center")
+                kind = "Entreprise" if f["kind"] == "entreprise" else "Offre"
+                left.markdown(f"**{f['label']}**")
+                left.caption(kind + (f" · {f['note']}" if f["note"] else ""))
+                key = f"fav_statut_{f['kind']}_{f['ref']}"
+                st.session_state.setdefault(key, f["statut"] or accounts.CANDIDATURE_STATUTS[0])
+                right.selectbox(
+                    "Statut",
+                    accounts.CANDIDATURE_STATUTS,
+                    key=key,
+                    on_change=_save_statut,
+                    args=(f["kind"], f["ref"], key),
+                    label_visibility="collapsed",
+                )
     if to_open:
         domaine = st.session_state.get("domaine")
         if to_open.startswith("siren:"):  # favori « toute l'entreprise » (T57)

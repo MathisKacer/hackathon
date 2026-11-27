@@ -107,6 +107,15 @@ SEARCH_TOP_MAX = 5
 FAVORITE_KINDS = ("offre", "entreprise")
 FAVORITES_MAX_PER_USER = 500
 NOTE_MAX = 500
+# Statut d'une candidature (T82), affiché dans « Mes candidatures » ; le premier est le défaut.
+CANDIDATURE_STATUTS = (
+    "Envoyée",
+    "Relancée",
+    "Entretien",
+    "Réponse positive",
+    "Réponse négative",
+    "Sans réponse",
+)
 
 # scrypt : paramètres recommandés pour un usage interactif (~50 ms, 16 Mo de mémoire).
 _SCRYPT = {"n": 2**14, "r": 8, "p": 1}
@@ -143,6 +152,7 @@ CREATE TABLE IF NOT EXISTS favoris (
     details    TEXT    NOT NULL,
     note       TEXT    NOT NULL DEFAULT '',
     candidate  INTEGER NOT NULL DEFAULT 0,
+    statut     TEXT    NOT NULL DEFAULT '',
     created_at TEXT    NOT NULL,
     UNIQUE (user_id, kind, ref)
 );
@@ -215,6 +225,10 @@ def _migrate(con: sqlite3.Connection) -> None:
             con.execute("ALTER TABLE users ADD COLUMN failed_logins INTEGER NOT NULL DEFAULT 0")
         if "locked_until" not in cols:
             con.execute("ALTER TABLE users ADD COLUMN locked_until TEXT")
+        # T82 : statut de candidature des favoris (bases créées avant)
+        fav_cols = {r[1] for r in con.execute("PRAGMA table_info(favoris)")}
+        if fav_cols and "statut" not in fav_cols:
+            con.execute("ALTER TABLE favoris ADD COLUMN statut TEXT NOT NULL DEFAULT ''")
 
 
 def normalize_username(username: str) -> str:
@@ -484,8 +498,17 @@ def update_favorite(
     ref: str,
     note: str | None = None,
     candidate: bool | None = None,
+    statut: str | None = None,
 ) -> None:
-    """Modifie la note libre et/ou la case « candidaté » d'un favori."""
+    """Modifie la note libre, la case « candidaté » et/ou le statut de candidature (T82)."""
+    if statut is not None:
+        if statut not in CANDIDATURE_STATUTS:
+            raise AccountError(f"Statut inconnu : {statut!r}.")
+        with con:
+            con.execute(
+                "UPDATE favoris SET statut = ? WHERE user_id = ? AND kind = ? AND ref = ?",
+                (statut, user_id, kind, str(ref)),
+            )
     if note is not None:
         if len(note) > NOTE_MAX:
             raise AccountError(f"Note trop longue ({NOTE_MAX} caractères au maximum).")
@@ -505,7 +528,7 @@ def update_favorite(
 def list_favorites(con: sqlite3.Connection, user_id: int, kind: str | None = None) -> list[dict]:
     """Favoris de l'utilisateur, les plus récents d'abord (tous types si `kind` est None)."""
     query = (
-        "SELECT kind, ref, label, details, note, candidate, created_at FROM favoris "
+        "SELECT kind, ref, label, details, note, candidate, created_at, statut FROM favoris "
         "WHERE user_id = ?"
     )
     params: list = [user_id]
@@ -523,6 +546,8 @@ def list_favorites(con: sqlite3.Connection, user_id: int, kind: str | None = Non
             "note": r[4],
             "candidate": bool(r[5]),
             "created_at": datetime.fromisoformat(r[6]),
+            # T82 : une candidature cochée sans statut choisi est « Envoyée »
+            "statut": r[7] or (CANDIDATURE_STATUTS[0] if r[5] else ""),
         }
         for r in rows
     ]

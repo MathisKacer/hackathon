@@ -308,3 +308,35 @@ def test_favorites_deleted_with_account_and_capped(con, monkeypatch):
         add_favorite(con, uid, "offre", "3", "c")
     delete_user(con, uid)
     assert con.execute("SELECT count(*) FROM favoris").fetchone()[0] == 0
+
+
+def test_candidature_statut(con):
+    """T82 : statut de candidature, « Envoyée » par défaut quand la case est cochée."""
+    from radar.accounts import CANDIDATURE_STATUTS, add_favorite, list_favorites, update_favorite
+
+    uid = create_user(con, "celia", "Radar-Demo-2026")
+    add_favorite(con, uid, "entreprise", "1", "ACME")
+    assert list_favorites(con, uid)[0]["statut"] == ""
+    update_favorite(con, uid, "entreprise", "1", candidate=True)
+    assert list_favorites(con, uid)[0]["statut"] == CANDIDATURE_STATUTS[0]
+    update_favorite(con, uid, "entreprise", "1", statut="Entretien")
+    assert list_favorites(con, uid)[0]["statut"] == "Entretien"
+    with pytest.raises(AccountError):
+        update_favorite(con, uid, "entreprise", "1", statut="Embauchée demain")
+
+
+def test_old_favoris_table_gets_statut(tmp_path):
+    import sqlite3
+
+    path = tmp_path / "ancienne.db"
+    old = sqlite3.connect(path)
+    old.execute(
+        "CREATE TABLE favoris (id INTEGER PRIMARY KEY, user_id INTEGER, kind TEXT, ref TEXT, "
+        "label TEXT, details TEXT, note TEXT DEFAULT '', candidate INTEGER DEFAULT 0, "
+        "created_at TEXT)"
+    )
+    old.commit()
+    old.close()
+    c = connect(path)
+    assert "statut" in {r[1] for r in c.execute("PRAGMA table_info(favoris)")}
+    c.close()

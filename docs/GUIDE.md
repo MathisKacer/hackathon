@@ -349,7 +349,7 @@ Temps de réponse : 0,05 à 0,4 s.
 **Ce que voit l'utilisateur.**
 - **Entreprise** : bouton « ☆ Ajouter aux favoris » / « ★ Dans mes favoris » dans sa **fiche** (la fenêtre ouverte depuis Explorer ou Entreprises). Dans la liste « Candidatures spontanées », une colonne ★ montre celles déjà en favori.
 - **Offre** : une **case ★** sur chaque ligne de la liste « Offres » (Explorer).
-- **Mon espace › Mes favoris** : deux onglets, Entreprises et Offres. Pour chaque favori : « Voir la fiche » (entreprise) ou « Voir l'offre » (lien vers l'annonce), « Retirer », la case **« Candidaté »** et une **note libre** (contact, date de relance…). Une offre qui n'est plus dans les données est marquée « n'est plus en ligne » mais reste en favori.
+- **Mon espace › Mes favoris** : trois onglets, Entreprises, Offres et **Mes candidatures** (T82 : les favoris cochés « Candidaté », avec un statut à choisir : Envoyée, Relancée, Entretien, Réponse positive, Réponse négative, Sans réponse). Pour chaque favori : « Voir la fiche » (entreprise) ou « Voir l'offre » (lien vers l'annonce), « Retirer », la case **« Candidaté »** et une **note libre** (contact, date de relance…). Une offre qui n'est plus dans les données est marquée « n'est plus en ligne » mais reste en favori.
 
 **Sans compte ou avec un compte** (choix fait avec l'équipe) :
 
