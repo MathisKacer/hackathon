@@ -14,6 +14,12 @@
 
 ---
 
+### D10 — offres.parquet : T13 classe, T21 rapproche (2026-11-27, @emma)
+**Contexte :** `offres.parquet` reçoit des colonnes de deux tâches menées en parallèle : `domaine`/`contrat` (T13, @emma) et `siret_match`/`match_score`/`match_methode` (T21, @mathis). Il ne faut pas que l'une écrase le travail de l'autre.
+**Décision :** T13 (`radar/process/classify.py`) écrit `offres.parquet` à partir de toutes les offres brutes. Il remplit le SIRET seulement quand la source le donne (`siret_source`), retire celui des offres déléguées à une école (`siret_ecole_exclu`) et marque les autres `a_rapprocher`. T21 relit `offres.parquet` et ne complète que les lignes `a_rapprocher`, avec sa propre valeur de `match_methode`. Chaque classement garde la règle qui l'a décidé (`domaine_regle`, `contrat_regle`) pour pouvoir l'expliquer. Pour le contrat, le titre l'emporte sur le `contract_type` d'Adzuna (rarement rempli, et seulement permanent/contract).
+**Alternatives écartées :** que T21 écrive son propre fichier (deux versions des offres à réconcilier dans T50) ; que T13 attende T21 (on perdrait du temps sur le chemin de la V1).
+**Conséquences :** ordre du pipeline (T50) : collecteurs → `classify_offres.py` → rapprochement T21 → score. `quick_filter.py` (T39) peut être remplacé par `offres.parquet` dans l'app (à voir avec Maxence).
+
 ### D9 — Dictionnaire des domaines : codes ROME sûrs, codes ambigus et mots-clés (2026-11-27, @emma)
 **Contexte :** classer chaque offre par domaine (T6 → T13). La bonne alternance fournit des codes ROME, mais pas Adzuna (titre seulement). Certains codes ROME sont ambigus (« Chargé d'études commerciales » peut être un poste data ou marketing).
 **Décision :** `radar/domains.yaml` décrit 5 domaines, dans l'ordre data, informatique, finance, marketing, rh (l'ordre départage les cas ambigus : data gagne). Pour chacun :

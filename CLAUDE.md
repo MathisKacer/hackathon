@@ -63,6 +63,7 @@ Python ≥ 3.11, dépendances gérées avec **uv** (`pyproject.toml` + `uv.lock`
 uv sync                                   # installer / mettre à jour l'environnement (.venv)
 uv add <paquet>                           # ajouter une dépendance (commit pyproject.toml + uv.lock)
 uv run python scripts/make_fake_data.py  # données FACTICES dans data/ (T5) pour lancer l'app sans la collecte
+uv run python scripts/classify_offres.py # offres brutes → offres.parquet (domaine, contrat) (T13)
 uv run streamlit run app/streamlit_app.py # lancer l'app (port 8501)
 uv run pytest -q                          # tests
 uv run ruff format . && uv run ruff check --fix .   # formatage + lint, avant chaque commit
