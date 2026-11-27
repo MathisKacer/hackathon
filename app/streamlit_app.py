@@ -22,6 +22,10 @@ init_defaults()
 persist_widget_state()  # garde la recherche quand on change de page
 
 user = current_user()
+n_fav = st.session_state.pop("_toast_favoris", 0)
+if n_fav:
+    s = "s" if n_fav > 1 else ""
+    st.toast(f"{n_fav} favori{s} enregistré{s} dans ton compte.")
 pages = [
     st.Page(PAGES_DIR / "explorer.py", title="Explorer", default=True),
     st.Page(PAGES_DIR / "entreprises.py", title="Entreprises"),

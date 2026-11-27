@@ -21,6 +21,7 @@
 10. [Fiche entreprise (T43, T38)](#10-fiche-entreprise-t43-t38)
 11. [La Bonne Boîte dans la couche orange (T28, T29, D27)](#11-la-bonne-boîte-dans-la-couche-orange-t28-t29-d27)
 12. [Recherche d'entreprises (page Entreprises)](#12-recherche-dentreprises-page-entreprises)
+13. [Favoris (T54)](#13-favoris-t54)
 
 ---
 
@@ -321,4 +322,37 @@ Temps de réponse : 0,05 à 0,4 s.
 **Tests.** `uv run pytest -q tests/test_recherche.py` (fautes, accents, sigle, ville, SIREN/SIRET, résultat vide).
 
 **Suites possibles.** Rechercher aussi par activité (« conseil informatique Rennes ») ; regrouper les établissements d'une même entreprise ; ouvrir directement la fiche depuis la carte.
+
+---
+
+## 13. Favoris (T54)
+
+**À quoi ça sert.** Garder les entreprises et les offres qui intéressent, et suivre ses candidatures : « je repère, je retrouve plus tard, je note où j'en suis ».
+
+**Ce que voit l'utilisateur.**
+- **Entreprise** : bouton « ☆ Ajouter aux favoris » / « ★ Dans mes favoris » dans sa **fiche** (la fenêtre ouverte depuis Explorer ou Entreprises). Dans la liste « Candidatures spontanées », une colonne ★ montre celles déjà en favori.
+- **Offre** : une **case ★** sur chaque ligne de la liste « Offres » (Explorer).
+- **Mon espace › Mes favoris** : deux onglets, Entreprises et Offres. Pour chaque favori : « Voir la fiche » (entreprise) ou « Voir l'offre » (lien vers l'annonce), « Retirer », la case **« Candidaté »** et une **note libre** (contact, date de relance…). Une offre qui n'est plus dans les données est marquée « n'est plus en ligne » mais reste en favori.
+
+**Sans compte ou avec un compte** (choix fait avec l'équipe) :
+
+| | Sans compte | Avec un compte |
+|---|---|---|
+| Mettre des favoris | oui, **temporaires** (le temps de la visite) | oui, enregistrés |
+| Où c'est gardé | en mémoire (`st.session_state`), **rien sur le disque** | base des comptes, table `favoris` |
+| Note et case « Candidaté » | non | oui |
+| Bandeau sur Explorer | « Tu as N favoris temporaires… Crée un compte pour les garder » | — |
+| À la connexion / création du compte | les favoris temporaires sont **enregistrés automatiquement** (message « N favoris enregistrés dans ton compte ») | — |
+
+**Comment ça marche.**
+- `radar/accounts.py` : table `favoris` ; `add_favorite` (sans doublon : un réajout garde la note et la case), `remove_favorite`, `update_favorite` (note ≤ 500 caractères, case « candidaté »), `list_favorites`, `favorite_refs`. 500 favoris au plus ; supprimés avec le compte.
+- `app/favoris.py` : même interface avec ou sans compte (`is_favorite`, `toggle`, `favorites`, `star_button`, `temp_banner`) ; `sync_offers_editor` applique les cases ★ cochées dans la liste des offres.
+- `app/compte.py` : `_flush_temp_favorites`, appelée à la connexion et à la création du compte.
+- Références : entreprise = SIRET ; offre = « source:offre_id ».
+
+**Régler.** `FAVORITES_MAX_PER_USER`, `NOTE_MAX` (`radar/accounts.py`).
+
+**Tests.** `uv run pytest -q tests/test_favoris.py` (étoile en anonyme sans écriture sur le disque, reprise à la connexion, étoile connectée, cases des offres) et `tests/test_accounts.py` (table `favoris`).
+
+**Suites possibles.** Un vrai suivi de candidatures (statuts : à contacter, envoyée, relancée, réponse reçue) ; avec de vraies réponses, on pourrait un jour remplacer les réponses simulées du modèle (D6).
 

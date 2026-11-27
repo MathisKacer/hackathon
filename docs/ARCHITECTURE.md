@@ -64,6 +64,7 @@ hackathon/
 ├── app/vues/                   # explorer.py (carte, listes), entreprises.py (recherche), mon_espace.py (compte)
 ├── app/commun.py, carte.py     # données et réglages partagés ; carte folium + popup
 ├── app/fiche_ui.py, compte.py  # fiche entreprise (fenêtre) ; comptes et historique
+├── app/favoris.py              # T54 : favoris (étoile), temporaires en anonyme, repris à la connexion
 ├── scripts/                    # points d'entrée : collect_all.py, build_all.py, make_fake_data.py
 ├── notebooks/                  # exploration (sorties vidées avant commit)
 ├── tests/
@@ -87,7 +88,7 @@ Données factices pour développer sans la collecte : `uv run python scripts/mak
 | `candidatures_simulees.parquet` | response/simulate | response/model | `siret, profil_id, domaine, contrat_vise, distance_km, <variables>, p_vraie, repondu: bool` — **données simulées** ; produit par `radar/response/simulate.py` (T35), règle dans `radar/response/params.yaml`, + `siren, ville, c_intensite, c_embauche, log10_effectif, distance_10km, alternance, a_offre_domaine, u_entreprise, donnees_simulees` |
 | `p_reponse.parquet` | response/model | app | `siret, domaine, contrat_vise, p_reponse, contributions…` ; **réel (T36)** : schéma `p_reponse_modele` (+ `donnees_simulees`, `contrib_*`), à distance nulle ; distance ajoutée par l'app via `data/processed/modele_reponse.json` |
 
-**Comptes (T48, D14)** : `data/app/radar.db` (SQLite, jamais dans Git ni sur S3) — tables `users(id, username, password_hash, created_at)`, `profils(user_id, data JSON, updated_at)` et `recherches(id, user_id, created_at, params JSON, n_resultats, top_resultats JSON)` (T49 : 50 max par compte, ajustements à moins de 2 min fusionnés). Rien n'y est écrit en mode anonyme.
+**Comptes (T48, D14)** : `data/app/radar.db` (SQLite, jamais dans Git ni sur S3) — tables `users(id, username, password_hash, created_at)`, `profils(user_id, data JSON, updated_at)` et `recherches(id, user_id, created_at, params JSON, n_resultats, top_resultats JSON)` (T49 : 50 max par compte, ajustements à moins de 2 min fusionnés) et `favoris(id, user_id, kind offre|entreprise, ref offre « source:offre_id » | siret, label, details JSON, note, candidate, created_at)` (T54, 500 max, unique par (user_id, kind, ref)). Rien n'y est écrit en mode anonyme.
 
 Le score final **n'est pas stocké** : l'app le calcule à la volée, `score = Σ wⱼ · cⱼ`, avec les poids choisis par l'utilisateur. L'adéquation (distance, CV) et l'**opportunité cachée** dépendent de l'utilisateur (contrat visé) et sont calculées dans l'app : opportunité cachée = besoin dans le domaine (offres d'emploi) mais 0 offre du contrat visé (stage ou alternance).
 

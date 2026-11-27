@@ -4,6 +4,25 @@
 
 ---
 
+## 2026-11-27 — Tâche T54 : favoris
+
+**Fait :**
+- `radar/accounts.py` : table `favoris` (offres et entreprises, note, case « candidaté », 500 max, suppression avec le compte).
+- `app/favoris.py` : étoile (fiche), cases ★ (liste des offres), colonne ★ (candidatures), bandeau des favoris temporaires.
+- Choix avec Celia : en anonyme, favoris temporaires (rien sur le disque), **enregistrés automatiquement** à la connexion ou à la création du compte (`compte._flush_temp_favorites`).
+- Mon espace : « Mes favoris » (voir la fiche, voir l'offre, « n'est plus en ligne », case « Candidaté », note, retirer).
+
+**Fichiers touchés :**
+- `radar/accounts.py`, `app/favoris.py`, `app/compte.py`, `app/fiche_ui.py`, `app/vues/explorer.py`, `app/vues/mon_espace.py`, `app/streamlit_app.py`, `tests/test_accounts.py`, `tests/test_favoris.py`, `CLAUDE.md`, `docs/*`
+
+**Résultats / chiffres clés :**
+- Parcours vérifié : 2 favoris temporaires → création du compte → enregistrés ; note et case sauvegardées ; retrait. 293 tests OK.
+
+**Prochaine étape :**
+- Statuts de candidature (à contacter / envoyée / relancée / réponse) si l'équipe le souhaite.
+
+---
+
 ## 2026-11-27 — T56 interface en 3 pages (D30) et T38 La Bonne Boîte dans la fiche
 
 **Fait :**

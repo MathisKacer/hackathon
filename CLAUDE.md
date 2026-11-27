@@ -91,7 +91,7 @@ L'app a **3 pages** (barre de navigation en haut, plus de barre latérale) : `ap
 3. être ajouté à `profile_keys()` avec ses options permises (`None` = libre) et à `PROFILE_LABELS` (`app/commun.py`) ;
 4. prendre sa valeur par défaut dans `init_defaults()` (`st.session_state.setdefault`), **pas** avec `value=`.
 
-`record_search(..., top=...)` : passer les **noms** des premières entreprises, pas les SIRET. Code : `radar/accounts.py` (SQLite `data/app/radar.db`, hors Git), `app/compte.py` ; tests : `tests/test_accounts.py`, `tests/test_compte_ui.py`. **Sécurité des mots de passe** : `docs/SECURITE.md`.
+**Favoris** (T54) : `app/favoris.py` ; en anonyme ils restent dans `st.session_state` (rien sur le disque) et sont repris à la connexion (`compte._flush_temp_favorites`). `record_search(..., top=...)` : passer les **noms** des premières entreprises, pas les SIRET. Code : `radar/accounts.py` (SQLite `data/app/radar.db`, hors Git), `app/compte.py` ; tests : `tests/test_accounts.py`, `tests/test_compte_ui.py`. **Sécurité des mots de passe** : `docs/SECURITE.md`.
 
 ## Style de réponse attendu de Claude
 

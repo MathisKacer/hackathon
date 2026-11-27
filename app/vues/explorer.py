@@ -15,6 +15,7 @@ from commun import (
     DOMAINES,
     DOMAINS,
     FILES,
+    PAGES_DIR,
     PROFILE_LABELS,
     RAYONS,
     SIMULATED_BANNER,
@@ -34,6 +35,7 @@ from commun import (
     reset_weights,
 )
 from compte import record_search
+from favoris import favorite_refs, offer_ref, sync_offers_editor, temp_banner
 from fiche_ui import open_fiche
 from streamlit_folium import st_folium
 
@@ -191,6 +193,8 @@ else:
     if spontaneous.empty and not FILES["scores"].exists():
         st.caption("Équipe : `scores.parquet` manquant (lancer `scripts/build_all.py`).")
 
+temp_banner(PAGES_DIR / "mon_espace.py")  # favoris temporaires (anonyme, T54)
+
 if not (view.empty and spontaneous.empty):
     st_folium(
         build_map(view, spontaneous, place, rayon if place is not None else None),
@@ -215,8 +219,10 @@ with tab_spont:
             f"{e} ({n})" if isinstance(e, str) and e and e != n else n
             for e, n in zip(etab, spontaneous["nom"].astype(str), strict=True)
         ]
+        fav = favorite_refs("entreprise")
         table = pd.DataFrame(
             {
+                "★": spontaneous["siret"].astype(str).isin(fav).map({True: "★", False: ""}),
                 "Entreprise": nom,
                 "Lieu": spontaneous.get("commune"),
                 "Distance": spontaneous["distance_km"],
@@ -233,6 +239,8 @@ with tab_spont:
         )
         if tri == TRI_P and "p_reponse" in spontaneous:
             table["Chance de réponse (démo)"] = spontaneous["p_reponse"]
+        if not table["★"].astype(bool).any():
+            table = table.drop(columns="★")
         if table["Situation"].isna().all():
             table = table.drop(columns="Situation")
         if not table["La Bonne Boîte"].astype(bool).any():
@@ -263,7 +271,9 @@ with tab_offers:
     if view.empty:
         st.write("Aucune offre ne correspond à ta recherche.")
     else:
-        table = view.sort_values("age_jours")[
+        ordered = view.sort_values("age_jours")
+        fav_offers = favorite_refs("offre")
+        table = ordered[
             ["titre", "entreprise_nom", "commune", "contrat", "age_jours", "url"]
         ].rename(
             columns={
@@ -275,15 +285,26 @@ with tab_offers:
                 "url": "Annonce",
             }
         )
-        st.dataframe(
+        table.insert(0, "★", [offer_ref(r) in fav_offers for _, r in ordered.iterrows()])
+        # La clé change avec la liste et les favoris : les cases repartent de l'état enregistré.
+        editor_key = f"offres_{hash((tuple(table.index), tuple(sorted(fav_offers))))}"
+        edited = st.data_editor(
             table,
             hide_index=True,
             width="stretch",
+            key=editor_key,
+            disabled=[c for c in table.columns if c != "★"],
             column_config={
+                "★": st.column_config.CheckboxColumn(
+                    "★", help="Ajouter aux favoris", width="small"
+                ),
                 "Publiée il y a": st.column_config.NumberColumn(format="%d j"),
                 "Annonce": st.column_config.LinkColumn("Annonce", display_text="Voir l'offre"),
             },
         )
+        st.caption("Coche ★ pour garder une offre dans tes favoris (Mon espace).")
+        if sync_offers_editor(edited, table, ordered):
+            st.rerun()
 
 SOURCE_LABELS = {"adzuna": "Adzuna", "lba": "La bonne alternance"}
 sources = ", ".join(SOURCE_LABELS.get(s, s) for s in sorted(offers["source"].dropna().unique()))

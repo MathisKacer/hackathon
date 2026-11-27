@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import pandas as pd
 import streamlit as st
+from favoris import star_button
 
 from radar import fiche
 from radar.domains import load_domains
@@ -90,6 +91,20 @@ def _identity(r: pd.Series, c: pd.Series) -> None:
         (st.error if alerte.startswith("🔴") else st.warning)(
             f"{alerte}.{reduit} Détail dans « Situation »."
         )
+
+
+def _star(siret: str, r: pd.Series, c: pd.Series) -> None:
+    """Favori (T54) : étoile pour garder l'entreprise (retrouvée dans Mon espace)."""
+    name = _value(c.get("nom"), r.get("nom")) or "Entreprise"
+    etab = _value(c.get("nom_etablissement"), r.get("nom_etablissement"))
+    label = f"{etab} ({name})" if etab and etab != name else name
+    details = {
+        "commune": _value(c.get("commune"), r.get("commune")),
+        "siren": _value(c.get("siren"), r.get("siren")),
+        "secteur": _value(c.get("naf_libelle"), r.get("naf_libelle")),
+        "taille": _value(c.get("tranche_libelle")),
+    }
+    star_button("entreprise", str(siret), label, details, key=f"fav_fiche_{siret}")
 
 
 def _why(r: pd.Series) -> None:
@@ -254,6 +269,7 @@ def fiche_content(siret: str, row: pd.Series | None = None, domaine: str | None 
             row["alerte"] = alert_text(row.get("procedure_type"), row.get("procedure_date"))
     siren = _value(c.get("siren"), row.get("siren"))
     _identity(row, c)
+    _star(siret, row, c)
     _why(row)
     _need(row, domaine)
     _offers_block(siren, siret)

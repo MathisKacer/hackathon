@@ -29,6 +29,7 @@ import streamlit as st
 
 from radar import accounts
 
+TEMP_FAVORITES_KEY = "_favoris_temporaires"  # favoris d'un visiteur anonyme (T54, app/favoris.py)
 USER_KEY = "compte_user"  # {"id": int, "username": str} quand on est connecté
 HISTORY_SHOWN = 10
 TZ = ZoneInfo("Europe/Paris")
@@ -64,9 +65,25 @@ def _current_settings(profile_keys: dict) -> dict:
     return {k: st.session_state[k] for k in profile_keys if k in st.session_state}
 
 
+def _flush_temp_favorites(user_id: int) -> int:
+    """Enregistre dans le compte les favoris temporaires de la visite anonyme (T54)."""
+    temp = st.session_state.pop(TEMP_FAVORITES_KEY, {}) or {}
+    n = 0
+    for (kind, ref), v in temp.items():
+        try:
+            accounts.add_favorite(_con(), user_id, kind, ref, v["label"], v.get("details"))
+            n += 1
+        except accounts.AccountError:
+            break  # plafond atteint
+    return n
+
+
 def _log_in(user_id: int, username: str, profile_keys: dict) -> None:
     st.session_state[USER_KEY] = {"id": user_id, "username": username}
     _apply_profile(accounts.load_profile(_con(), user_id), profile_keys)
+    n = _flush_temp_favorites(user_id)
+    if n:
+        st.session_state["_toast_favoris"] = n
     st.rerun()
 
 
@@ -255,8 +272,12 @@ def account_page(
     profile_keys: dict[str, list | None],
     labels: dict[str, str] | None = None,
     explorer_page=None,
+    favorites_section=None,
 ) -> None:
-    """Page « Mon espace » : connexion, ou profil + historique + suppression du compte."""
+    """Page « Mon espace » : connexion, ou profil + favoris + historique + suppression.
+
+    `favorites_section` : fonction qui affiche « Mes favoris » (app/vues/mon_espace.py, T54).
+    """
     if st.session_state.pop(GO_EXPLORER_KEY, False) and explorer_page is not None:
         st.switch_page(st.Page(explorer_page))
     user = _validated_user()
@@ -269,6 +290,8 @@ def account_page(
         left, _ = st.columns([1, 1])
         with left, st.container(border=True):
             login_forms(profile_keys)
+        if favorites_section is not None:
+            favorites_section()
         return
 
     st.title(f"Bonjour {user['username']}")
@@ -291,6 +314,9 @@ def account_page(
         if profile
         else "Aucun profil enregistré pour l'instant."
     )
+
+    if favorites_section is not None:
+        favorites_section()
 
     st.subheader("Mes recherches")
     searches = accounts.list_searches(con, user["id"], limit=HISTORY_SHOWN)
