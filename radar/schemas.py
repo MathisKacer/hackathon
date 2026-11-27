@@ -33,6 +33,28 @@ OFFRES_RAW = [
 SCHEMAS: dict[str, list[str]] = {
     "offres_raw": OFFRES_RAW,
     "offres": OFFRES_RAW + ["domaine", "contrat", "siret_match", "match_score", "match_methode"],
+    # « Recruteurs potentiels » La bonne alternance : entreprises SANS offre publiée mais
+    # susceptibles d'embaucher des alternants (signal d'opportunité cachée). Une ligne par SIRET.
+    "recruteurs_lba": [
+        "source",
+        "recruteur_id",
+        "date_collecte",
+        "siret",
+        "nom",
+        "raison_sociale",
+        "naf",
+        "naf_libelle",
+        "taille",
+        "adresse",
+        "code_postal",
+        "commune",
+        "lat",
+        "lon",
+        "site_web",
+        "opco",
+        "idcc",
+        "url",
+    ],
     "entreprises": [
         "siret",
         "siren",
