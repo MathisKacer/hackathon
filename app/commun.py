@@ -13,6 +13,7 @@ import pyarrow.parquet as pq
 import streamlit as st
 
 from radar.communes import load_communes, place_of
+from radar.competences import SKILL_LABELS, SkillProfile
 from radar.config import FILES
 from radar.domains import classify, load_domains
 from radar.familles import OFFER_COLS, build_families
@@ -65,6 +66,7 @@ WIDGET_KEYS = [
     "une_par_entreprise",
     "niveaux",
     "niveau_inconnu",
+    "competences",
     "tri",
     *WEIGHT_KEYS.values(),
 ]
@@ -120,6 +122,18 @@ def get_families(domaine: str) -> pd.DataFrame:
     sc_cols = pq.read_schema(FILES["scores"]).names
     sc = pd.read_parquet(FILES["scores"], columns=[c for c in wanted_s if c in sc_cols])
     return build_families(ent, sc, domaine)
+
+
+@st.cache_resource(show_spinner="Lecture des compétences demandées par les offres…")
+def get_skill_profile(domaine: str) -> SkillProfile | None:
+    """Compétences des offres du domaine, par secteur (T45) ; None sans offres classées."""
+    if not (FILES["offres"].exists() and FILES["entreprises"].exists()):
+        return None
+    cols = ["titre", "description", "domaine", "siret_match"]
+    offres = pd.read_parquet(FILES["offres"])
+    offres = offres[[c for c in cols if c in offres]]
+    ent = pd.read_parquet(FILES["entreprises"], columns=["siret", "naf_division"])
+    return SkillProfile.build(offres, ent, domaine)
 
 
 @st.cache_data
@@ -191,6 +205,7 @@ def profile_keys() -> dict[str, list | None]:
         "une_par_entreprise": [True, False],
         "niveaux": NIVEAUX,
         "niveau_inconnu": [True, False],
+        "competences": SKILL_LABELS,  # T45 : compétences du CV (le CV lui-même n'est pas gardé)
     }
 
 
@@ -211,6 +226,7 @@ PROFILE_LABELS = {
     "une_par_entreprise": "Une ligne par entreprise",
     "niveaux": "Niveau d'études",
     "niveau_inconnu": "Avec niveau non précisé",
+    "competences": "Compétences",
 }
 
 
@@ -227,6 +243,7 @@ def init_defaults() -> None:
     st.session_state.setdefault("une_par_entreprise", False)
     st.session_state.setdefault("niveaux", [])
     st.session_state.setdefault("niveau_inconnu", True)
+    st.session_state.setdefault("competences", [])
     for c, key in WEIGHT_KEYS.items():
         st.session_state.setdefault(key, DEFAULT_WEIGHTS[c])
 

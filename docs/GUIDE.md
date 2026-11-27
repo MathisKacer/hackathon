@@ -25,6 +25,7 @@
 14. [Entreprise et sites (T57)](#14-entreprise-et-sites-t57)
 15 bis. [Effectifs : site et entreprise (T73)](#15-bis-effectifs--site-et-entreprise-t73)
 15. [Niveau d'études attendu (T67)](#15-niveau-détudes-attendu-t67-d34)
+16. [Adéquation avec ton CV (T45)](#16-adéquation-avec-ton-cv-t45-d37)
 
 ---
 
@@ -429,3 +430,16 @@ Case vide quand SIRENE n'a pas l'information. **Pas de total calculé** : additi
 
 **Pourquoi `TRANCHE_LIBELLES` ne change pas.** Il sert aussi à construire des phrases (« établissement de 20 à 49 salariés », `radar/explain.py`) ; le libellé « entre … » est réservé à l'affichage.
 
+---
+
+## 16. Adéquation avec ton CV (T45, D37)
+
+**Utilisation.** Panneau « Filtres » › « Ton CV » : déposer son CV en PDF. Les compétences reconnues (Python, SQL, Power BI, comptabilité, paie, anglais…) remplissent la liste « Tes compétences ». On peut la corriger ou la remplir à la main, sans CV. Dès qu'une compétence est choisie, le curseur « Adéquation avec ton CV » compte dans le score (poids 2 par défaut). L'explication de la carte et de la fiche peut alors dire « les offres data de son secteur demandent Python, SQL », et la décomposition du score montre l'apport de l'adéquation.
+
+**Fonctionnement** (`radar/competences.py`). Les mêmes compétences sont cherchées dans les offres du domaine (titre + description). Pour chaque offre : part de ses compétences que tu as. Pour chaque entreprise : moyenne sur les offres de son secteur (division NAF), rapprochée de l'ensemble du domaine quand le secteur a peu d'offres, puis corrigée par ses propres offres si elle en a. La composante est le rang de cette part parmi les entreprises de la recherche.
+
+**Données personnelles.** Le PDF est lu en mémoire puis oublié : rien n'est écrit sur le disque. Seule la liste des compétences est un réglage, enregistrée dans le profil si on est connecté (clé `competences`).
+
+**Réglages.** Liste et expressions : `SKILLS` (avec les choix prudents : pas « C » ni « Go », « R » seulement en majuscule isolée, « recrutement » de présentation écarté) ; lissage : `M_SECTOR`, `M_COMPANY` ; seuil de l'explication : `radar/explain.py`. Tests : `tests/test_competences.py` (ajouter un cas avant de modifier une expression).
+
+**Limites et suites.** Adéquation au niveau du secteur, descriptions tronquées, PDF scannés illisibles (L29). Suites : proposer le domaine et le niveau d'études à partir du CV ; lettre de candidature (T46).

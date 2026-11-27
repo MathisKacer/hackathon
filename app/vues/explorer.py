@@ -36,6 +36,7 @@ from commun import (
     get_nearby,
     get_offers,
     get_place,
+    get_skill_profile,
     profile_keys,
     reset_weights,
 )
@@ -46,6 +47,7 @@ from streamlit_folium import st_folium
 from style import GREEN, LINK_STYLE, RED, Tile, fmt_int, hero, kpi_tiles, pill
 
 from radar.collect.sirene import tranche_display
+from radar.competences import SKILL_LABELS, add_adequation, detect_skills, pdf_text
 from radar.familles import mark_family_offers
 from radar.filters import SECTIONS, TAILLES, filter_companies
 from radar.niveau import levels_label
@@ -74,6 +76,26 @@ def _pl(n: int, word: str) -> str:
     return word + ("s" if n > 1 else "")
 
 
+def _read_cv() -> None:
+    """T45 : compétences lues dans le CV déposé, ajoutées à la liste « Tes compétences ».
+
+    Le PDF reste en mémoire le temps de la lecture : rien n'est écrit sur le disque. Seule la
+    liste des compétences est un réglage (enregistré dans le profil si on est connecté)."""
+    fichier = st.session_state.get("cv_fichier")
+    if fichier is None:
+        return
+    found = detect_skills(pdf_text(fichier.getvalue()))
+    before = list(st.session_state.get("competences", []))
+    st.session_state["competences"] = before + [s for s in found if s not in before]
+    st.session_state["_cv_message"] = (
+        f"{len(found)} compétence{'s' if len(found) > 1 else ''} trouvée"
+        f"{'s' if len(found) > 1 else ''} dans ton CV. Tu peux corriger la liste."
+        if found
+        else "Aucune compétence reconnue : le PDF est peut-être une image scannée. "
+        "Choisis tes compétences dans la liste."
+    )
+
+
 def _n_filters_on() -> int:
     """Nombre de filtres modifiés (affiché sur le bouton « Filtres »)."""
     ss = st.session_state
@@ -88,6 +110,7 @@ def _n_filters_on() -> int:
             ss.get("tri") == TRI_P,
             bool(ss.get("une_par_entreprise")),
             bool(ss.get("niveaux")),
+            bool(ss.get("competences")),
         ]
     )
 
@@ -171,6 +194,23 @@ with st.container(border=True, key="carte_recherche"):
             help="Garde seulement le site le mieux classé de chaque entreprise "
             "(les autres sites restent visibles dans sa fiche).",
         )
+        st.markdown("**Ton CV**")
+        st.file_uploader(
+            "Dépose ton CV (PDF)",
+            type="pdf",
+            key="cv_fichier",
+            on_change=_read_cv,
+            help="On y repère tes compétences (Python, SQL, comptabilité…) pour classer les "
+            "entreprises dont le secteur les demande. Ton CV n'est pas conservé.",
+        )
+        if msg := st.session_state.pop("_cv_message", None):
+            st.caption(msg)
+        competences = st.multiselect(
+            "Tes compétences",
+            SKILL_LABELS,
+            key="competences",
+            placeholder="Choisis ou dépose ton CV",
+        )
         st.markdown("**Classement**")
         tri = st.radio("Classer par", TRIS, key="tri", horizontal=True)
         st.caption("Importance de chaque critère dans le score (0 = ignoré) :")
@@ -196,6 +236,10 @@ if place is not None:
     nearby = filter_companies(
         get_nearby(place.lat, place.lon, float(rayon), domaine), tailles, secteurs
     )
+    # T45 : adéquation entre les compétences de l'étudiant et celles que demande le secteur
+    profile = get_skill_profile(domaine) if competences else None
+    if profile is not None:
+        nearby = add_adequation(nearby, competences, profile)
     spontaneous = rank_spontaneous(
         nearby, place.lat, place.lon, rayon, contrat, weights, show_liquidation
     )

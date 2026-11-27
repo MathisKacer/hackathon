@@ -4,6 +4,31 @@
 
 ---
 
+## 2026-11-27 — T45 : CV → compétences → adéquation ✅
+
+**Fait :**
+- `radar/competences.py` : liste fermée `SKILLS` (~85 compétences data, informatique, finance, marketing, RH, transversales) repérées par expressions (texte sans accents) ; choix prudents : pas « C » ni « Go », « R » seulement en majuscule isolée, « SAS au capital » écarté, « recrutement » de présentation (cabinets, forums) écarté. `pdf_text` (pypdf), `SkillProfile.build` (offres du domaine à ≥ 1 compétence, division NAF via `siret_match`), `add_adequation` (part des compétences de chaque offre que l'étudiant a, moyenne par secteur lissée vers le domaine, puis par entreprise ; `c_adequation` = rang dans la recherche ; `competences_demandees` pour l'explication). D37.
+- App : Filtres › « Ton CV » (dépôt du PDF + multisélection « Tes compétences », réglage `competences` enregistré au profil selon la règle de CLAUDE.md ; le PDF n'est jamais écrit) ; nouveau curseur « Adéquation avec ton CV » ; explication de la carte et de la fiche.
+- Choix d'Emma : option 1 (liste de compétences) et compétences gardées au profil.
+
+**Fichiers touchés :**
+- `radar/competences.py` (nouveau), `tests/test_competences.py` (nouveau), `radar/spontaneous.py`, `radar/explain.py`, `app/commun.py`, `app/vues/explorer.py`, `pyproject.toml`, `uv.lock` (pypdf), docs (DECISIONS D37, LIMITES L29, GUIDE § 16, ARCHITECTURE, TACHES)
+
+**Résultats / chiffres clés :**
+- Offres réelles : 51 % des offres data citent au moins une compétence (informatique 56 %, finance 70 %, marketing 66 %, RH 71 %) ; la moitié seulement est rattachée à un secteur. Profil construit en ~4 s (mis en cache).
+- Rennes 20 km, stage, CV « Python, SQL, statistiques, Power BI, machine learning » : 9 des 20 premières entreprises inchangées (12 avec un poids de 1) ; montent INSERM, Météo-France, éditeurs de logiciels. Recalcul dans l'app ~7 s la première fois, puis rapide.
+- 360 tests passent.
+
+**Problèmes / points d'attention pour l'équipe :**
+- **Code partagé modifié** (nécessaire à la tâche) : `radar/spontaneous.py` (`COMPONENTS`, `DEFAULT_WEIGHTS` + `c_adequation` ; `weighted_score` ignore maintenant une composante absente ou vide, comme un poids nul : sans effet sans CV, et la validation de @mathis, qui tire des poids au hasard, reste valable), `radar/explain.py` (une raison en plus). Nouvelle dépendance : `pypdf` → `uv sync`.
+- Le dépôt du fichier n'est pas testable avec l'outil de test de Streamlit : la lecture du PDF est testée à part (PDF généré dans le test) et la liste des compétences dans l'app.
+- Adéquation au niveau du secteur (L29) : à dire au pitch.
+
+**Prochaine étape :**
+- Possible : proposer le domaine et le niveau d'études à partir du CV ; T46 (lettre) pourrait réutiliser les compétences.
+
+---
+
 ## 2026-11-27 — Note de passation : domaines par entreprise avec un LLM (T77, proposition)
 
 **Fait :**

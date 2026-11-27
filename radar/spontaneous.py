@@ -139,6 +139,12 @@ COMPONENTS: dict[str, tuple[str, str]] = {
         "1 si La bonne alternance signale l'entreprise comme recruteur potentiel d'alternants "
         "sur un métier du domaine, sans offre publiée (T51). Compte en alternance et « Tous ».",
     ),
+    "c_adequation": (
+        "Adéquation avec ton CV",
+        "Part des compétences demandées par les offres du domaine de son secteur (et par ses "
+        "propres offres) que tu as, classée parmi les entreprises de ta recherche. "
+        "Ignorée tant que tu n'as indiqué aucune compétence (T45).",
+    ),
     "c_dynamisme": (
         "Dynamisme",
         "Croissance de l'entreprise (T22) ; neutre (0,5) tant que les finances manquent.",
@@ -151,6 +157,7 @@ DEFAULT_WEIGHTS: dict[str, int] = {
     "c_proximite": 1,
     "c_cachee": 1,
     "c_recruteur_lba": 2,
+    "c_adequation": 2,
     "c_dynamisme": 0,
 }
 # Composantes qui n'ont de sens que pour certains contrats visés : ailleurs, leur poids est
@@ -204,9 +211,15 @@ def weighted_score(df: pd.DataFrame, weights: dict[str, float]) -> pd.DataFrame:
 
     L'apport est la part du score due à la composante (la somme des apports = le score) ;
     NaN pour une composante de poids nul. Tous les poids à 0 : repli sur le score D13.
+    Une composante absente ou vide (ex. `c_adequation` sans CV, T45) est ignorée, comme un
+    poids nul : sinon elle vaudrait 0 partout et ferait baisser tous les scores.
     """
     out = df.copy()
-    w = {k: float(v) for k, v in weights.items() if k in COMPONENTS and float(v) > 0}
+    w = {
+        k: float(v)
+        for k, v in weights.items()
+        if k in COMPONENTS and float(v) > 0 and k in out and out[k].notna().any()
+    }
     total = sum(w.values())
     for k in COMPONENTS:
         # Composante sans poids (ou hors sujet pour le contrat) : apport NaN, masqué dans l'app.

@@ -78,11 +78,11 @@
 ## 🔵 En cours
 
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
-- [ ] T45 — Dépôt du CV (PDF) → compétences → composante d'adéquation — @emma
 - _…_
 
 ## ✅ Fait
 
+- [x] T45 — **Dépôt du CV (PDF) → compétences → composante d'adéquation** — @emma → `radar/competences.py` (D37) : liste fermée d'~85 compétences repérées dans le CV (pypdf) et dans les offres du domaine ; adéquation = part des compétences demandées par les offres du **secteur** (division NAF, puis offres de l'entreprise) que l'étudiant a ; curseur « Adéquation avec ton CV » (poids 2, ignoré sans compétence) ; Filtres › « Ton CV » (dépôt + liste « Tes compétences » corrigeable, enregistrée au profil ; PDF jamais conservé) ; explication « les offres data de son secteur demandent Python, SQL » ; L29, GUIDE § 16
 - [x] T76 — **Infos de candidature spontanée dans les fiches** — @celia : fiche site : phrase de signal de la carte (« N offres du domaine, mais aucune pour ton contrat » / « aucune offre publiée… », `offer_signal`, `app/carte.py`) en plus du palier, de la famille et de l'explication ; une fiche site ouverte depuis la recherche ou la liste des sites reprend la candidature de la recherche en cours (Explorer la garde dans `st.session_state["_candidatures"]`) ; fiche entreprise : bloc « Candidature spontanée » (N sites dans ta recherche, le mieux classé avec palier et signal, les suivants, « Voir la fiche du mieux classé », famille ; sinon message clair)
   ℹ️ @celia : complément de @maxence dans `app/fiche_ui.py` (`_site_not_candidate`) — la fiche d'un **site** absent des candidatures de la recherche ne restait plus muette : bloc « Candidature spontanée » qui explique pourquoi (pas de ville choisie ; hors rayon, offre existante ou filtre ; « Une ligne par entreprise » cochée, avec bouton vers le site gardé)
 - [x] 🐞 **L'app n'affichait rien avec les fichiers du README** — @celia : elle ne lisait que les offres brutes (`data/raw/offres_raw/*.parquet`), absentes de la liste du README ; elle lit maintenant `data/processed/offres.parquet` quand les offres brutes manquent (`get_offers`, `app/commun.py`). Vérifié avec les vraies données (Rennes, stage : 3 714 entreprises, 8 offres)

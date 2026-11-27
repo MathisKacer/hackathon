@@ -41,6 +41,7 @@ hackathon/
 │   ├── geocode.py              # T40 : adresse → lat/lon (Géoplateforme IGN, sans clé, cache disque PATHS.cache)
 │   ├── familles.py             # T26 : familles de marque (ETI/GE, début du nom) → offres publiées par les sociétés sœurs (D36)
 │   ├── filters.py              # T41 : filtres taille (4 tranches) et secteur (section NAF) des entreprises (D20)
+│   ├── competences.py          # T45 : compétences du CV (PDF) et adéquation avec le secteur (D37)
 │   ├── niveau.py               # T67 : niveau d'études attendu d'une offre (champ LBA, sinon lu dans le texte) (D34)
 │   ├── paliers.py              # T65 : score → paliers de priorité (mots, couleurs), règle mixte rang + minimum (D32)
 │   ├── recruteurs.py           # T51 : recruteurs potentiels LBA sur un ROME du domaine → `recruteur_lba` (D26)
