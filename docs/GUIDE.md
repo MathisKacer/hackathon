@@ -1,13 +1,14 @@
-# Guide des fonctionnalités : comptes, historique, sécurité, SIRENE, BODACC, fiche entreprise
+# Guide des fonctionnalités : interface, recherche d'entreprises, comptes, historique, sécurité, SIRENE, BODACC, fiche entreprise
 
 > **Mode d'emploi** des parties construites par @celia : à quoi elles servent, comment les utiliser, comment elles marchent, comment les régler, et ce qu'on peut faire ensuite.
 > Pour le reste de l'app (carte, score, poids, P(réponse)) : `ARCHITECTURE.md` et les décisions D19 à D23.
 > Mettre à jour ce guide quand on change une de ces fonctionnalités.
 >
-> **Depuis D30, l'app a 3 pages** : *Explorer* (recherche, carte, listes ; la fiche s'ouvre en fenêtre au clic sur une ligne), *Entreprises* (barre de recherche : nom, SIREN ou SIRET, fautes tolérées, ville facultative) et *Mon espace* (compte, profil, historique, « Relancer »). Les sections ci-dessous parlent parfois de « barre latérale » : le compte est maintenant dans *Mon espace*, et les réglages dans la recherche d'Explorer et son panneau « Filtres ».
+> **L'interface a changé (D30)** : 3 pages, voir la section 0 ci-dessous.
 
 ## Sommaire
 
+0. [L'interface : 3 pages (T56, D30)](#0-linterface--3-pages-t56-d30)
 1. [Vue d'ensemble](#1-vue-densemble)
 2. [Référentiel des entreprises (SIRENE, T20)](#2-référentiel-des-entreprises-sirene-t20)
 3. [Entreprises en difficulté (BODACC, T23)](#3-entreprises-en-difficulté-bodacc-t23)
@@ -17,7 +18,47 @@
 7. [Où sont les données ?](#7-où-sont-les-données-)
 8. [Commandes utiles](#8-commandes-utiles)
 9. [Ce qu'on peut faire ensuite](#9-ce-quon-peut-faire-ensuite)
-10. [Fiche entreprise (T43)](#10-fiche-entreprise-t43)
+10. [Fiche entreprise (T43, T38)](#10-fiche-entreprise-t43-t38)
+11. [La Bonne Boîte dans la couche orange (T28, T29, D27)](#11-la-bonne-boîte-dans-la-couche-orange-t28-t29-d27)
+12. [Recherche d'entreprises (page Entreprises)](#12-recherche-dentreprises-page-entreprises)
+
+---
+
+## 0. L'interface : 3 pages (T56, D30)
+
+**Navigation.** Une barre en haut de l'écran avec trois pages (plus de barre latérale) :
+
+| Page | Pour quoi faire | Fichier |
+|---|---|---|
+| **Explorer** (page d'accueil) | Chercher où candidater autour de soi | `app/vues/explorer.py` |
+| **Entreprises** | Chercher une entreprise précise et voir sa fiche | `app/vues/entreprises.py` |
+| **Se connecter** / **Mon espace (prénom)** | Compte facultatif, profil, historique des recherches | `app/vues/mon_espace.py` |
+
+**Explorer, de haut en bas :**
+1. **La recherche** : « Où ? » (suggesteur de ville, T55 : on tape le début du nom et on choisit « Ville (code postal) »), « Contrat » (Tous / Stage / Alternance / Emploi), « Domaine », « Rayon ».
+2. **Le bouton « Filtres »** : un panneau avec les régions, le mot-clé, l'ancienneté des offres, la taille et le secteur des entreprises, « Afficher aussi les entreprises en liquidation », le classement (score ou chance de réponse, démo) et l'importance de chaque critère du score. Le bouton affiche le nombre de filtres actifs (« Filtres (2) »).
+3. **Une phrase de résultat** : « Autour de Rennes (35000) (20 km) : 42 entreprises pourraient t'accueillir en alternance sans avoir publié d'offre, et 18 offres sont publiées. » Sans ville : un « Comment ça marche » en 3 étapes.
+4. **La carte** : offres en bleu, candidatures spontanées en orange (`app/carte.py`, inchangé).
+5. **Deux onglets** : « Candidatures spontanées » (Entreprise, Lieu, Distance, Taille, Situation, La Bonne Boîte ✔, Score) et « Offres » (lien vers chaque annonce).
+6. **Un clic sur une ligne** de « Candidatures spontanées » ouvre la **fiche dans une fenêtre** par-dessus la page (section 10). Fermer la fenêtre permet d'en ouvrir une autre.
+
+**Principes.**
+- Textes courts, en français simple : pas de numéros de tâches, de noms de fichiers ni de commandes à l'écran (ils restent dans les commentaires du code).
+- Peu d'emojis : seulement les drapeaux d'alerte et le ✔ La Bonne Boîte.
+- **Les réglages sont conservés quand on change de page** (`persist_widget_state` dans `app/commun.py`).
+- **Thème sobre** (`.streamlit/config.toml`) : bleu nuit `#1D3557`, fond `#FAFAF7`, police Inter ; le bleu et l'orange restent réservés à la carte.
+
+**Organisation du code.**
+
+| Fichier | Rôle |
+|---|---|
+| `app/streamlit_app.py` | point d'entrée : configuration, navigation |
+| `app/commun.py` | constantes, chargement des données (mis en cache), réglages du profil (`WIDGET_KEYS`, `profile_keys()`, `PROFILE_LABELS`, `init_defaults()`) |
+| `app/carte.py` | carte folium et popup des entreprises |
+| `app/fiche_ui.py` | fiche entreprise (`open_fiche` : fenêtre) |
+| `app/compte.py` | comptes : formulaires, `record_search`, page Mon espace |
+
+**Ajouter un réglage de recherche** : suivre la consigne de `CLAUDE.md` (widget avec une `key` dans Explorer, puis `WIDGET_KEYS`, `profile_keys()`, `PROFILE_LABELS`, `init_defaults()` dans `app/commun.py`).
 
 ---
 
@@ -113,22 +154,17 @@ uv run python scripts/build_all.py                 # le pipeline complet l'inclu
 **À quoi ça sert.** Retrouver ses réglages de recherche d'une visite à l'autre, sans rendre la connexion obligatoire.
 
 **Ce que voit l'utilisateur.**
-- Par défaut : « 🕶️ **Mode démo anonyme** : rien n'est enregistré ».
-- Volet « Se connecter ou créer un compte » (barre latérale) : onglets **Connexion** et **Créer un compte**. À la création, les réglages actuels deviennent le profil.
-- Connecté : « 💾 Enregistrer » (sauvegarde les réglages), « Se déconnecter », « Supprimer mon compte » (case à cocher de confirmation ; efface compte, profil et historique).
-- À la connexion, tous les réglages reviennent : adresse, rayon, domaine, contrat, régions, mot-clé, taille, secteur, poids du score, classement, « afficher les liquidations »…
+- Par défaut : mode anonyme, rien n'est enregistré ; la page s'appelle « **Se connecter** ».
+- Page **Se connecter** : onglets **Connexion** et **Créer un compte**. À la création, les réglages actuels deviennent le profil.
+- Connecté, la page devient « **Mon espace (prénom)** » : « Enregistrer mes réglages », « Se déconnecter », le profil enregistré, l'historique (section 5) et « Supprimer mon compte » (case à cocher de confirmation ; efface compte, profil et historique).
+- À la connexion, tous les réglages reviennent : ville, rayon, domaine, contrat, régions, mot-clé, taille, secteur, poids du score, classement, « afficher les liquidations »…
 
 **Comment ça marche.**
 - `radar/accounts.py` : la partie serveur (comptes, mots de passe, profils, historique) dans une base SQLite. Testable sans Streamlit.
-- `app/compte.py` : le bloc de la barre latérale.
-- **Le profil = les valeurs des widgets de recherche** listés dans `PROFILE_KEYS` (`app/streamlit_app.py`). Chaque widget a une `key` ; à la connexion, le profil est recopié dans `st.session_state`. Une valeur devenue invalide (région disparue des données…) est ignorée.
+- `app/compte.py` : formulaires (`login_forms`), enregistrement des recherches (`record_search`), page Mon espace (`account_page`). Les anciennes fonctions de barre latérale (`account_sidebar`, `search_history`) restent pour les tests.
+- **Le profil = les valeurs des widgets de recherche** listés dans `profile_keys()` (`app/commun.py`). Chaque widget a une `key` ; à la connexion, le profil est recopié dans `st.session_state`. Une valeur devenue invalide (région disparue des données…) est ignorée.
 
-**⚠️ Règle pour ajouter un réglage à l'app** (aussi dans `CLAUDE.md`) :
-1. lui donner une `key` ;
-2. l'ajouter à `PROFILE_KEYS` avec ses options permises (`None` = valeur libre) ;
-3. lui donner un libellé dans `PROFILE_LABELS` ;
-4. poser sa valeur par défaut avec `st.session_state.setdefault(...)`, pas avec `value=` ;
-5. le créer **après** `account_sidebar(PROFILE_KEYS)`.
+**⚠️ Règle pour ajouter un réglage à l'app** : voir `CLAUDE.md` et la section 0.
 
 Sinon le réglage n'est pas enregistré dans le profil.
 
@@ -136,12 +172,12 @@ Sinon le réglage n'est pas enregistré dans le profil.
 
 ## 5. Historique des recherches (T49)
 
-**Ce que voit l'utilisateur (connecté seulement).** Volet « 🕘 Mes recherches » en bas de la barre latérale : pour chaque recherche, la date, un résumé lisible (« Contrat : Stage · Régions : Bretagne »), le nombre de résultats et les premières entreprises. Bouton « ↻ Relancer » (remet tous les réglages) et « Effacer mon historique ». En anonyme, rien n'est enregistré.
+**Ce que voit l'utilisateur (connecté seulement).** Page **Mon espace**, partie « Mes recherches » : pour chaque recherche, la date, un résumé lisible (« Contrat : Stage · Régions : Bretagne »), le nombre de résultats et les premières entreprises. Bouton « Relancer » (remet tous les réglages **et ramène sur Explorer**) et « Effacer mon historique ». En anonyme, rien n'est enregistré.
 
 **Comment ça marche.**
-- `search_history(...)` est appelée dans l'app **après** le calcul des résultats : la recherche en cours apparaît tout de suite.
+- `record_search(...)` est appelée par Explorer **après** le calcul des résultats ; Mon espace affiche la liste.
 - Streamlit relance la page à chaque changement de réglage : pour ne pas créer une entrée par cran de curseur, les changements faits **à moins de 2 minutes** de la dernière recherche la mettent à jour. Une recherche identique à la précédente n'est pas dupliquée. **50 recherches max** par compte.
-- « ↻ Relancer » passe par un rappel `on_click` : Streamlit l'exécute avant de redessiner la page, ce qui permet de modifier les widgets.
+- « Relancer » passe par un rappel `on_click` (qui remplit les réglages) puis `st.switch_page` vers Explorer.
 - `top=` reçoit les **noms** des premières entreprises (affichés tels quels), pas les SIRET.
 
 **Régler.** `SEARCH_MERGE_WINDOW`, `SEARCH_MAX_PER_USER`, `SEARCH_TOP_MAX` dans `radar/accounts.py` ; nombre affiché : `HISTORY_SHOWN` dans `app/compte.py`.
@@ -214,30 +250,30 @@ Par ordre d'intérêt (✅ = déjà une tâche dans `TACHES.md`) :
 
 ---
 
-## 10. Fiche entreprise (T43)
+## 10. Fiche entreprise (T43, T38)
 
 **À quoi ça sert.** Voir d'un coup d'œil tout ce qu'on sait d'une entreprise de la couche orange, et **pourquoi** elle est recommandée. Premier pas vers « tout savoir sur une entreprise dès qu'on la cherche ».
 
-**Ce que voit l'utilisateur.** Sous la liste orange, le panneau « 🔎 Fiche entreprise » : un sélecteur avec toute la liste dans l'ordre du classement (on peut **taper un nom** pour chercher), puis la fiche :
+**Ce que voit l'utilisateur.** Une **fenêtre** par-dessus la page, ouverte par un clic sur une ligne de « Candidatures spontanées » (Explorer) ou d'un résultat de recherche (Entreprises). Depuis la recherche, l'entreprise n'a ni distance ni score final : le bloc « Pourquoi elle est recommandée » est masqué, le reste est affiché. Contenu :
 
 | Bloc | Contenu | D'où ça vient |
 |---|---|---|
 | Identité | nom, établissement, secteur, taille, catégorie (PME, ETI, grande entreprise), siège ou non ; **alerte** si procédure collective | SIRENE (T20), BODACC (T23) |
 | Pourquoi elle est recommandée | phrase « Recommandée car… » si la colonne `explication` existe (T32, Mathis) ; score, distance, P(réponse) simulée ; **décomposition du score** en barres (apport de chaque composante) | score (T30, T42), T32, T37 |
-| Besoin dans le domaine | **niveau de preuve** (🟢 élevé ≥ 5 offres, 🟡 moyen 1 à 4, ⚪ faible 0, ⚪ non collecté si la zone n'a pas été collectée) ; offres du domaine dont stages et alternances ; intensité estimée (offres pour 100 salariés) avec **intervalle crédible à 90 %** et moyenne du secteur | `scores.parquet` (D13) |
+| Besoin dans le domaine | **La Bonne Boîte** (T38) : « ✔ Signalée par La Bonne Boîte (France Travail) comme susceptible d'embaucher en … », avec le potentiel d'embauche (médiane 2,8), sinon « potentiel estimé » ; **niveau de preuve** (🟢 élevé ≥ 5 offres, 🟡 moyen 1 à 4, ⚪ faible 0, ⚪ non collecté si la zone n'a pas été collectée) ; offres du domaine dont stages et alternances ; intensité estimée (offres pour 100 salariés) avec **intervalle crédible à 90 %** et moyenne du secteur | `scores.parquet` (D13) |
 | Offres récentes | jusqu'à 10 offres de l'entreprise (toute l'entreprise, par SIREN ; sans les intermédiaires), avec lien vers l'annonce | `offres.parquet` (T13, T21) |
 | Situation (BODACC) | historique de toutes les annonces de procédure collective sur 2 ans, avec lien | cache BODACC (T23) |
 | Coordonnées et liens | adresse (masquée si diffusion partielle), SIRET, SIREN ; liens Annuaire des entreprises, OpenStreetMap, annonce BODACC | SIRENE |
 
 **Comment ça marche.**
 - `radar/fiche.py` (données, testable sans Streamlit) : chaque fonction lit **un seul** établissement avec DuckDB (`load_company`, `company_offers`, `bodacc_history`), calcule le niveau de preuve (`evidence`) et les liens (`links`). Si un fichier manque (pas d'offres, pas de cache BODACC), le bloc correspondant est simplement vide.
-- `app/fiche_ui.py` (affichage) : `render_fiche(spontaneous)`, appelée dans `app/streamlit_app.py` juste après la liste orange. Résultats mis en cache (`st.cache_data`).
-- La sélection (`fiche_siret`) n'est pas enregistrée dans le profil : ce n'est pas un réglage de recherche.
+- `radar/fiche.py` aussi : `load_scores` (indicateurs du domaine pour une entreprise trouvée par la recherche) et `hiring_signal` (La Bonne Boîte ou estimation, T38).
+- `app/fiche_ui.py` (affichage) : `open_fiche(siret, ligne, domaine)` ouvre la fenêtre (`st.dialog`) ; `fiche_content` dessine la fiche. À la fermeture, la sélection de la liste est vidée pour pouvoir rouvrir la même fiche. Résultats mis en cache (`st.cache_data`). L'ancien panneau avec sélecteur (`render_fiche`) reste pour les tests.
 - **Coordination avec T32** : le popup de la carte est à Mathis ; ce panneau à Celia ; la fiche affiche la colonne `explication` dès qu'elle existe.
 
-**Régler.** Nombre d'entreprises dans le sélecteur : `MAX_CHOICES` (`app/fiche_ui.py`) ; nombre d'offres : `OFFERS_SHOWN` ; seuils du niveau de preuve : `evidence` (`radar/fiche.py`).
+**Régler.** Nombre d'offres : `OFFERS_SHOWN` ; seuils du niveau de preuve : `evidence` (`radar/fiche.py`).
 
-**Tests.** `uv run pytest -q tests/test_fiche.py` (6 tests, dont l'affichage avec AppTest).
+**Tests.** `uv run pytest -q tests/test_fiche.py` (8 tests, dont l'affichage et La Bonne Boîte avec AppTest).
 
 ## 11. La Bonne Boîte dans la couche orange (T28, T29, D27)
 
@@ -252,4 +288,37 @@ Par ordre d'intérêt (✅ = déjà une tâche dans `TACHES.md`) :
 - `scripts/collect_lbb.py` → `data/raw/lbb.parquet` (1 736 établissements data en France, 30 appels) ; `build_all.py` → `scores.parquet` avec `c_embauche_source` (`la_bonne_boite` / `proxy_besoin_attendu`) et `lbb_potentiel` (`radar/score/embauche.py`).
 - `radar/spontaneous.py › signaled_by_lbb(df)` : vrai si `c_embauche_source == "la_bonne_boite"`, faux partout si la colonne manque (anciens scores, données factices) → pas d'erreur, pas de colonne.
 - Limite : La Bonne Boîte ne couvre que 0,3 % des établissements du référentiel (L11) ; autour de Rennes, quelques dizaines.
+
+---
+
+## 12. Recherche d'entreprises (page Entreprises)
+
+**À quoi ça sert.** Trouver une entreprise précise et voir sa fiche, **dans toute la France** (les ~406 000 établissements d'au moins 10 salariés), pas seulement autour de sa ville. Va vers l'idée « tout savoir sur une entreprise dès qu'on la cherche ».
+
+**Ce que voit l'utilisateur.** Une barre « Nom de l'entreprise, SIREN ou SIRET » et un champ facultatif « Ville ou code postal » (début du nom de la commune, ou début du code postal : « 35 » = Ille-et-Vilaine). Jusqu'à 50 établissements, les plus proches de la recherche d'abord, puis les plus gros. Colonnes : Entreprise, Lieu, Taille, Activité, Situation (BODACC). **Un clic ouvre la fiche** en fenêtre.
+
+**Ce qu'elle tolère.**
+
+| Recherche | Résultat |
+|---|---|
+| `sopra steria`, `SOPRA-STERIA` | Sopra Steria (casse, tirets, accents ignorés) |
+| `sopra steira`, `spora steria` | Sopra Steria (fautes de frappe) |
+| `insee` | l'Institut national de la statistique (sigle) |
+| `orane` + ville `rennes` | les établissements d'Orange à Rennes |
+| `552081317` (SIREN) ou un SIRET | tous les établissements de l'entreprise, ou l'établissement |
+
+**Comment ça marche** (`radar/recherche.py`, testable sans Streamlit) :
+1. **Index** chargé une fois (~7 s, puis en mémoire) : nom de l'entreprise + nom de l'établissement + sigle, **normalisés** (minuscules, sans accents ni ponctuation), et commune normalisée.
+2. **Présélection rapide** : les noms qui contiennent les 3 premières lettres de **chaque** mot recherché.
+3. **Note fine, mot par mot** : pour chaque mot recherché, la meilleure ressemblance avec un mot du nom (`rapidfuzz`), puis la moyenne. « sopra steira » / « sopra steria group » ≈ 92 ; « sopra » seul ≈ 68 (écarté sous 75).
+4. **Secours** si rien n'est assez proche (faute dans les premières lettres) : il suffit qu'**un** des mots soit reconnu pour être candidat.
+5. SIREN (9 chiffres) ou SIRET (14 chiffres) : recherche exacte.
+
+Temps de réponse : 0,05 à 0,4 s.
+
+**Régler.** Seuil de ressemblance : `MIN_SCORE` (75) ; colonnes chargées : `INDEX_COLS` (`radar/recherche.py`) ; nombre de résultats : `limit` (50, `app/vues/entreprises.py`).
+
+**Tests.** `uv run pytest -q tests/test_recherche.py` (fautes, accents, sigle, ville, SIREN/SIRET, résultat vide).
+
+**Suites possibles.** Rechercher aussi par activité (« conseil informatique Rennes ») ; regrouper les établissements d'une même entreprise ; ouvrir directement la fiche depuis la carte.
 
