@@ -72,6 +72,7 @@
 
 ## 🔵 En cours
 
+- [ ] T7 — 🔗T11 Ajouter des **recruteurs LBA factices** (`data/raw/lba_recruteurs.parquet`) au générateur T5 — @emma
 
 ## ✅ Fait
 
@@ -90,5 +91,4 @@
 ## 🧊 Bloqué / en attente
 
 - T8 — 🔗T6, données Adzuna de Mathis **Titres anglais mal classés** : sur les vraies offres, compter les titres classés `autre` par `radar.domains.classify` et lister les plus fréquents (dont les titres en anglais), puis ajouter les mots-clés anglais utiles dans `radar/domains.yaml` (expressions complètes avec `\b`, ex. `financial analyst`, `talent acquisition`, `software engineer` ; éviter `controller` ou `analyst` seuls) + un test par cas — @emma, **dès que Mathis partage `adzuna.parquet` (lien S3 via `scripts/share_s3.py`)**
-- T7 — 🔗T11 Ajouter des **recruteurs LBA factices** (`lba_recruteurs.parquet`) au générateur T5 — @emma, **débloquée : branche de Maxence fusionnée** (schéma `recruteurs_lba` dans `radar/schemas.py`)
 - API Offres d'emploi France Travail : suspendue côté France Travail (voir `SOURCES.md`)
