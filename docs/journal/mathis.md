@@ -2,6 +2,22 @@
 
 ---
 
+## 2026-11-27 — T69 suite : vérification des hypothèses du score v1
+
+**Fait :**
+- Diagnostics (désormais dans `scripts/eval_score.py` → `docs/EVAL_SCORE.md`) : surdispersion (Pearson 7,8), erreurs-types de Poisson fausses, 9,7 % de doublons, φ non constant, calibration du milieu imparfaite.
+- Corrections : erreurs-types **sandwich**, **dédoublonnage** (entreprise × titre normalisé), **φ par MV binomiale négative par tranche d'effectif**, « société à mission » retirée (séparation complète), **a posteriori à sens unique**. 1 test en plus.
+- Titre de D33 restauré (coupé lors d'une fusion) ; limite L28.
+
+**Résultats / chiffres clés :**
+- Besoin caché AUC 0,830 ; besoin futur 0,877 ; volume : top 200 14 → 29. Effets robustes : densité ×1,40, capital ×1,45, ETI/GE ×1,7–2,0, établissements ×0,76 ; âge non significatif.
+- Modèle de réponse : 7/7.
+
+**Points d'attention pour l'équipe :**
+- Les intervalles des effets présentés avant cette correction étaient trop étroits : utiliser ceux de `docs/EVAL_SCORE.md`.
+
+---
+
 ## 2026-11-27 — T68 (note) + T69 : score v1 avec covariables
 
 **Fait :**
