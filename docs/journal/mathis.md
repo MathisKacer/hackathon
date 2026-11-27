@@ -2,6 +2,14 @@
 
 ---
 
+## 2026-11-27 — Limites connues + tâches pour les lever
+
+**Fait :**
+- `docs/LIMITES.md` : 16 limites (offres, rapprochement, score, données personnelles), avec impact, réglable ou non, tâche, phrase pour le pitch. Référencé dans `CLAUDE.md` et `PROJET.md`.
+- Nouvelles tâches : T25 (rattrapage du rapprochement), T26 (familles de marque), T27 (revue des intermédiaires), T28 (`c_embauche` réel), T18 (autres domaines). T33 marquée faite (via T30), T22 précisée.
+
+---
+
 ## 2026-11-27 — T30/T31 : score v0 sur vraies données
 
 **Fait :**
