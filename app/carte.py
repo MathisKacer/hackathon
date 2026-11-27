@@ -16,6 +16,7 @@ from commun import BLUE, ORANGE, WEIGHT_KEYS
 from folium.plugins import MarkerCluster
 
 from radar.geocode import Place
+from radar.paliers import tier_color, tier_text
 from radar.spontaneous import COMPONENTS, LBB_SOURCE
 
 FRANCE_CENTER = (46.6, 2.4)
@@ -51,6 +52,17 @@ def _popup_html(group: pd.DataFrame) -> str:
     )
 
 
+def _tier_html(r: pd.Series) -> str:
+    """Palier de priorité (T65) en couleur, score à côté pour l'explicabilité."""
+    rank = r.get("palier")
+    if rank is None or pd.isna(rank):
+        return f"<b style='color:{ORANGE}'>Score {r['score']:.2f}</b>"
+    return (
+        f"<b style='color:{tier_color(rank)}'>{html.escape(tier_text(rank))}</b> "
+        f"<span style='color:#555'>(score {r['score']:.2f})</span>"
+    )
+
+
 def _company_popup(r: pd.Series) -> str:
     """Fiche courte d'une entreprise de la couche orange (texte échappé)."""
     name = r.get("nom_etablissement") if pd.notna(r.get("nom_etablissement")) else None
@@ -72,7 +84,7 @@ def _company_popup(r: pd.Series) -> str:
     return (
         f"<div style='font-family:sans-serif;font-size:13px'>"
         f"<b>{title}</b><br><span style='color:#555'>{'<br>'.join(lines)}</span><br>"
-        f"<b style='color:{ORANGE}'>Score {r['score']:.2f}</b> · {signal}<br>"
+        f"{_tier_html(r)} · {signal}<br>"
         f"{_explication_html(r)}"
         f"{_procedure_html(r)}"
         f"{_lbb_html(r)}"
@@ -183,15 +195,19 @@ def build_map(
     if spontaneous is not None and not spontaneous.empty:
         orange = folium.FeatureGroup(name="🟠 Candidature spontanée", show=True)
         for _, r in spontaneous.head(MAX_SPONTANEOUS_ON_MAP).iloc[::-1].iterrows():
+            # T65 (D32) : couleur et taille selon le palier de priorité, score en info-bulle.
+            rank = r.get("palier", 4)
+            color = tier_color(rank)
             folium.CircleMarker(
                 location=(r["lat"], r["lon"]),
-                radius=4 + 8 * float(r["score"]),
-                color=ORANGE,
+                radius={1: 10, 2: 8, 3: 6}.get(int(rank) if pd.notna(rank) else 4, 4),
+                color=color,
                 weight=1,
                 fill=True,
-                fill_color=ORANGE,
-                fill_opacity=0.35 + 0.5 * float(r["score"]),
-                tooltip=f"{r.get('nom') or ''} — score {r['score']:.2f}",
+                fill_color=color,
+                fill_opacity=0.85,
+                tooltip=f"{r.get('nom') or ''} — {tier_text(rank, False) or 'score'} "
+                f"(score {r['score']:.2f})",
                 popup=folium.Popup(_company_popup(r), max_width=340),
             ).add_to(orange)
         orange.add_to(m)

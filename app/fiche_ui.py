@@ -20,6 +20,7 @@ from favoris import star_button
 
 from radar import fiche
 from radar.domains import load_domains
+from radar.paliers import rule_text, tier_text
 from radar.spontaneous import COMPONENTS
 
 MAX_CHOICES = 5000  # entreprises proposées (le sélecteur permet de taper pour chercher)
@@ -59,7 +60,8 @@ def _label(rank: int, r: pd.Series) -> str:
     if isinstance(etab, str) and etab and etab != name:
         name = f"{etab} ({name})"
     flag = str(r.get("alerte") or "")[:1]
-    return f"{rank}. {name} — {r.get('commune') or ''} · score {r['score']:.2f} {flag}".strip()
+    prio = tier_text(r.get("palier"), with_dots=False) or f"score {r['score']:.2f}"  # T65
+    return f"{rank}. {name} — {r.get('commune') or ''} · {prio} {flag}".strip()
 
 
 def _value(*vals) -> str | None:
@@ -121,7 +123,18 @@ def _why(r: pd.Series) -> None:
     if explication:
         st.info(explication)
     c1, c2, c3 = st.columns(3)
-    c1.metric("Score", f"{r['score']:.2f}", help="Moyenne pondérée des composantes (0 à 1).")
+    # T65 (D32) : palier en mots ; le score reste visible juste en dessous.
+    prio = tier_text(r.get("palier")) if pd.notna(r.get("palier", None)) else ""
+    c1.metric(
+        "Priorité" if prio else "Score",
+        prio or f"{r['score']:.2f}",
+        delta=f"score {r['score']:.2f}" if prio else None,
+        delta_color="off",
+        delta_arrow="off",
+        help=(rule_text() + " Score = moyenne pondérée des critères (0 à 1).")
+        if prio
+        else "Moyenne pondérée des composantes (0 à 1).",
+    )
     if pd.notna(r.get("distance_km")):
         c2.metric("Distance", f"{r['distance_km']:.1f} km")
     p = r.get("p_reponse")

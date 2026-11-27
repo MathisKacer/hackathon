@@ -41,6 +41,7 @@ from streamlit_folium import st_folium
 
 from radar.collect.sirene import TRANCHE_LIBELLES
 from radar.filters import SECTIONS, TAILLES, filter_companies
+from radar.paliers import add_tiers, rule_text, tier_color
 from radar.response.predict import add_p_reponse
 from radar.spontaneous import COMPONENTS, haversine_km, rank_spontaneous, signaled_by_lbb
 
@@ -177,6 +178,8 @@ if not spontaneous.empty:
     spontaneous = spontaneous.assign(_autres_sites=n_same - 1)
     if une_par_entreprise:
         spontaneous = spontaneous.drop_duplicates("_siren").reset_index(drop=True)
+    # T65 (D32) : palier de priorité en mots et en couleurs, parmi les résultats affichés.
+    spontaneous = add_tiers(spontaneous)
 
 # Connecté : la recherche est enregistrée (« Mes recherches », page Mon espace).
 record_search(
@@ -267,6 +270,7 @@ with tab_spont:
                 ).map(SITUATION_COURTE),
                 # T29 (D27) : ✔ si La Bonne Boîte signale l'établissement comme recruteur
                 "La Bonne Boîte": signaled_by_lbb(spontaneous).map({True: "✔", False: ""}),
+                "Priorité": spontaneous["palier_libelle"],
                 "Score": spontaneous["score"],
             }
         )
@@ -282,8 +286,14 @@ with tab_spont:
         if not table["La Bonne Boîte"].astype(bool).any():
             table = table.drop(columns="La Bonne Boîte")
         version = st.session_state.get("_liste_version", 0)
+        # T65 : couleur du palier sur la colonne « Priorité » (du plus foncé au gris).
+        tier_colors = dict(zip(spontaneous["palier_libelle"], spontaneous["palier"], strict=True))
+        styled = table.style.map(
+            lambda v: f"color: {tier_color(tier_colors.get(v))}; font-weight: 600",
+            subset=["Priorité"],
+        )
         event = st.dataframe(
-            table,
+            styled,
             hide_index=True,
             width="stretch",
             on_select="rerun",
@@ -294,8 +304,10 @@ with tab_spont:
                 "Autres sites": st.column_config.TextColumn(
                     help="Autres sites de la même entreprise dans le rayon (voir sa fiche)."
                 ),
-                "Score": st.column_config.ProgressColumn(
-                    min_value=0.0, max_value=1.0, format="%.2f"
+                "Priorité": st.column_config.TextColumn(help=rule_text()),
+                "Score": st.column_config.NumberColumn(
+                    format="%.2f",
+                    help="Moyenne pondérée des critères (0 à 1), d'où vient la priorité.",
                 ),
                 "Chance de réponse": st.column_config.NumberColumn(
                     format="percent", help=CHANCE_HELP
