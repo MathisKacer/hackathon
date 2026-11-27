@@ -62,6 +62,7 @@
 
 **Comptes (optionnels, D14) : le mode démo anonyme reste le parcours par défaut**
 - [ ] T49 — 🔗T48 **Historique des recherches** (connecté seulement) : chaque recherche enregistrée (date, paramètres, nombre de résultats, top 5 SIRET) ; liste « Mes recherches » avec bouton « Relancer » ; en anonyme, rien n'est écrit (`st.session_state` seulement)
+- [ ] T19 — **Données factices vs vraies offres** : dans `fake_data`, `date_collecte` est une date alors que les offres Adzuna l'ont en texte → l'app plante sur les données factices (`offers['date_collecte'].max()[:10]`, dernière ligne de `streamlit_app.py`) et elles n'ont pas `region_requete`. Aligner l'un ou l'autre
 
 ## 🟢 P3 — Bonus (seulement si le P2 est fini)
 
@@ -79,11 +80,11 @@
 
 ## 🔵 En cours
 
-- [ ] T48 — 🔗T40,T41,T42 **Connexion facultative + profil** : bouton « Se connecter / Créer un compte » dans la barre latérale (`streamlit-authenticator`, mots de passe hachés bcrypt), « Continuer sans compte » par défaut. Profil enregistré = domaine, contrat visé, adresse, rayon, filtres, poids ; rechargé à la connexion. Stockage SQLite `data/app/radar.db` (hors Git). Bouton « Supprimer mon compte » (RGPD) — @celia
 - [ ] T17 — 🔗T11 **Partager les données LBA sur S3** (`offres_raw/lba.parquet`, `lba_recruteurs.parquet`) : relancer `scripts/collect_lba.py` sur Onyxia puis `scripts/share_s3.py` — @maxence
 
 ## ✅ Fait
 
+- [x] T48 — **Connexion facultative + profil** (D14) : mode démo anonyme par défaut ; bloc compte dans la barre latérale (connexion, création, enregistrer le profil, déconnexion, suppression) ; `radar/accounts.py` + `app/compte.py`, SQLite `data/app/radar.db`, mots de passe scrypt. ⚠️ **T40/T41/T42** : donner une `key` à chaque nouveau réglage et l'ajouter à `PROFILE_KEYS` dans `app/streamlit_app.py` — @celia
 - [x] T33 — Modèle gamma-Poisson (nombre d'offres du domaine, avec l'effectif comme exposition) ; comparer au bêta-binomial → fait dans T30 (D13)
 - [x] T31 — 🔗T30 **Rétrécissement bêta-binomial** : a priori par secteur NAF, a posteriori, intervalle crédible — @mathis → fusionnée dans T30 : gamma-Poisson au lieu de bêta-binomial (D13)
 - [x] T30 — 🔗T5 **Score v0** sur données factices : composantes simples (part brute des offres du domaine, opportunité cachée, distance, taille) → `scores.parquet` — @mathis → gamma-Poisson réel (D13), `scripts/build_scores.py`

@@ -40,3 +40,10 @@
 | # | Limite | Impact | Réglable ? | Tâche |
 |---|---|---|---|---|
 | L16 | SIRENE contient des noms de personnes physiques (dirigeants, entrepreneurs individuels) | Ne pas les afficher comme « contacts » ; positions masquées si diffusion partielle (fait) | ✅ règle d'affichage dans l'app | T43 |
+
+## Comptes (T48)
+
+| # | Limite | Impact | Réglable ? | Tâche | À dire au pitch |
+|---|---|---|---|---|---|
+| L17 | Base des comptes en SQLite **dans le pod Onyxia** | Comptes et profils perdus au redémarrage du service ; un seul serveur | ✅ base hébergée (PostgreSQL) ou copie sur S3 | — | « Comptes en local pour la démo ; en production, une base hébergée » |
+| L18 | Pas de « se souvenir de moi » ni de mot de passe oublié | Recharger la page (F5) déconnecte ; un mot de passe oublié = nouveau compte (pas d'e-mail collecté, volontairement) | ✅ cookie signé ; récupération par e-mail | — | « On ne collecte pas d'e-mail : minimum de données personnelles » |

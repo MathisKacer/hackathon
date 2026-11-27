@@ -32,6 +32,7 @@ hackathon/
 ├── .env.example                # noms des variables d'environnement (sans valeurs)
 ├── radar/                      # package Python
 │   ├── config.py               # chemins, lecture du .env
+│   ├── accounts.py             # T48 : comptes facultatifs et profils (SQLite data/app/radar.db, scrypt)
 │   ├── schemas.py              # colonnes du contrat de données (copie en code du tableau ci-dessous) + check_columns()
 │   ├── fake_data.py            # T5 : générateur de données FACTICES respectant le contrat
 │   ├── domains.yaml            # T6 : domaines (data, informatique, finance, marketing, rh) → codes ROME 4.0 + mots-clés
@@ -49,7 +50,7 @@ hackathon/
 │   │   ├── params.yaml         # vrais paramètres de la simulation (documentés)
 │   │   └── model.py            # entraîne le modèle de réponse, calibration, paramètres retrouvés
 │   └── llm/letter.py           # génération de lettre (bonus)
-├── app/streamlit_app.py
+├── app/streamlit_app.py        # + app/compte.py : bloc « compte » de la barre latérale (T48)
 ├── scripts/                    # points d'entrée : collect_all.py, build_all.py, make_fake_data.py
 ├── notebooks/                  # exploration (sorties vidées avant commit)
 ├── tests/
@@ -71,6 +72,8 @@ Données factices pour développer sans la collecte : `uv run python scripts/mak
 | `scores.parquet` | score | app | **une ligne par (`siret`, `domaine`)** : composantes dans [0, 1] (`c_intensite, c_dynamisme, c_embauche…`) + `n_offres, n_offres_domaine, n_stage_domaine, n_alternance_domaine, intensite_post, intensite_ic_bas, intensite_ic_haut` ; **réel (T30)** : schéma `scores_reels` (+ `siren, couverture, prior_moyenne, besoin_attendu, n_*_domaine_siren, volume_suspect, c_embauche_source, c_dynamisme_disponible`), domaine data seulement, `intensite_*` en offres pour 100 salariés |
 | `candidatures_simulees.parquet` | response/simulate | response/model | `siret, profil_id, domaine, contrat_vise, distance_km, <variables>, p_vraie, repondu: bool` — **données simulées** |
 | `p_reponse.parquet` | response/model | app | `siret, domaine, contrat_vise, p_reponse, contributions…` |
+
+**Comptes (T48, D14)** : `data/app/radar.db` (SQLite, jamais dans Git ni sur S3) — tables `users(id, username, password_hash, created_at)` et `profils(user_id, data JSON, updated_at)`. Rien n'y est écrit en mode anonyme.
 
 Le score final **n'est pas stocké** : l'app le calcule à la volée, `score = Σ wⱼ · cⱼ`, avec les poids choisis par l'utilisateur. L'adéquation (distance, CV) et l'**opportunité cachée** dépendent de l'utilisateur (contrat visé) et sont calculées dans l'app : opportunité cachée = besoin dans le domaine (offres d'emploi) mais 0 offre du contrat visé (stage ou alternance).
 
