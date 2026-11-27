@@ -2,6 +2,23 @@
 
 ---
 
+## 2026-11-27 — T20 : référentiel SIRENE + partage S3
+
+**Fait :**
+- `radar/collect/sirene.py` + `scripts/extract_sirene.py` : DuckDB lit à distance StockEtablissement + Géolocalisation + StockUniteLegale + NAF rév. 2 → `data/processed/entreprises.parquet` (contrat d'Emma vérifié par `check_columns`). Tests sans réseau : `tests/test_sirene.py`.
+- `scripts/share_s3.py` : partage via liens S3 temporaires (24 h) pour les équipiers hors Onyxia ; README de démarrage.
+
+**Résultats / chiffres clés :**
+- **406 266 établissements** actifs ≥ 10 salariés, 99,7 % géolocalisés, 99,8 % nommés, 100 % avec libellé NAF ; PME 245 k, ETI 96 k, GE 61 k. Effectifs millésime 2024. Extraction en ~2 min.
+- 245 établissements à diffusion partielle → position masquée (RGPD).
+- Ajout de `effectif_estime` (moyenne géométrique de la tranche) pour l'exposition du modèle gamma-Poisson.
+
+**Points d'attention pour l'équipe :**
+- `ca_n`, `ca_n_1`, `lbb_proba`, `procedure_collective` sont **NA** (pas encore alimentés) : ne pas les traiter comme 0/False dans le score.
+- Fichier partagé en lien privé (demander la commande `curl` à Mathis).
+
+---
+
 ## 2026-11-27 — T39 : carte couche 1 « Offres réelles »
 
 **Fait :**
