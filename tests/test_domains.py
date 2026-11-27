@@ -56,7 +56,7 @@ def test_fake_data_uses_the_same_domains():
         ("Ingénieur Réseaux, WiFi & Téléphonie H/F", "informatique"),
         ("Contrôleur de gestion H/F", "finance"),
         ("Stage - Analyste financier", "finance"),
-        ("Accounting Generalist", OTHER),  # anglais non couvert : assumé, T13 pourra compléter
+        ("Accounting Generalist", "finance"),  # T8
         ("Chargé de communication", "marketing"),
         ("Alternance Chef de produit marketing digital", "marketing"),
         ("Chargé de recrutement", "rh"),
@@ -81,3 +81,40 @@ def test_classify_with_rome_code():
     assert classify("Data engineer", "M1805") == "informatique"  # le code sûr prime sur le titre
     assert classify("Alternance", "M1419,M1405") == "data"  # plusieurs codes (La bonne alternance)
     assert classify("Assistant RH", "Z9999") == "rh"  # code inconnu → titre
+
+
+@pytest.mark.parametrize(
+    "title,expected",
+    [
+        # T8 — titres relevés sur les vraies offres Adzuna (2026-11-27)
+        ("Analytics Engineer Senior Databricks (IT)", "data"),
+        ("MLOps Engineer (CDI)", "data"),
+        ("Consultant(e) Decision Scientist – Retail", "data"),
+        ("Pricing Analyst (H/F)", "data"),
+        ("RWE Delivery Manager - France/Germany", "data"),
+        ("Business Analyst (H/F)", "informatique"),
+        ("Architecte de solutions H/F", "informatique"),
+        ("Senior Product Manager", "informatique"),
+        ("Site Reliability Engineer Confirmé·e H/F", "informatique"),
+        ("Tech Lead API F/H", "informatique"),
+        ("Consultant Fonctionnel SAP SD F/H", "informatique"),
+        ("IT Support Technician", "informatique"),
+        ("Senior General Accountant", "finance"),
+        ("Consultant Senior Capital Market", "finance"),
+        ("CDI- Controlling Manager H/F", "finance"),
+        ("Senior People Business Partner (H/F)", "rh"),
+        ("Recruitment Coordinator H/F", "rh"),
+        ("Talent Acquisition Specialist", "rh"),  # était « marketing » (mot « acquisition »)
+        ("Paid Acquisition Specialist - Alternance H/F", "marketing"),
+        ("Head of Acquisition", "marketing"),
+        # restent « autre » : métiers hors des 5 domaines, voulu
+        ("Account Executive - Acquisition", OTHER),
+        ("Sales Development Representative (H/F)", OTHER),
+        ("Senior Clinical Research Associate", OTHER),
+        ("Customer Success Manager", OTHER),
+        ("Négociateurs(trices) immobilier H/F", OTHER),
+        ("GenAI Sales Specialist", OTHER),  # « GenAI » seul ne suffit pas
+    ],
+)
+def test_classify_english_titles_t8(title, expected):
+    assert classify(title) == expected

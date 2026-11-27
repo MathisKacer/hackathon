@@ -80,6 +80,15 @@ domaines:
       - 'd[ée]mograph'
       - 'bio-?informati'
       - 'mod[ée]lisation (statistique|pr[ée]dictive)'
+      # T8 : titres anglais (et oublis) relevés sur les vraies offres Adzuna
+      - 'analytics'
+      - '\b(ml|llm) ?ops\b'
+      - '\b(data|decision|research|applied|ml|ai) scientists?\b'
+      - '\b(gen ?ai|ai|ml|llm) engineer'
+      - 'generative ai'
+      - 'pricing analyst'
+      - '\b(insights?|reporting) analyst'
+      - 'real[- ]world (evidence|data)|\brwe\b'
     exclusions:
       - 'data ?cent(er|re)'
       - 'protection des donn[ée]es|data protection|\bdpo\b'
@@ -199,6 +208,15 @@ domaines:
       - 'helpdesk|technicien\w* (informatique|support)'
       - 'data ?cent(er|re)'
       - 'r[ée]seaux? (et|&) t[ée]l[ée]com'
+      # T8 : titres anglais (et oublis) relevés sur les vraies offres Adzuna
+      - '\b(software|security|systems?|platform|cloud|network|devops|site reliability|back[- ]?end|front[- ]?end|full[- ]?stack|qa|test|ops|solutions?|forward deployed|embedded) engineer'
+      - '\btech(nical)? lead'
+      - '\bit (support|manager|technician|project)'
+      - 'product manager|product management'
+      - 'business analyst'
+      - 'solutions? architect|architecte (de )?solutions?'
+      - 'technico-?fonctionnel|consultant\w* fonctionnel'
+      - 'salesforce|\bsap\b|\berp\b'
     exclusions: []
 
   finance:
@@ -272,6 +290,13 @@ domaines:
       - '\bdaf\b|\bcfo\b'
       - 'souscript'
       - 'middle office|back office'
+      # T8 : titres anglais (et oublis) relevés sur les vraies offres Adzuna
+      - '\baccount(ant|ing)\b'
+      - 'capital markets?'
+      - '\bcontrolling\b'
+      - '\btreasury\b'
+      - 'investment (bank|manager|analyst|monitoring)'
+      - 'portfolio (manager|management)'
     exclusions: []
 
   marketing:
@@ -330,8 +355,9 @@ domaines:
       - '[ée]v[ée]nementiel'
       - '[ée]tudes? de march[ée]'
       - 'trade marketing'
-      - 'acquisition'
-    exclusions: []
+      - 'acquisition (client|digitale?|marketing|payante)|user acquisition|paid acquisition|head of acquisition|acquisition (specialist|manager|lead)'  # T8 : « acquisition » seul attrapait « Talent Acquisition »
+    exclusions:
+      - 'talent acquisition'  # T8 : c'est du recrutement (domaine rh)
 
   rh:
     libelle: 'Ressources humaines'
@@ -360,4 +386,8 @@ domaines:
       - '\bhr(bp)?\b|hr business partner|human resources'
       - 'relations sociales'
       - '\bgpec\b'
+      # T8 : titres anglais (et oublis) relevés sur les vraies offres Adzuna
+      - 'people (business )?partner|people (operations|experience|associate)'
+      - 'recruit(er|ment|ing)'
+      - 'talent acquisition'
     exclusions: []
