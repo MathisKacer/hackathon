@@ -75,10 +75,10 @@
 ## 🔵 En cours
 
 - [ ] T20 — **Référentiel SIRENE France** : stock parquet géolocalisé (data.gouv) → établissements actifs et employeurs, avec NAF, tranche d'effectif et lat/lon → `entreprises.parquet` (DuckDB) — @mathis
-- [ ] T11 — 🔗T2 **Collecteur La bonne alternance**, France entière : offres + recruteurs potentiels, avec SIRET → `offres_raw/lba/` — @maxence
 
 ## ✅ Fait
 
+- [x] T11 — **Collecteur La bonne alternance** (export complet France) : `uv run python scripts/collect_lba.py` → `data/raw/offres_raw/lba.parquet` (12 748 offres) + `data/raw/lba_recruteurs.parquet` (382 180 recruteurs potentiels, dont 28 845 avec un ROME data) — @maxence
 - [x] T6 — **Dictionnaire « domaines »** : `radar/domains.yaml` (data, informatique, finance, marketing, rh ; codes ROME 4.0 vérifiés + mots-clés) et `radar/domains.py` (`load_domains`, `classify`) — @emma
 - [x] T39 — 🔗T4 **Carte couche 1 « Offres réelles » (bleu)** : afficher les offres de `data/raw/offres_raw/*.parquet` (Adzuna maintenant, La bonne alternance ensuite), avec popup titre / entreprise / lien vers l'annonce ; filtre v0 par mots-clés dans le titre en attendant T13 — @mathis
 - [x] T12 — 🔗T10 **Collecteur Adzuna** France entière dans la limite du quota (offres « data » région par région, Bretagne et Île-de-France d'abord, offres de moins de 60 jours) + cache disque + compteur de quota → `data/raw/offres_raw/adzuna.parquet` — @mathis
@@ -90,5 +90,5 @@
 ## 🧊 Bloqué / en attente
 
 - T8 — 🔗T6, données Adzuna de Mathis **Titres anglais mal classés** : sur les vraies offres, compter les titres classés `autre` par `radar.domains.classify` et lister les plus fréquents (dont les titres en anglais), puis ajouter les mots-clés anglais utiles dans `radar/domains.yaml` (expressions complètes avec `\b`, ex. `financial analyst`, `talent acquisition`, `software engineer` ; éviter `controller` ou `analyst` seuls) + un test par cas — @emma, **dès que Mathis partage `adzuna.parquet` (lien S3 via `scripts/share_s3.py`)**
-- T7 — 🔗T11 Ajouter des **recruteurs LBA factices** (`lba_recruteurs.parquet`) au générateur T5 — @emma, **après la fusion de la branche de Maxence**
+- T7 — 🔗T11 Ajouter des **recruteurs LBA factices** (`lba_recruteurs.parquet`) au générateur T5 — @emma, **débloquée : branche de Maxence fusionnée** (schéma `recruteurs_lba` dans `radar/schemas.py`)
 - API Offres d'emploi France Travail : suspendue côté France Travail (voir `SOURCES.md`)
