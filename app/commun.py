@@ -9,12 +9,13 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
+import pyarrow.parquet as pq
 import streamlit as st
 
 from radar.communes import load_communes, place_of
 from radar.config import FILES
 from radar.domains import classify, load_domains
-from radar.familles import build_families
+from radar.familles import OFFER_COLS, build_families
 from radar.filters import SECTIONS, TAILLES
 from radar.geo import region_of
 from radar.geocode import Place
@@ -105,9 +106,14 @@ def get_families(domaine: str) -> pd.DataFrame:
     """Familles de marque (T26, D36) : sociétés d'ETI/GE reliées par le début de leur nom."""
     if not (FILES["entreprises"].exists() and FILES["scores"].exists()):
         return pd.DataFrame()
-    ent = pd.read_parquet(FILES["entreprises"], columns=["siren", "nom", "categorie"])
-    offer_cols = ["n_offres_domaine_siren", "n_stage_domaine_siren", "n_alternance_domaine_siren"]
-    sc = pd.read_parquet(FILES["scores"], columns=["siren", "domaine", *offer_cols])
+    # Seulement les colonnes présentes : les scores factices n'ont pas les comptes `*_siren` (T75).
+    wanted_e = ["siret", "siren", "nom", "categorie"]
+    ent_cols = pq.read_schema(FILES["entreprises"]).names
+    ent = pd.read_parquet(FILES["entreprises"], columns=[c for c in wanted_e if c in ent_cols])
+    wanted_s = ["siret", "siren", "domaine", *OFFER_COLS]
+    wanted_s += [c.removesuffix("_siren") for c in OFFER_COLS]
+    sc_cols = pq.read_schema(FILES["scores"]).names
+    sc = pd.read_parquet(FILES["scores"], columns=[c for c in wanted_s if c in sc_cols])
     return build_families(ent, sc, domaine)
 
 

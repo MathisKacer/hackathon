@@ -72,3 +72,25 @@ def test_empty_and_signal():
         "Groupe Thales : 3 offres déjà publiées"
     )
     assert family_signal({"famille_offres": 0}) == ""
+
+
+def test_fake_scores_without_siren_columns():
+    """T75 : scores factices = comptes par site, sans `siren` ni colonnes `*_siren`."""
+    ent, _ = _data()
+    ent = ent.assign(siret=[s + "0001" for s in ent["siren"]])
+    extra = pd.DataFrame({"siren": ["1"], "nom": ["THALES SIX GTS"], "categorie": ["GE"]})
+    ent = pd.concat([ent, extra.assign(siret="10002")], ignore_index=True)  # 2e site de 1
+    sc = pd.DataFrame(
+        {
+            "siret": ["10001", "10002", "20001", "30001"],
+            "domaine": "data",
+            "n_offres_domaine": [2, 1, 0, 1],
+            "n_stage_domaine": [1, 1, 0, 0],
+            "n_alternance_domaine": [0, 0, 0, 1],
+        }
+    )
+    fam = build_families(ent, sc).set_index("siren")
+    assert fam.loc["1", "n_offres_domaine_siren"] == 3  # deux sites additionnés
+    assert fam.loc["1", "n_stage_domaine_siren"] == 2
+    out = mark_family_offers(pd.DataFrame({"siren": ["2"]}), fam.reset_index(), "Stage")
+    assert out["famille_offres"].tolist() == [2]

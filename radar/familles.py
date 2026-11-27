@@ -58,6 +58,31 @@ def brand_key(name: str | None) -> str | None:
     return None
 
 
+OFFER_COLS = ["n_offres_domaine_siren", "n_stage_domaine_siren", "n_alternance_domaine_siren"]
+
+
+def _offers_by_siren(scores: pd.DataFrame, entreprises: pd.DataFrame, domaine: str) -> pd.DataFrame:
+    """Offres du domaine par SIREN, quel que soit le format des scores (T75).
+
+    Vrais scores : colonnes `*_siren` (déjà au niveau de l'entreprise). Scores factices : seulement
+    les comptes par site (`n_offres_domaine`…) et parfois pas de `siren` → on retrouve le SIREN
+    par le SIRET et on additionne les sites.
+    """
+    sc = scores
+    if "domaine" in sc:
+        sc = sc[sc["domaine"] == domaine]
+    if "siren" not in sc and "siret" in sc and {"siret", "siren"} <= set(entreprises):
+        sc = sc.merge(entreprises[["siret", "siren"]].drop_duplicates("siret"), on="siret")
+    if "siren" not in sc:
+        return pd.DataFrame(columns=OFFER_COLS)
+    if all(c in sc for c in OFFER_COLS):
+        return sc.groupby("siren")[OFFER_COLS].max()
+    by_site = [c.removesuffix("_siren") for c in OFFER_COLS]
+    present = [c for c in by_site if c in sc]
+    out = sc.groupby("siren")[present].sum() if present else pd.DataFrame(index=[])
+    return out.rename(columns=lambda c: f"{c}_siren").reindex(columns=OFFER_COLS, fill_value=0)
+
+
 def build_families(
     entreprises: pd.DataFrame, scores: pd.DataFrame, domaine: str = "data"
 ) -> pd.DataFrame:
@@ -68,6 +93,7 @@ def build_families(
     (`n_offres_domaine_siren`, `n_stage_domaine_siren`, `n_alternance_domaine_siren`) : les
     totaux de la famille se calculent selon le contrat visé (`mark_family_offers`).
     """
+    sc = _offers_by_siren(scores, entreprises, domaine)
     cols = ["siren", "nom", "categorie"]
     ent = entreprises[[c for c in cols if c in entreprises]].drop_duplicates("siren")
     ent = ent[ent["categorie"].isin(BIG_CATEGORIES)].copy()
@@ -75,17 +101,11 @@ def build_families(
     ent = ent.dropna(subset=["famille"])
     size = ent.groupby("famille")["siren"].transform("size")
     ent = ent[size >= 2].assign(famille_n_societes=size[size >= 2])
-    offer_cols = ["n_offres_domaine_siren", "n_stage_domaine_siren", "n_alternance_domaine_siren"]
-    sc = scores
-    if "domaine" in sc:
-        sc = sc[sc["domaine"] == domaine]
-    present = [c for c in offer_cols if c in sc]
-    offers = sc.groupby("siren")[present].max() if present else pd.DataFrame()
-    ent = ent.merge(offers, left_on="siren", right_index=True, how="left")
-    for c in offer_cols:
-        ent[c] = ent[c].fillna(0).astype(int) if c in ent else 0
+    ent = ent.merge(sc, left_on="siren", right_index=True, how="left")
+    for c in OFFER_COLS:
+        ent[c] = ent[c].fillna(0).astype(int)
     ent["famille_nom"] = ent["famille"].str.title()  # « Geodis », « Credit Mutuel »
-    out_cols = ["siren", "famille", "famille_nom", "famille_n_societes", *offer_cols]
+    out_cols = ["siren", "famille", "famille_nom", "famille_n_societes", *OFFER_COLS]
     return ent[out_cols].reset_index(drop=True)
 
 
