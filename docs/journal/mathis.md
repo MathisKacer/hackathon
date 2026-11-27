@@ -2,6 +2,24 @@
 
 ---
 
+## 2026-11-27 — T39 : carte couche 1 « Offres réelles »
+
+**Fait :**
+- `radar/process/quick_filter.py` : filtre v0 « data » par regex sur le titre + type de contrat déduit du titre (stage / alternance / emploi), en attendant T13. 27 tests (`tests/test_quick_filter.py`).
+- `app/streamlit_app.py` : carte folium (OpenStreetMap), **un point bleu par lieu** (taille selon le nombre d'offres, popup listant les offres avec lien vers l'annonce), filtres (contrat visé, régions, mot-clé, ancienneté, « seulement data »), indicateurs, tableau avec liens. Légende prévue pour la couche orange (T40).
+
+**Résultats / chiffres clés :**
+- 10 633 offres géolocalisées → **3 298 offres data** (31 %), dont 557 stages et 41 alternances, 1 101 entreprises.
+- Seulement 374 positions distinctes (offres placées au centre de la commune) → regroupement par lieu.
+- Page de carte ~1 Mo ; titres échappés dans les popups (contenu venant d'Internet).
+
+**Points d'attention pour l'équipe :**
+- Les tuiles CartoDB exigent maintenant une clé d'API → utiliser OpenStreetMap.
+- Pour T40 : ajouter un `folium.FeatureGroup(name="🟠 Candidature spontanée")` dans `build_map` ; la légende et le contrôle des couches sont déjà en place.
+- Pas de capture d'écran possible depuis Claude : à vérifier visuellement via `<URL du service>/proxy/8501/`.
+
+---
+
 ## 2026-11-27 — T12 : collecteur Adzuna
 
 **Fait :**
