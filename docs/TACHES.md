@@ -76,6 +76,7 @@
 
 ## 🔵 En cours
 
+- [ ] T70 — **Apparence plus vivante** (hors fiche, en attendant T67) : bandeau d'en-tête coloré avec la recherche posée dessus, chiffres clés en tuiles colorées, meilleures cibles en cartes au-dessus du tableau, icônes sobres (Material) au lieu des emojis, finitions (coins arrondis, ombres, titres) — @celia
 - [ ] T67 — **Niveau d'études attendu** : l'afficher (offres, fiche) et/ou en faire un filtre. Données : La bonne alternance fournit `niveau_diplome` (champ `target_diploma`) ; **Adzuna ne le donne pas** → à déduire du texte (« Bac+5 », « Master », « M2 »…) ou à laisser « non précisé ». Pour les candidatures spontanées (pas d'offre), pas de niveau observé. Nouveau champ → `radar/schemas.py` et `ARCHITECTURE.md` — @emma
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
 - _…_
