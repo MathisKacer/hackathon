@@ -4,6 +4,15 @@
 
 ---
 
+## 2026-11-27 — Fiche site : candidature spontanée toujours expliquée (complément de T76)
+
+**Fait :**
+- Constat (en testant l'app) : la fiche **entreprise** affichait le bloc « Candidature spontanée » (avec un message si aucune ville ou aucun site ciblé), mais la fiche d'un **site** n'affichait **rien** quand le site n'était pas dans les candidatures de la recherche : aucune ville (cas fréquent après un redémarrage de l'app), hors rayon, offre existante, filtre, ou « Une ligne par entreprise » cochée.
+- Ajout de `_site_not_candidate` dans `app/fiche_ui.py` (code de Celia, T76) : bloc « Candidature spontanée » avec la bonne explication, et un bouton vers le site gardé dans le cas « Une ligne par entreprise ».
+- Vérifié (AppTest) : sans ville / site hors des résultats / site dans les résultats. Note laissée à Celia dans `TACHES.md` (T76).
+
+---
+
 ## 2026-11-27 — T75 : plantage avec les données factices (mon code de T26)
 
 **Fait :**
