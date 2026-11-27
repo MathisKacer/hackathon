@@ -250,3 +250,61 @@ def test_old_database_is_migrated(tmp_path):
     cols = {r[1] for r in c.execute("PRAGMA table_info(users)")}
     assert {"failed_logins", "locked_until"} <= cols
     c.close()
+
+
+# --- Favoris (T54) ------------------------------------------------------------------------
+
+
+def test_favorites_add_list_remove(con):
+    from radar.accounts import add_favorite, favorite_refs, list_favorites, remove_favorite
+
+    uid = create_user(con, "celia", "Radar-Demo-2026")
+    add_favorite(con, uid, "entreprise", "11111111100011", "ACME", {"commune": "RENNES"}, now=T0)
+    add_favorite(
+        con,
+        uid,
+        "offre",
+        "adzuna-42",
+        "Stage data — ACME",
+        {"url": "https://ex.org"},
+        now=T0 + timedelta(minutes=1),
+    )
+    add_favorite(con, uid, "entreprise", "11111111100011", "ACME (renommée)", now=T0)  # doublon
+    favs = list_favorites(con, uid)
+    assert [f["kind"] for f in favs] == ["offre", "entreprise"]  # récents d'abord
+    assert favs[1]["label"] == "ACME (renommée)" and len(favs) == 2
+    assert favorite_refs(con, uid, "entreprise") == {"11111111100011"}
+    remove_favorite(con, uid, "offre", "adzuna-42")
+    assert [f["kind"] for f in list_favorites(con, uid)] == ["entreprise"]
+
+
+def test_favorites_note_candidate_and_isolation(con):
+    from radar.accounts import add_favorite, list_favorites, update_favorite
+
+    a = create_user(con, "celia", "Radar-Demo-2026")
+    b = create_user(con, "mathis", "Autre-Compte-42")
+    add_favorite(con, a, "entreprise", "1", "ACME")
+    update_favorite(con, a, "entreprise", "1", note="Appeler lundi", candidate=True)
+    f = list_favorites(con, a, "entreprise")[0]
+    assert f["note"] == "Appeler lundi" and f["candidate"] is True
+    add_favorite(con, a, "entreprise", "1", "ACME")  # réajout : note et case conservées
+    assert list_favorites(con, a)[0]["note"] == "Appeler lundi"
+    assert list_favorites(con, b) == []
+    with pytest.raises(AccountError):
+        update_favorite(con, a, "entreprise", "1", note="x" * 501)
+    with pytest.raises(AccountError):
+        add_favorite(con, a, "inconnu", "1", "?")
+
+
+def test_favorites_deleted_with_account_and_capped(con, monkeypatch):
+    from radar import accounts
+    from radar.accounts import add_favorite
+
+    uid = create_user(con, "celia", "Radar-Demo-2026")
+    monkeypatch.setattr(accounts, "FAVORITES_MAX_PER_USER", 2)
+    add_favorite(con, uid, "offre", "1", "a")
+    add_favorite(con, uid, "offre", "2", "b")
+    with pytest.raises(AccountError, match="maximum"):
+        add_favorite(con, uid, "offre", "3", "c")
+    delete_user(con, uid)
+    assert con.execute("SELECT count(*) FROM favoris").fetchone()[0] == 0

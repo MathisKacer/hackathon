@@ -103,6 +103,11 @@ SEARCH_MERGE_WINDOW = timedelta(minutes=2)
 SEARCH_MAX_PER_USER = 50
 SEARCH_TOP_MAX = 5
 
+# Favoris (T54) : offres (ref = offre_id) et entreprises (ref = siret).
+FAVORITE_KINDS = ("offre", "entreprise")
+FAVORITES_MAX_PER_USER = 500
+NOTE_MAX = 500
+
 # scrypt : paramètres recommandés pour un usage interactif (~50 ms, 16 Mo de mémoire).
 _SCRYPT = {"n": 2**14, "r": 8, "p": 1}
 
@@ -129,6 +134,18 @@ CREATE TABLE IF NOT EXISTS recherches (
     top_resultats TEXT    NOT NULL
 );
 CREATE INDEX IF NOT EXISTS recherches_user ON recherches (user_id, created_at);
+CREATE TABLE IF NOT EXISTS favoris (
+    id         INTEGER PRIMARY KEY,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind       TEXT    NOT NULL CHECK (kind IN ('offre', 'entreprise')),
+    ref        TEXT    NOT NULL,
+    label      TEXT    NOT NULL,
+    details    TEXT    NOT NULL,
+    note       TEXT    NOT NULL DEFAULT '',
+    candidate  INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT    NOT NULL,
+    UNIQUE (user_id, kind, ref)
+);
 """
 
 
@@ -296,7 +313,7 @@ def get_username(con: sqlite3.Connection, user_id: int) -> str | None:
 
 
 def delete_user(con: sqlite3.Connection, user_id: int) -> None:
-    """Supprime le compte et tout ce qui lui est rattaché (profil, historique)."""
+    """Supprime le compte et tout ce qui lui est rattaché (profil, historique, favoris)."""
     with con:
         con.execute("DELETE FROM users WHERE id = ?", (user_id,))
 
@@ -406,3 +423,115 @@ def list_searches(con: sqlite3.Connection, user_id: int, limit: int = 20) -> lis
 def clear_searches(con: sqlite3.Connection, user_id: int) -> None:
     with con:
         con.execute("DELETE FROM recherches WHERE user_id = ?", (user_id,))
+
+
+# --- Favoris (T54) -------------------------------------------------------------------------
+
+
+def _check_kind(kind: str) -> None:
+    if kind not in FAVORITE_KINDS:
+        raise AccountError(f"Type de favori inconnu : {kind!r}.")
+
+
+def add_favorite(
+    con: sqlite3.Connection,
+    user_id: int,
+    kind: str,
+    ref: str,
+    label: str,
+    details: dict | None = None,
+    now: datetime | None = None,
+) -> None:
+    """Ajoute un favori (sans doublon : un favori existant garde sa note et sa case)."""
+    _check_kind(kind)
+    data = _dump(details or {})
+    if len(data.encode()) > PROFILE_MAX_BYTES:
+        raise AccountError("Favori trop volumineux.")
+    n = con.execute("SELECT count(*) FROM favoris WHERE user_id = ?", (user_id,)).fetchone()[0]
+    with con:
+        exists = con.execute(
+            "SELECT 1 FROM favoris WHERE user_id = ? AND kind = ? AND ref = ?",
+            (user_id, kind, str(ref)),
+        ).fetchone()
+        if exists:
+            con.execute(
+                "UPDATE favoris SET label = ?, details = ? WHERE user_id = ? AND kind = ? "
+                "AND ref = ?",
+                (str(label)[:300], data, user_id, kind, str(ref)),
+            )
+            return
+        if n >= FAVORITES_MAX_PER_USER:
+            raise AccountError(f"{FAVORITES_MAX_PER_USER} favoris au maximum.")
+        con.execute(
+            "INSERT INTO favoris (user_id, kind, ref, label, details, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (user_id, kind, str(ref), str(label)[:300], data, _now(now)),
+        )
+
+
+def remove_favorite(con: sqlite3.Connection, user_id: int, kind: str, ref: str) -> None:
+    with con:
+        con.execute(
+            "DELETE FROM favoris WHERE user_id = ? AND kind = ? AND ref = ?",
+            (user_id, kind, str(ref)),
+        )
+
+
+def update_favorite(
+    con: sqlite3.Connection,
+    user_id: int,
+    kind: str,
+    ref: str,
+    note: str | None = None,
+    candidate: bool | None = None,
+) -> None:
+    """Modifie la note libre et/ou la case « candidaté » d'un favori."""
+    if note is not None:
+        if len(note) > NOTE_MAX:
+            raise AccountError(f"Note trop longue ({NOTE_MAX} caractères au maximum).")
+        with con:
+            con.execute(
+                "UPDATE favoris SET note = ? WHERE user_id = ? AND kind = ? AND ref = ?",
+                (note, user_id, kind, str(ref)),
+            )
+    if candidate is not None:
+        with con:
+            con.execute(
+                "UPDATE favoris SET candidate = ? WHERE user_id = ? AND kind = ? AND ref = ?",
+                (int(bool(candidate)), user_id, kind, str(ref)),
+            )
+
+
+def list_favorites(con: sqlite3.Connection, user_id: int, kind: str | None = None) -> list[dict]:
+    """Favoris de l'utilisateur, les plus récents d'abord (tous types si `kind` est None)."""
+    query = (
+        "SELECT kind, ref, label, details, note, candidate, created_at FROM favoris "
+        "WHERE user_id = ?"
+    )
+    params: list = [user_id]
+    if kind is not None:
+        _check_kind(kind)
+        query += " AND kind = ?"
+        params.append(kind)
+    rows = con.execute(query + " ORDER BY created_at DESC, id DESC", params).fetchall()
+    return [
+        {
+            "kind": r[0],
+            "ref": r[1],
+            "label": r[2],
+            "details": json.loads(r[3]),
+            "note": r[4],
+            "candidate": bool(r[5]),
+            "created_at": datetime.fromisoformat(r[6]),
+        }
+        for r in rows
+    ]
+
+
+def favorite_refs(con: sqlite3.Connection, user_id: int, kind: str) -> set[str]:
+    """Références (offre_id ou siret) des favoris d'un type : pour afficher ★ ou ☆."""
+    _check_kind(kind)
+    rows = con.execute(
+        "SELECT ref FROM favoris WHERE user_id = ? AND kind = ?", (user_id, kind)
+    ).fetchall()
+    return {r[0] for r in rows}
