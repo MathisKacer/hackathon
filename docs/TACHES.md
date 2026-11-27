@@ -65,6 +65,12 @@
 ## 🎤 Pitch (en continu, une personne référente)
 
 - [ ] T60 — Plan des slides : problème → démo → méthodo du score → limites assumées → suite
+  **Points à intégrer (travail de @celia)** :
+  - **Chance de réponse** : estimation issue d'un modèle entraîné sur des réponses **simulées** — à dire clairement à l'oral (D6, D31 : plus de mention à l'écran, seulement en info-bulle).
+  - **Entreprises en difficulté** (BODACC) : 2,7 % des établissements en alerte ; score **pénalisé selon le contrat visé**, pas supprimés (D24).
+  - **Comptes facultatifs** : démo sans compte ; mots de passe hachés (scrypt), **règles CNIL**, blocage après 5 échecs ; pas d'e-mail collecté (`SECURITE.md`).
+  - **Recherche d'entreprises** sur ~406 000 établissements, fautes de frappe tolérées ; **fiche entreprise** (toute l'entreprise, SIREN) et **fiche site** (SIRET) reliées ; limite : filiales d'un groupe non reliées (L24, T26).
+  - **Favoris** avec case « Candidaté » et note : premier pas vers un suivi de candidatures qui fournirait un jour de **vraies réponses** pour remplacer les simulées.
 - [ ] T61 — Scénario de démo (2 ou 3 recherches qui montrent de bons résultats, dont une hors Bretagne)
 - [ ] T62 — 🔗H+18 Cache de démo figé + vidéo de secours
 - [ ] T63 — Répétition chronométrée
@@ -74,6 +80,7 @@
 - [ ] T19 — **Données factices vs vraies offres** : dans `fake_data`, `date_collecte` est une date alors que les offres Adzuna l'ont en texte → l'app plante sur les données factices (`offers['date_collecte'].max()[:10]`, dernière ligne de `streamlit_app.py`) et elles n'ont pas `region_requete`. Aligner l'un ou l'autre — 🟡 **dates : corrigé** par @emma (`d3dbff2`, le générateur écrit du texte ISO comme les collecteurs) ; **reste : `region_requete`** absente des offres factices — @emma
 - [ ] T69 — 🔗T30,T27 **Score v1 : bayésien empirique avec covariables** (régression binomiale négative) + évaluation honnête. Constat (audit du 27/11) : la moyenne du secteur seule (AUC 0,895) bat l'intensité par entreprise (0,830) pour retrouver les recruteurs d'alternants data de LBA ; faux positifs (avocats, vétérinaires) dus au lissage fixe et au rang centile ; « 0 offre » traité à tort comme une preuve. Plan : covariables (âge, nb d'établissements, catégorie, augmentation de capital BODACC, densité d'entreprises data à proximité), probabilité de détection, a priori NAF hiérarchique à lissage estimé, comparaison à LightGBM ; découpage train/test par département ; tableau avant/après pour les slides (couvre l'essentiel de T34) — @mathis
 - [ ] T65 — **Score en mots et en couleurs** au lieu du nombre : des paliers (ex. « Possible », « Probable », « Fortement probable ») avec une couleur de plus en plus intense, dans la liste, sur la carte et dans la fiche. Fixer les seuils (quantiles du score ?) et les documenter dans `DECISIONS.md` ; garder le nombre en info-bulle pour l'explicabilité — @maxence
+  ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
 - _…_
 
 ## ✅ Fait
