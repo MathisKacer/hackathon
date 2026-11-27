@@ -168,9 +168,29 @@ def _company_popup(r: pd.Series) -> str:
         f"<div style='font-family:sans-serif;font-size:13px'>"
         f"<b>{title}</b><br><span style='color:#555'>{'<br>'.join(lines)}</span><br>"
         f"<b style='color:{ORANGE}'>Score {r['score']:.2f}</b> · {signal}<br>"
+        f"{_procedure_html(r)}"
         f"{_p_reponse_html(r)}"
         f"{_score_breakdown_html(r)}"
         f'<a href="{url}" target="_blank" rel="noopener">Annuaire des entreprises</a></div>'
+    )
+
+
+def _procedure_html(r: pd.Series) -> str:
+    """Alerte BODACC (T23, D24) : situation défavorable, score réduit, lien vers l'annonce."""
+    alerte = r.get("alerte")
+    if not alerte or pd.isna(alerte):
+        return ""
+    url = r.get("procedure_url")
+    link = (
+        f' · <a href="{html.escape(str(url), quote=True)}" target="_blank" '
+        'rel="noopener">BODACC</a>'
+        if isinstance(url, str) and url
+        else ""
+    )
+    return (
+        f"<span style='color:#b00020'>{html.escape(str(alerte))}</span>{link}<br>"
+        f"<span style='color:#555;font-size:11px'>Score réduit (×{float(r['coef_procedure']):.2f})"
+        "</span><br>"
     )
 
 
@@ -304,6 +324,7 @@ PROFILE_KEYS = {
     "secteurs": list(SECTIONS),
     **{key: list(range(WEIGHT_MAX + 1)) for key in WEIGHT_KEYS.values()},
     "tri": TRIS,
+    "show_liquidation": [True, False],
 }
 # Libellés affichés dans « Mes recherches » (T49).
 PROFILE_LABELS = {
@@ -319,6 +340,7 @@ PROFILE_LABELS = {
     "secteurs": "Secteur",
     **{key: f"Poids {COMPONENTS[c][0].lower()}" for c, key in WEIGHT_KEYS.items()},
     "tri": "Classement",
+    "show_liquidation": "Avec liquidations",
 }
 # Valeurs par défaut posées dans session_state (et non via value=) pour qu'un profil chargé
 # puisse les remplacer sans avertissement de Streamlit.
@@ -326,6 +348,7 @@ st.session_state.setdefault("max_age", 60)
 st.session_state.setdefault("only_data", True)
 st.session_state.setdefault("rayon", 20)
 st.session_state.setdefault("tri", TRI_SCORE)
+st.session_state.setdefault("show_liquidation", False)
 for _c, _key in WEIGHT_KEYS.items():
     st.session_state.setdefault(_key, DEFAULT_WEIGHTS[_c])
 
@@ -383,6 +406,13 @@ with st.sidebar:
         placeholder="Tous les secteurs",
         help="Section NAF de l'établissement (Insee).",
     )
+    show_liquidation = st.checkbox(
+        "Afficher aussi les entreprises en liquidation",
+        key="show_liquidation",
+        help="BODACC (T23) : en liquidation judiciaire, l'activité est en principe arrêtée. "
+        "Masquées par défaut ; les autres procédures (sauvegarde, redressement, plan) restent "
+        "visibles avec une alerte et un score réduit.",
+    )
     tri = st.radio(
         "Classer les entreprises 🟠 par",
         TRIS,
@@ -425,7 +455,9 @@ if place is not None:
             "Pas encore de `scores.parquet` : lance `uv run python scripts/build_all.py` "
             "(ou `scripts/make_fake_data.py` pour des données factices)."
         )
-    spontaneous = rank_spontaneous(nearby, place.lat, place.lon, rayon, contrat, weights)
+    spontaneous = rank_spontaneous(
+        nearby, place.lat, place.lon, rayon, contrat, weights, show_liquidation
+    )
     # P(réponse) du démonstrateur (T37, D18) : à distance nulle + effet de la distance.
     spontaneous = add_p_reponse(spontaneous, domaine, contrat, get_coefficients())
     if tri == TRI_P and spontaneous["p_reponse"].notna().any():
@@ -520,6 +552,7 @@ with tab_spont:
         )
         cols = {
             "nom": "Entreprise",
+            "alerte": "Situation",  # BODACC (T23) : vide si rien à signaler
             "nom_etablissement": "Établissement",
             "commune": "Lieu",
             "distance_km": "Distance (km)",
@@ -536,7 +569,13 @@ with tab_spont:
             n_col: "Offres du domaine (autre contrat)",
             "url_annuaire": "Fiche",
         }
-        shown = [c for c in cols if c in spontaneous and spontaneous[c].notna().any()]
+        shown = [
+            c
+            for c in cols
+            if c in spontaneous
+            and spontaneous[c].notna().any()
+            and (c != "alerte" or spontaneous[c].astype(bool).any())
+        ]
         table = spontaneous[shown].rename(columns=cols)
         st.dataframe(
             table,
