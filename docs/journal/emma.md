@@ -4,6 +4,30 @@
 
 ---
 
+## 2026-11-27 — T80 : correspondance CV ↔ entreprise, à part du score ✅
+
+**Fait :**
+- Demande d'Emma : les compétences ne comptent plus dans le score. Retrait de `c_adequation` de `COMPONENTS` / `DEFAULT_WEIGHTS` (`radar/spontaneous.py`) et de la raison correspondante (`radar/explain.py`) : score et classement identiques à avant T45 (vérifié à Rennes : mêmes premières entreprises avec ou sans compétences).
+- `radar/competences.py` : `add_match` (colonnes `correspondance`, `correspondance_palier`, `correspondance_source`, `competences_demandees`, `competences_manquantes`), `match_tier`, `match_summary`, `MATCH_TIERS`, `MATCH_COLORS`. Choix d'Emma : paliers de mots, avec des seuils tels que « Forte » apparaisse.
+- App : colonne « Correspondance » colorée (liste), ligne dans la fenêtre de la carte et dans la fiche (pourcentage, source, « Tu as », « Souvent demandé aussi »), tri « Correspondance » (`TRI_MATCH`, `app/commun.py`). D40 (D37 annotée).
+
+**Fichiers touchés :**
+- `radar/competences.py`, `radar/spontaneous.py`, `radar/explain.py`, `app/commun.py`, `app/vues/explorer.py`, `app/carte.py`, `app/fiche_ui.py`, `tests/test_competences.py`, docs (DECISIONS D40, LIMITES L29, GUIDE § 16, ARCHITECTURE, TACHES)
+
+**Résultats / chiffres clés :**
+- Seuils calés sur les vraies offres data : CV data complet (9 compétences) → médiane 17 %, 90e centile 29 % à Rennes comme à Paris. Rennes 20 km : 39 Forte, 100 Bonne, 291 Partielle, 70 Faible sur les 500 premières. CV « Excel, Power BI, SQL » : médiane 8 %, surtout Partielle / Faible.
+- 373 tests passent.
+
+**Problèmes / points d'attention pour l'équipe :**
+- Code partagé modifié : `radar/spontaneous.py` (retour à la liste de composantes d'avant T45), `radar/explain.py`, `app/carte.py`, `app/fiche_ui.py` (une ligne en plus, à côté de la chance de réponse). Un ancien profil avec `poids_adequation` est simplement ignoré.
+- `uv run ruff check .` signale des erreurs dans `notebooks/grille_llm_colab.ipynb` (@mathis, T77) et `ruff format .` le reformate : je ne l'ai pas touché (lint lancé sur `app radar tests scripts`).
+- Seuls les scores data existent : pour les autres domaines la liste orange est vide, donc la correspondance n'a été mesurée que pour data.
+
+**Prochaine étape :**
+- T81 (profil = compétences seulement), après accord de @celia.
+
+---
+
 ## 2026-11-27 — T45 : CV → compétences → adéquation ✅
 
 **Fait :**

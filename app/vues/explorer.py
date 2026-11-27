@@ -19,11 +19,13 @@ from commun import (
     DOMAINES,
     DOMAINS,
     FILES,
+    MATCH_HELP,
     NIVEAUX,
     ORANGE,
     PAGES_DIR,
     PROFILE_LABELS,
     RAYONS,
+    TRI_MATCH,
     TRI_P,
     TRIS,
     WEIGHT_KEYS,
@@ -47,7 +49,7 @@ from streamlit_folium import st_folium
 from style import GREEN, LINK_STYLE, RED, Tile, fmt_int, hero, kpi_tiles, pill
 
 from radar.collect.sirene import tranche_display
-from radar.competences import SKILL_LABELS, add_adequation, detect_skills, pdf_text
+from radar.competences import MATCH_COLORS, SKILL_LABELS, add_match, detect_skills, pdf_text
 from radar.familles import mark_family_offers
 from radar.filters import SECTIONS, TAILLES, filter_companies
 from radar.niveau import levels_label
@@ -107,7 +109,7 @@ def _n_filters_on() -> int:
             bool(ss.get("tailles")),
             bool(ss.get("secteurs")),
             bool(ss.get("show_liquidation")),
-            ss.get("tri") == TRI_P,
+            ss.get("tri") in (TRI_P, TRI_MATCH),
             bool(ss.get("une_par_entreprise")),
             bool(ss.get("niveaux")),
             bool(ss.get("competences")),
@@ -200,8 +202,9 @@ with st.container(border=True, key="carte_recherche"):
             type="pdf",
             key="cv_fichier",
             on_change=_read_cv,
-            help="On y repère tes compétences (Python, SQL, comptabilité…) pour classer les "
-            "entreprises dont le secteur les demande. Ton CV n'est pas conservé.",
+            help="On y repère tes compétences (Python, SQL, comptabilité…) pour afficher ta "
+            "correspondance avec chaque entreprise (sans changer le score). "
+            "Ton CV n'est pas conservé.",
         )
         if msg := st.session_state.pop("_cv_message", None):
             st.caption(msg)
@@ -236,10 +239,6 @@ if place is not None:
     nearby = filter_companies(
         get_nearby(place.lat, place.lon, float(rayon), domaine), tailles, secteurs
     )
-    # T45 : adéquation entre les compétences de l'étudiant et celles que demande le secteur
-    profile = get_skill_profile(domaine) if competences else None
-    if profile is not None:
-        nearby = add_adequation(nearby, competences, profile)
     spontaneous = rank_spontaneous(
         nearby, place.lat, place.lon, rayon, contrat, weights, show_liquidation
     )
@@ -247,9 +246,14 @@ if place is not None:
     # T26 (D36) : offres publiées par les autres sociétés du même groupe (familles de marque) ;
     # signalées seulement (« Groupe … : N offres »), jamais masquées : tout reste sur la carte.
     spontaneous = mark_family_offers(spontaneous, get_families(domaine), contrat)
-    if tri == TRI_P and spontaneous["p_reponse"].notna().any():
+    # T80 : correspondance CV ↔ entreprise, à part du score (rien ne change sans compétences)
+    profile = get_skill_profile(domaine) if competences else None
+    if profile is not None:
+        spontaneous = add_match(spontaneous, competences, profile)
+    sort_col = {TRI_P: "p_reponse", TRI_MATCH: "correspondance"}.get(tri)
+    if sort_col in spontaneous and spontaneous[sort_col].notna().any():
         spontaneous = spontaneous.sort_values(
-            ["p_reponse", "score"], ascending=False, na_position="last"
+            [sort_col, "score"], ascending=False, na_position="last"
         ).reset_index(drop=True)
 
 # T57 : sites d'une même entreprise (SIREN) dans le rayon → « +N » ; option une ligne par entreprise
@@ -450,6 +454,9 @@ with tab_spont:
         # T64 : toujours affichée quand le modèle couvre le contrat et le domaine
         if "p_reponse" in shown and shown["p_reponse"].notna().any():
             table["Chance de réponse"] = shown["p_reponse"]
+        # T80 : correspondance avec le CV, en paliers de mots (pourcentage dans la fiche)
+        if "correspondance" in shown and shown["correspondance"].notna().any():
+            table["Correspondance"] = shown["correspondance_palier"]
         if not table["Autres sites"].astype(bool).any():
             table = table.drop(columns="Autres sites")
         if not table["★"].astype(bool).any():
@@ -480,6 +487,11 @@ with tab_spont:
                 subset=["Score"],
             )
         )
+        if "Correspondance" in table:
+            styled = styled.map(
+                lambda v: f"color: {MATCH_COLORS.get(v, '#555')}; font-weight: 600",
+                subset=["Correspondance"],
+            )
         event = st.dataframe(
             styled,
             hide_index=True,
@@ -513,6 +525,7 @@ with tab_spont:
                 "Chance de réponse": st.column_config.NumberColumn(
                     format="percent", help=CHANCE_HELP
                 ),
+                "Correspondance": st.column_config.TextColumn(help=MATCH_HELP),
             },
         )
         more = len(spontaneous) - len(shown)

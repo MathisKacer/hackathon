@@ -18,13 +18,14 @@ from functools import partial
 import pandas as pd
 import streamlit as st
 from carte import _family_html, _tier_html, offer_signal
-from commun import CHANCE_HELP, get_families, get_place
+from commun import CHANCE_HELP, MATCH_HELP, get_families, get_place
 from favoris import star_button
 from style import LINK_STYLE
 
 from radar import fiche
 from radar.candidature import candidature_facts, load_company_scores
 from radar.collect.sirene import tranche_display
+from radar.competences import match_summary
 from radar.domains import load_domains
 from radar.familles import family_signal, mark_family_offers
 from radar.paliers import rule_text, tier_text
@@ -60,6 +61,10 @@ def _sites(siren: str, lat: float | None, lon: float | None) -> pd.DataFrame:
 @st.cache_data(show_spinner=False)
 def _history(siren: str | None) -> pd.DataFrame:
     return fiche.bodacc_history(siren)
+
+
+# Couleurs Streamlit (markdown « :green[…] ») des paliers de correspondance (T80).
+MATCH_MD_COLORS = {"Forte": "green", "Bonne": "green", "Partielle": "orange", "Faible": "gray"}
 
 
 def _label(rank: int, r: pd.Series) -> str:
@@ -152,6 +157,21 @@ def _why(r: pd.Series) -> None:
     p = r.get("p_reponse")
     if p is not None and pd.notna(p):
         c3.metric("Chance de réponse", f"{100 * float(p):.0f} %", help=CHANCE_HELP)
+    # T80 : correspondance avec le CV (à part du score)
+    m = match_summary(r)
+    if m is not None:
+        st.markdown(
+            f"**Correspondance avec ton profil : :{MATCH_MD_COLORS.get(m['palier'], 'gray')}"
+            f"[{m['palier']}]** ({m['pourcentage']}, {m['source']})",
+            help=MATCH_HELP,
+        )
+        details = []
+        if "as" in m:
+            details.append(f"Tu as : {m['as']}")
+        if "manque" in m:
+            details.append(f"Souvent demandé aussi : {m['manque']}")
+        if details:
+            st.caption(" · ".join(details))
     apports = [
         (label, float(r[f"apport_{k}"]), float(r[k]) if pd.notna(r.get(k)) else None, help_)
         for k, (label, help_) in COMPONENTS.items()

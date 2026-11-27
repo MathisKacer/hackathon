@@ -15,6 +15,7 @@ import streamlit as st
 from commun import BLUE, ORANGE, WEIGHT_KEYS
 from folium.plugins import MarkerCluster
 
+from radar.competences import MATCH_COLORS, match_summary
 from radar.familles import family_signal
 from radar.geocode import Place
 from radar.niveau import levels_label
@@ -99,6 +100,7 @@ def _company_popup(r: pd.Series) -> str:
         f"{_lbb_html(r)}"
         f"{_family_html(r)}"
         f"{_p_reponse_html(r)}"
+        f"{_match_html(r)}"
         f"{_score_breakdown_html(r)}"
         f'<a href="{url}" target="_blank" rel="noopener">Annuaire des entreprises</a></div>'
     )
@@ -156,6 +158,24 @@ def _p_reponse_html(r: pd.Series) -> str:
         return ""
     # T64 : libellé clair ; mention « simulée » dans les info-bulles (liste, fiche)
     return f"Chance de réponse : <b>{100 * float(p):.0f} %</b><br>"
+
+
+def _match_html(r: pd.Series) -> str:
+    """T80 : correspondance avec le CV (palier, pourcentage, compétences) ; vide sans CV."""
+    m = match_summary(r)
+    if m is None:
+        return ""
+    color = MATCH_COLORS.get(m["palier"], "#555")
+    txt = (
+        f"Correspondance avec ton profil : <b style='color:{color}'>{m['palier']}</b> "
+        f"({m['pourcentage']}, {html.escape(m['source'])})<br>"
+    )
+    if "as" in m:
+        txt += f"<span style='color:#555'>Tu as : {html.escape(m['as'])}</span><br>"
+    if "manque" in m:
+        manque = html.escape(m["manque"])
+        txt += f"<span style='color:#555'>Souvent demandé aussi : {manque}</span><br>"
+    return txt
 
 
 def _score_breakdown_html(r: pd.Series) -> str:

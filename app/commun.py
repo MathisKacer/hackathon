@@ -37,14 +37,20 @@ CONTRATS = ["Tous", "Stage", "Alternance", "Emploi"]
 WEIGHT_KEYS = {c: "poids_" + c.removeprefix("c_") for c in COMPONENTS}
 WEIGHT_MAX = 5
 # Classement des candidatures spontanées (T37) : score ou chance de réponse du démonstrateur.
-TRI_SCORE, TRI_P = "Score", "Chance de réponse"
-TRIS = [TRI_SCORE, TRI_P]
+TRI_SCORE, TRI_P, TRI_MATCH = "Score", "Chance de réponse", "Correspondance"
+TRIS = [TRI_SCORE, TRI_P, TRI_MATCH]  # T80 : correspondance avec le CV (si compétences)
 # Mention discrète (info-bulles) : la chance de réponse vient d'un modèle entraîné sur des
 # réponses simulées (D6, D23) ; plus de bandeau à l'écran (T64, choix de l'équipe), dit au pitch.
 CHANCE_HELP = (
     "Estimation de la probabilité que l'entreprise réponde à une candidature spontanée. "
     "Modèle entraîné sur des réponses simulées : aucune donnée publique ne dit encore "
     "quelles entreprises répondent."
+)
+# T80 : correspondance CV ↔ entreprise, indicateur à part (n'entre pas dans le score).
+MATCH_HELP = (
+    "Part des compétences demandées par les offres que tu as (d'après ton CV) : les offres de "
+    "l'entreprise si elle en publie, sinon celles de son secteur. Forte ≥ 25 %, Bonne ≥ 17 %, "
+    "Partielle ≥ 10 %. N'entre pas dans le score."
 )
 # Niveaux d'études proposés dans le filtre (T67), en libellés : « CAP », « Bac »… « Doctorat ».
 NIVEAUX = [LEVEL_LABELS[c] for c in LEVELS]

@@ -25,7 +25,7 @@
 14. [Entreprise et sites (T57)](#14-entreprise-et-sites-t57)
 15 bis. [Effectifs : site et entreprise (T73)](#15-bis-effectifs--site-et-entreprise-t73)
 15. [Niveau d'études attendu (T67)](#15-niveau-détudes-attendu-t67-d34)
-16. [Adéquation avec ton CV (T45)](#16-adéquation-avec-ton-cv-t45-d37)
+16. [Correspondance avec ton CV (T45, T80)](#16-correspondance-avec-ton-cv-t45-t80-d37-d40)
 17. [Administrateurs et gestion des comptes (T79)](#17-administrateurs-et-gestion-des-comptes-t79-d39)
 
 ---
@@ -438,47 +438,19 @@ Case vide quand SIRENE n'a pas l'information. **Pas de total calculé** : additi
 
 ---
 
-## 16. Adéquation avec ton CV (T45, D37)
+## 16. Correspondance avec ton CV (T45, T80, D37, D40)
 
-**Utilisation.** Panneau « Filtres » › « Ton CV » : déposer son CV en PDF. Les compétences reconnues (Python, SQL, Power BI, comptabilité, paie, anglais…) remplissent la liste « Tes compétences ». On peut la corriger ou la remplir à la main, sans CV. Dès qu'une compétence est choisie, le curseur « Adéquation avec ton CV » compte dans le score (poids 2 par défaut). L'explication de la carte et de la fiche peut alors dire « les offres data de son secteur demandent Python, SQL », et la décomposition du score montre l'apport de l'adéquation.
+**Utilisation.** Panneau « Filtres » › « Ton CV » : déposer son CV en PDF. Les compétences reconnues (Python, SQL, Power BI, comptabilité, paie, anglais…) remplissent la liste « Tes compétences » ; on peut la corriger ou la remplir à la main, sans CV. Dès qu'une compétence est choisie :
+- colonne **« Correspondance »** dans la liste des candidatures spontanées : **Forte**, **Bonne**, **Partielle** ou **Faible** ;
+- dans la fenêtre de la carte et dans la fiche : « Correspondance avec ton profil : Forte (35 %, d'après les offres de son secteur) », puis « Tu as : Machine learning, Python · Souvent demandé aussi : Deep learning, Data visualisation » ;
+- « Classer par › Correspondance » trie la liste par correspondance.
 
-**Fonctionnement** (`radar/competences.py`). Les mêmes compétences sont cherchées dans les offres du domaine (titre + description). Pour chaque offre : part de ses compétences que tu as. Pour chaque entreprise : moyenne sur les offres de son secteur (division NAF), rapprochée de l'ensemble du domaine quand le secteur a peu d'offres, puis corrigée par ses propres offres si elle en a. La composante est le rang de cette part parmi les entreprises de la recherche.
+**La correspondance ne change pas le score** ni la priorité : c'est un indicateur à part (D40).
+
+**Fonctionnement** (`radar/competences.py › add_match`). Les mêmes compétences sont cherchées dans les offres du domaine (titre + description). Pour chaque offre : part de ses compétences que tu as. Pour chaque entreprise : moyenne sur **ses offres** si elle en publie (profil recherché) ; sinon, et pour compléter, sur les offres de **son secteur** (division NAF, profil potentiellement recherché), rapprochée de l'ensemble du domaine quand le secteur a moins de 5 offres. Paliers : Forte ≥ 25 %, Bonne ≥ 17 %, Partielle ≥ 10 % (`MATCH_TIERS`) ; calés sur les vraies offres data, où un CV data complet couvre en moyenne ~20 % des compétences demandées (les offres citent aussi cloud, IA générative, DevOps).
 
 **Données personnelles.** Le PDF est lu en mémoire puis oublié : rien n'est écrit sur le disque. Seule la liste des compétences est un réglage, enregistrée dans le profil si on est connecté (clé `competences`).
 
-**Réglages.** Liste et expressions : `SKILLS` (avec les choix prudents : pas « C » ni « Go », « R » seulement en majuscule isolée, « recrutement » de présentation écarté) ; lissage : `M_SECTOR`, `M_COMPANY` ; seuil de l'explication : `radar/explain.py`. Tests : `tests/test_competences.py` (ajouter un cas avant de modifier une expression).
+**Réglages.** Liste et expressions : `SKILLS` (choix prudents : pas « C » ni « Go », « R » seulement en majuscule isolée, « recrutement » de présentation écarté) ; lissage : `M_SECTOR`, `M_COMPANY` ; paliers : `MATCH_TIERS`, couleurs `MATCH_COLORS`. Tests : `tests/test_competences.py` (ajouter un cas avant de modifier une expression).
 
-**Limites et suites.** Adéquation au niveau du secteur, descriptions tronquées, PDF scannés illisibles (L29). Suites : proposer le domaine et le niveau d'études à partir du CV ; lettre de candidature (T46).
-
----
-
-## 17. Administrateurs et gestion des comptes (T79, D39)
-
-**Qui.** Seuls les **membres de l'équipe** (4 au plus) sont administrateurs. On le devient **uniquement** avec le script ci-dessous, dans le terminal du pod : aucun bouton du site ne le permet. Tous les autres comptes sont **classiques**.
-
-**Devenir administrateur (à faire une fois, sur ton pod)** — la base des comptes est propre à chaque pod (L17) :
-
-1. Lancer l'app (`uv run streamlit run app/streamlit_app.py`), aller dans **Se connecter** (page Mon espace) et **créer ton compte**.
-2. Dans le terminal du pod (VS Code Onyxia) :
-   ```bash
-   uv run python scripts/admin.py promouvoir <ton identifiant>
-   uv run python scripts/admin.py liste      # vérifier : « ADMIN  <ton identifiant> »
-   ```
-3. Dans l'app, **se déconnecter puis se reconnecter** : l'onglet **Administration** apparaît en haut.
-
-**Ce que fait un administrateur** (page Administration) :
-
-| Action | Quand | Remarques |
-|---|---|---|
-| Voir les comptes | toujours | Nombres seulement (recherches, favoris, profil) : jamais le contenu (vie privée) |
-| **Débloquer** | compte bloqué après 5 échecs de connexion | Possible sur tout compte |
-| **Mot de passe provisoire** | l'utilisateur a oublié son mot de passe | Généré au hasard, **affiché une seule fois** : le transmettre en **message privé**. L'utilisateur voit un bandeau qui l'invite à le changer (Mon espace → « Changer mon mot de passe ») |
-| **Supprimer** | compte à retirer | Comptes classiques seulement ; efface profil, historique et favoris |
-| Journal | toujours | Qui a fait quoi et quand ; aussi `scripts/admin.py journal` |
-
-Un administrateur ne peut **ni réinitialiser ni supprimer** le compte d'un autre administrateur, ni se supprimer depuis cette page : entre membres de l'équipe, on passe par le script (`retirer`), et chacun supprime son propre compte dans Mon espace.
-
-**Pour tout le monde.** « Changer mon mot de passe » dans Mon espace (ancien mot de passe demandé, mêmes règles qu'à la création, D16).
-
-**Code et tests.** `radar/admin.py` (règles), `app/admin_ui.py` et `app/vues/administration.py` (page), `scripts/admin.py` (nommer), `tests/test_admin.py`. Détails de sécurité : `docs/SECURITE.md` › Administrateurs.
-
+**Limites et suites.** Correspondance surtout au niveau du secteur, descriptions tronquées, PDF scannés illisibles (L29). Suites : profil = compétences seulement (T81) ; proposer le domaine et le niveau d'études à partir du CV ; lettre de candidature (T46).

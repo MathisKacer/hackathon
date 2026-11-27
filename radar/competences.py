@@ -1,17 +1,17 @@
-"""T45 — Compétences du CV et adéquation avec ce que demande le secteur de chaque entreprise.
+"""T45, T80 — Compétences du CV et correspondance avec le profil recherché par chaque entreprise.
 
 1. On lit le texte du CV (PDF, `pdf_text`) et on y repère des compétences d'une liste fermée
    (`SKILLS` : outils, langages, méthodes ; `detect_skills`). L'étudiant peut corriger la liste.
 2. On repère les mêmes compétences dans les offres du domaine (titre + description).
-3. Adéquation d'une entreprise = part moyenne des compétences demandées par une offre du
-   domaine de **son secteur** (division NAF) que l'étudiant possède. Les entreprises de la
-   couche orange n'ont presque jamais d'offre : on regarde donc leur secteur, rétréci vers
-   l'ensemble des offres du domaine quand le secteur en a peu (même idée que le score, D13),
-   et leurs propres offres quand elles en ont.
+3. Correspondance d'une entreprise (T80, **à part du score**) = part moyenne des compétences
+   demandées par une offre du domaine que l'étudiant possède : offres de l'entreprise si elle
+   en a, rapprochées de **son secteur** (division NAF), lui-même rapproché de l'ensemble du
+   domaine quand il a peu d'offres (même idée que le score, D13). Les entreprises de la couche
+   orange n'ont presque jamais d'offre : c'est surtout le profil « potentiellement recherché ».
 
     skills = detect_skills(pdf_text(open("cv.pdf", "rb").read()))       # ["Python", "SQL", …]
     prof = SkillProfile.build(offres, entreprises, "data")
-    df = add_adequation(nearby, skills, prof)    # colonnes c_adequation, competences_demandees
+    df = add_match(nearby, skills, prof)   # correspondance, correspondance_palier, …
 
 Liste fermée plutôt qu'un modèle : explicable (« Python et SQL sont demandés dans ce secteur »),
 rapide, sans téléchargement. Le CV n'est jamais écrit sur le disque (seule la liste des
@@ -213,24 +213,61 @@ def _coverage(matrix: np.ndarray, cv: np.ndarray) -> np.ndarray:
     return (matrix @ cv) / matrix.sum(axis=1)
 
 
-def add_adequation(df: pd.DataFrame, skills: list[str], profile: SkillProfile) -> pd.DataFrame:
-    """Ajoute `c_adequation` (rang 0 à 1 dans la recherche), `adequation_part` (part brute) et
-    `competences_demandees` (« Python, SQL » : compétences du CV les plus demandées dans le
-    secteur). Sans compétence ou sans offre : NaN (composante ignorée par le score pondéré)."""
+# T80 : paliers de correspondance (seuils fixes sur la part brute). Calés sur les vraies offres
+# data : avec un CV data complet (Python, R, SQL, SAS, ML, deep learning, stats, Git, anglais),
+# à Rennes comme à Paris, médiane 17 %, 90e centile 29 % → ~10 % des entreprises en « Forte ».
+# Un CV plus mince (Excel, Power BI, SQL : médiane 8 %) reste surtout « Partielle » ou « Faible ».
+MATCH_TIERS: list[tuple[float, str]] = [
+    (0.25, "Forte"),
+    (0.17, "Bonne"),
+    (0.10, "Partielle"),
+    (0.0, "Faible"),
+]
+MATCH_COLORS = {"Forte": "#2b8a3e", "Bonne": "#74b816", "Partielle": "#f59f00", "Faible": "#adb5bd"}
+MIN_SECTOR_OFFERS = 5  # en dessous, on dit « d'après le domaine » plutôt que « son secteur »
+SOURCE_LABELS = {
+    "offres": "d'après ses offres",
+    "secteur": "d'après les offres de son secteur",
+    "domaine": "d'après l'ensemble des offres du domaine",
+}
+
+
+def match_tier(part: float | None) -> str | None:
+    """Palier en mots (« Forte »…) d'une part de correspondance ; None si inconnue."""
+    if part is None or pd.isna(part):
+        return None
+    return next(label for seuil, label in MATCH_TIERS if part >= seuil)
+
+
+def add_match(df: pd.DataFrame, skills: list[str], profile: SkillProfile) -> pd.DataFrame:
+    """T80 — Correspondance entre le profil du CV et le profil recherché par l'entreprise.
+
+    **N'entre pas dans le score** : indicateur à part. Ajoute :
+    - `correspondance` : part (0 à 1) des compétences demandées par une offre que l'étudiant a,
+      en moyenne sur les offres de l'entreprise si elle en a, rapprochée de son secteur (profil
+      « potentiellement recherché »), lui-même rapproché de l'ensemble du domaine ;
+    - `correspondance_palier` : « Forte », « Bonne », « Partielle », « Faible » (`MATCH_TIERS`) ;
+    - `correspondance_source` : « offres », « secteur » ou « domaine » (`SOURCE_LABELS`) ;
+    - `competences_demandees` / `competences_manquantes` : jusqu'à 3 compétences du CV demandées
+      dans son secteur / 3 compétences souvent demandées qu'il n'a pas (« Python, SQL »).
+    Sans compétence ou sans offre : colonnes vides (NaN / None).
+    """
     out = df.copy()
     cv = np.array([s in set(skills) for s in SKILL_LABELS], dtype=float)
+    cols = ["correspondance_palier", "correspondance_source"]
+    cols += ["competences_demandees", "competences_manquantes"]
     if not cv.any() or profile.n_offers == 0 or out.empty:
-        out["c_adequation"] = np.nan
-        out["adequation_part"] = np.nan
-        out["competences_demandees"] = None
+        out["correspondance"] = np.nan
+        for c in cols:
+            out[c] = None
         return out
     cov = pd.Series(_coverage(profile.matrix, cv))
     overall = float(cov.mean())
     by_div = cov.groupby(profile.division).agg(["sum", "size"])
+    by_div = by_div[by_div.index != ""]
     div_cov = (by_div["sum"] + M_SECTOR * overall) / (by_div["size"] + M_SECTOR)
-    by_siret = (
-        cov[profile.siret != ""].groupby(profile.siret[profile.siret != ""]).agg(["sum", "size"])
-    )
+    known = profile.siret != ""
+    by_siret = cov[known].groupby(profile.siret[known]).agg(["sum", "size"])
 
     division = (
         out["naf_division"].astype("string")
@@ -241,25 +278,56 @@ def add_adequation(df: pd.DataFrame, skills: list[str], profile: SkillProfile) -
     sirets = out["siret"].astype("string")
     s_sum = sirets.map(by_siret["sum"]).astype(float).fillna(0.0)
     s_n = sirets.map(by_siret["size"]).astype(float).fillna(0.0)
-    # Part moyenne des compétences demandées que l'étudiant possède (lisible : « 30 % ») ;
-    # la composante du score est son rang dans la recherche (0 à 1), comme l'intensité : les
-    # parts brutes varient peu d'un secteur à l'autre (descriptions Adzuna tronquées).
     part = ((s_sum + M_COMPANY * prior) / (s_n + M_COMPANY)).clip(0, 1)
-    out["adequation_part"] = part
-    out["c_adequation"] = part.rank(pct=True, method="average")
+    out["correspondance"] = part
+    out["correspondance_palier"] = part.map(match_tier).astype(object)
+    n_div = division.map(by_div["size"]).astype(float).fillna(0.0)
+    source = np.where(s_n > 0, "offres", np.where(n_div >= MIN_SECTOR_OFFERS, "secteur", "domaine"))
+    out["correspondance_source"] = pd.Series(source, index=out.index, dtype=object)
 
-    # Explication : compétences du CV les plus demandées dans le secteur (≥ 10 % des offres).
-    demand = profile.demand()
+    # Compétences demandées dans le secteur (part des offres, lissée vers le domaine).
+    m = pd.DataFrame(profile.matrix, columns=SKILL_LABELS)
+    overall_d = m.mean()
+    grp = m.groupby(profile.division)
+    sector_d = (grp.sum() + M_SECTOR * overall_d) / (grp.size().to_numpy()[:, None] + M_SECTOR)
     mine = [s for s in SKILL_LABELS if s in set(skills)]
-    overall_d = pd.Series(profile.matrix.mean(axis=0), index=SKILL_LABELS)[mine]
-    labels: dict[str, str | None] = {}
+    others = [s for s in SKILL_LABELS if s not in set(skills)]
+
+    def top(d: pd.Series) -> str | None:
+        d = d[d >= 0.10].sort_values(ascending=False).head(3)
+        return ", ".join(d.index) or None
+
+    have: dict[str, str | None] = {}
+    lack: dict[str, str | None] = {}
     for div in division.dropna().unique():
-        d = demand.loc[div, mine] if div in demand.index else overall_d
-        top = d[d >= 0.10].sort_values(ascending=False).head(3)
-        labels[div] = ", ".join(top.index) or None
-    top_all = overall_d[overall_d >= 0.10].sort_values(ascending=False).head(3)
-    fallback = ", ".join(top_all.index) or None
+        d = sector_d.loc[div] if div in sector_d.index and div != "" else overall_d
+        have[div], lack[div] = top(d[mine]), top(d[others])
+    known_div = division.notna()
     out["competences_demandees"] = (
-        division.map(labels).astype(object).where(division.notna(), fallback)
+        division.map(have).astype(object).where(known_div, top(overall_d[mine]))
     )
+    out["competences_manquantes"] = (
+        division.map(lack).astype(object).where(known_div, top(overall_d[others]))
+    )
+    return out
+
+
+def match_summary(row) -> dict[str, str] | None:
+    """Textes d'affichage de la correspondance (carte, fiche) ; None si pas de CV.
+
+    {"palier": "Forte", "pourcentage": "31 %", "source": "d'après les offres de son secteur",
+     "as": "Python, SQL", "manque": "Cloud GCP, Spark"} (clés « as » / « manque » absentes si vides)
+    """
+    part = row.get("correspondance")
+    if part is None or pd.isna(part):
+        return None
+    out = {
+        "palier": match_tier(float(part)) or "",
+        "pourcentage": f"{100 * float(part):.0f} %",
+        "source": SOURCE_LABELS.get(str(row.get("correspondance_source")), ""),
+    }
+    for key, col in (("as", "competences_demandees"), ("manque", "competences_manquantes")):
+        v = row.get(col)
+        if isinstance(v, str) and v:
+            out[key] = v
     return out

@@ -109,12 +109,6 @@ def reasons(row, contrat: str = "tous") -> list[tuple[str, str, float]]:
             ("c_embauche", f"{taille}, avec un besoin de recrutement {dom} attendu élevé", 5)
         )
 
-    # T45 : compétences du CV demandées dans son secteur (rang dans la recherche ≥ 0,7)
-    c_adq = _num(row, "c_adequation")
-    comp = row.get("competences_demandees")
-    if c_adq is not None and c_adq >= 0.7 and isinstance(comp, str) and comp:
-        out.append(("c_adequation", f"les offres {dom} de son secteur demandent {comp}", 5.5))
-
     d = _num(row, "distance_km")
     if d is not None and d <= 5:
         out.append(("c_proximite", f"à {d:.1f} km de chez toi".replace(".", ","), 6))

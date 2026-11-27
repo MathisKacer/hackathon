@@ -1,16 +1,18 @@
-"""T45 — compétences du CV et adéquation avec le secteur."""
+"""T45, T80 — compétences du CV et correspondance avec le profil recherché."""
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from radar.competences import (
     SKILL_LABELS,
     SkillProfile,
-    add_adequation,
+    add_match,
     detect_skills,
+    match_summary,
+    match_tier,
     pdf_text,
 )
-from radar.explain import explain
 from radar.spontaneous import COMPONENTS, DEFAULT_WEIGHTS, weighted_score
 
 
@@ -93,34 +95,47 @@ def test_profile_keeps_domain_offers_with_skills():
     assert list(p.division) == ["72", "72", "62", ""]
 
 
-def test_add_adequation_ranks_matching_sector_first():
+def test_add_match_uses_company_then_sector():
     near = pd.DataFrame(
         {"siret": ["X", "Y", "A"], "naf": ["72.19Z", "62.01Z", "72.19Z"]}, index=[10, 11, 12]
     )
-    out = add_adequation(near, ["Python", "Machine learning", "SQL"], _profile())
-    part = out["adequation_part"]
+    out = add_match(near, ["Python", "Machine learning", "SQL"], _profile())
+    part = out["correspondance"]
     assert part[10] > part[11]  # le secteur 72 demande Python/SQL/ML, le 62 Spark/Java
     assert part[12] > part[10]  # A a elle-même une offre qui demande exactement ces compétences
-    assert out["c_adequation"].between(0, 1).all()
+    assert part.between(0, 1).all()
+    assert list(out["correspondance_source"]) == ["domaine", "domaine", "offres"]  # < 5 offres
     assert out.loc[10, "competences_demandees"].startswith("Python")
+    assert "Spark" in out.loc[11, "competences_manquantes"]
     assert list(out.index) == [10, 11, 12]
+    assert set(out["correspondance_palier"]) <= {"Forte", "Bonne", "Partielle", "Faible"}
 
 
-def test_add_adequation_without_skills_is_ignored_by_score():
+def test_match_tiers_and_summary():
+    tiers = [match_tier(x) for x in (0.4, 0.25, 0.2, 0.12, 0.05)]
+    assert tiers == ["Forte", "Forte", "Bonne", "Partielle", "Faible"]
+    assert match_tier(None) is None
+    row = {
+        "correspondance": 0.31,
+        "correspondance_source": "secteur",
+        "competences_demandees": "Python, SQL",
+        "competences_manquantes": None,
+    }
+    assert match_summary(row) == {
+        "palier": "Forte",
+        "pourcentage": "31 %",
+        "source": "d'après les offres de son secteur",
+        "as": "Python, SQL",
+    }
+    assert match_summary({"correspondance": float("nan")}) is None
+
+
+def test_match_is_not_in_score():
+    assert "c_adequation" not in COMPONENTS
     near = pd.DataFrame({"siret": ["X"], "naf": ["72.19Z"]})
-    out = add_adequation(near, [], _profile())
-    assert out["c_adequation"].isna().all()
-    df = out.assign(**{c: 0.5 for c in COMPONENTS if c != "c_adequation"})
-    scored = weighted_score(df, DEFAULT_WEIGHTS)
-    assert scored["score"].iloc[0] == 0.5  # pas tiré vers 0 par la composante vide
-    assert np.isnan(scored["apport_c_adequation"].iloc[0])
-    # Colonne absente (validation, anciennes données) : ignorée aussi
-    scored = weighted_score(df.drop(columns="c_adequation"), DEFAULT_WEIGHTS)
-    assert scored["score"].iloc[0] == 0.5
-
-
-def test_explain_mentions_skills():
-    row = {"c_adequation": 0.9, "competences_demandees": "Python, SQL", "domaine": "data"}
-    assert "demandent Python, SQL" in explain(row, "stage")
-    row["c_adequation"] = 0.3
-    assert "Python" not in explain(row, "stage")
+    out = add_match(near, [], _profile())
+    assert out["correspondance"].isna().all()
+    assert out["correspondance_palier"].isna().all()
+    # une composante absente ou vide reste ignorée par le score pondéré
+    df = pd.DataFrame({c: [0.5] for c in COMPONENTS}).assign(c_intensite=np.nan)
+    assert weighted_score(df, DEFAULT_WEIGHTS)["score"].iloc[0] == pytest.approx(0.5)
