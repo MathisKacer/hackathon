@@ -5,7 +5,7 @@ Lancer : uv run streamlit run app/streamlit_app.py
 Carte à deux couches (D8) :
 - 🔵 Offres réelles (T39) : offres actuelles filtrées sur le domaine et le contrat visé ;
 - 🟠 Candidature spontanée (T40) : entreprises du rayon sans offre correspondante, classées par
-  score (radar/spontaneous.py) ; il faut une adresse (géocodée par la Géoplateforme).
+  score (radar/spontaneous.py) ; il faut choisir sa ville dans le suggesteur (T55).
 """
 
 from __future__ import annotations
@@ -21,11 +21,12 @@ from fiche_ui import render_fiche  # app/fiche_ui.py (T43)
 from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
 
+from radar.communes import load_communes, place_of
 from radar.config import FILES
 from radar.domains import classify, load_domains
 from radar.filters import SECTIONS, TAILLES, filter_companies
 from radar.geo import region_of
-from radar.geocode import Place, geocode
+from radar.geocode import Place
 from radar.process.quick_filter import load_raw_offers, prepare_offers
 from radar.recruteurs import mark_lba_recruiters
 from radar.response.predict import add_p_reponse, contracts_for, load_coefficients
@@ -77,9 +78,10 @@ def get_offers() -> pd.DataFrame:
     return df.assign(region_requete=region.fillna(from_cp), domaine=[domains[k] for k in keys])
 
 
-@st.cache_data(show_spinner="Recherche de l'adresse…", ttl=3600)
-def get_place(address: str) -> Place | None:
-    return geocode(address)
+@st.cache_data(show_spinner="Chargement de la liste des communes…", ttl=24 * 3600)
+def get_communes() -> pd.DataFrame:
+    """Communes de France « Nom (code postal) » pour le suggesteur de ville (T55)."""
+    return load_communes()
 
 
 @st.cache_data
@@ -311,6 +313,8 @@ DOMAINS = load_domains()  # radar/domains.yaml : clé → Domain (libellé, ROME
 DOMAINES = list(DOMAINS)
 CONTRATS = ["Tous", "Stage", "Alternance", "Emploi"]
 all_regions = sorted(offers["region_requete"].dropna().unique())
+communes = get_communes()
+COMMUNE_LABELS = communes["label"].tolist()
 
 # Réglages enregistrés dans le profil quand on est connecté (T48) : clé du widget → options
 # permises (None = libre). Ajouter ici la clé de tout nouveau réglage (T40, T41, T42…).
@@ -321,7 +325,7 @@ PROFILE_KEYS = {
     "query": None,
     "max_age": list(range(7, 61, 7)) + [60],
     "only_data": [True, False],
-    "adresse": None,
+    "ville": COMMUNE_LABELS,
     "rayon": RAYONS,
     "tailles": list(TAILLES),
     "secteurs": list(SECTIONS),
@@ -337,7 +341,7 @@ PROFILE_LABELS = {
     "query": "Mot-clé",
     "max_age": "Moins de (jours)",
     "only_data": "Seulement le domaine",
-    "adresse": "Adresse",
+    "ville": "Ville",
     "rayon": "Rayon (km)",
     "tailles": "Taille",
     "secteurs": "Secteur",
@@ -347,6 +351,7 @@ PROFILE_LABELS = {
 }
 # Valeurs par défaut posées dans session_state (et non via value=) pour qu'un profil chargé
 # puisse les remplacer sans avertissement de Streamlit.
+st.session_state.setdefault("ville", None)
 st.session_state.setdefault("max_age", 60)
 st.session_state.setdefault("only_data", True)
 st.session_state.setdefault("rayon", 20)
@@ -365,11 +370,14 @@ with st.sidebar:
     account_sidebar(PROFILE_KEYS)
     st.divider()
     st.header("Ta recherche")
-    adresse = st.text_input(
-        "Ton adresse (ou ta ville)",
-        placeholder="ex. 51 rue Blaise Pascal, Bruz",
-        key="adresse",
-        help="Géocodée par la Géoplateforme (IGN). Nécessaire pour la couche orange.",
+    # Suggesteur (T55) : on tape le début du nom, on valide « Ville (code postal) » dans la liste.
+    ville = st.selectbox(
+        "Ta ville",
+        COMMUNE_LABELS,
+        key="ville",
+        placeholder="Tape le nom de ta ville…",
+        help="Tape quelques lettres puis choisis ta commune et son code postal dans la liste. "
+        "Nécessaire pour la couche orange (distance depuis le centre de la commune).",
     )
     rayon = st.select_slider("Rayon (km)", RAYONS, key="rayon")
     domaine = st.selectbox(
@@ -444,11 +452,9 @@ view = filter_offers(
     offers, regions, contrat, domaine if only_data else None, max_age, query.strip()
 )
 
-# Couche orange (T40) : adresse → géocodage → entreprises du rayon sans offre correspondante.
-place = get_place(adresse.strip()) if adresse.strip() else None
+# Couche orange (T40) : ville choisie (T55) → entreprises du rayon sans offre correspondante.
+place = place_of(ville, communes)
 spontaneous = pd.DataFrame()
-if adresse.strip() and place is None:
-    st.warning(f"Adresse introuvable : « {adresse} ». Essaie une ville ou un code postal.")
 if place is not None:
     view = view[haversine_km(place.lat, place.lon, view["lat"], view["lon"]) <= rayon]
     nearby = get_nearby(place.lat, place.lon, float(rayon), domaine)
@@ -468,7 +474,7 @@ if place is not None:
             ["p_reponse", "score"], ascending=False, na_position="last"
         ).reset_index(drop=True)
 # Connecté : enregistre la recherche et affiche « Mes recherches » ; anonyme : ne fait rien (T49).
-# Avec une adresse : noms des premières entreprises de la couche orange (consigne CLAUDE.md).
+# Avec une ville : noms des premières entreprises de la couche orange (consigne CLAUDE.md).
 search_history(
     PROFILE_KEYS,
     n_results=len(view) + len(spontaneous),
@@ -487,7 +493,7 @@ c3.metric("Stages / alternances", int(view["contrat"].isin(["stage", "alternance
 c4.metric(
     "Candidatures spontanées",
     f"{len(spontaneous):,}".replace(",", " ") if place is not None else "—",
-    help="Entreprises du rayon sans offre correspondante (il faut saisir une adresse).",
+    help="Entreprises du rayon sans offre correspondante (il faut choisir ta ville).",
 )
 if place is not None:
     st.caption(f"📍 {place.label} · rayon {rayon} km")
@@ -503,7 +509,7 @@ if place is not None:
             why = f"le modèle ne couvre pas encore le domaine « {DOMAINS[domaine].label} »"
         st.info(f"P(réponse) indisponible : {why}. Classement par score.")
 else:
-    st.info("Saisis ton adresse dans la barre latérale pour voir les entreprises 🟠 à démarcher.")
+    st.info("Choisis ta ville dans la barre latérale pour voir les entreprises 🟠 à démarcher.")
 
 if view.empty and spontaneous.empty:
     st.warning("Aucune offre ni entreprise ne correspond à ces filtres.")
@@ -542,7 +548,7 @@ with tab_offers:
         )
 with tab_spont:
     if place is None:
-        st.write("Saisis ton adresse pour voir les entreprises à démarcher.")
+        st.write("Choisis ta ville pour voir les entreprises à démarcher.")
     elif spontaneous.empty:
         st.write(
             "Aucune entreprise trouvée : élargis le rayon ou retire des filtres (taille, secteur)."
