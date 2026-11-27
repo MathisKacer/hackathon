@@ -42,6 +42,7 @@ hackathon/
 │   ├── recruteurs.py           # T51 : recruteurs potentiels LBA sur un ROME du domaine → `recruteur_lba` (D26)
 │   ├── spontaneous.py          # T40 : couche orange — entreprises du rayon sans offre correspondante, classées (D19)
 │   ├── procedures.py           # T23 : pénalité et alerte BODACC selon la situation et le contrat (D24)
+│   ├── fiche.py                # T43 : données de la fiche entreprise (SIRENE complet, offres, BODACC, niveau de preuve)
 │   ├── collect/                # un module par source : adzuna.py, lba.py, ats.py, sirene.py, bodacc.py…
 │   ├── process/
 │   │   ├── classify.py         # T13 : domaine (radar.domains.classify) + contrat + SIRET donné par la source → offres.parquet
@@ -56,7 +57,7 @@ hackathon/
 │   │   ├── model.py            # entraîne le modèle de réponse, calibration, paramètres retrouvés
 │   │   └── predict.py          # T37 : P(réponse) dans l'app (lecture DuckDB des SIRET affichés + effet de la distance, D23)
 │   └── llm/letter.py           # génération de lettre (bonus)
-├── app/streamlit_app.py        # + app/compte.py : bloc « compte » et « Mes recherches » de la barre latérale (T48, T49)
+├── app/streamlit_app.py        # + app/compte.py : bloc « compte » et « Mes recherches » de la barre latérale (T48, T49) ; app/fiche_ui.py : panneau « Fiche entreprise » (T43)
 ├── scripts/                    # points d'entrée : collect_all.py, build_all.py, make_fake_data.py
 ├── notebooks/                  # exploration (sorties vidées avant commit)
 ├── tests/

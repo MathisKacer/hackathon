@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-11-27 — Tâche T43 : fiche entreprise
+
+**Fait :**
+- `radar/fiche.py` : `load_company`, `company_offers` (par SIREN, sans intermédiaires), `bodacc_history`, `evidence` (niveau de preuve), `links`.
+- `app/fiche_ui.py` + appel dans `app/streamlit_app.py` : panneau « 🔎 Fiche entreprise » sous la liste orange (identité + alerte, pourquoi recommandée + décomposition du score, besoin dans le domaine + intervalle crédible à 90 %, offres récentes, historique BODACC, coordonnées et liens).
+- Coordination avec T32 (@mathis) notée dans `TACHES.md` : la fiche affiche sa colonne `explication`, il garde le popup.
+- Sélecteur de toute la liste (5 000 max, recherche par nom) : les entreprises en procédure, pénalisées, sont classées loin.
+
+**Fichiers touchés :**
+- `radar/fiche.py`, `app/fiche_ui.py`, `app/streamlit_app.py`, `tests/test_fiche.py`, `docs/*`
+
+**Résultats / chiffres clés :**
+- Vérifié dans l'app (scores factices autour de Rennes) : entreprise saine, en redressement (×0,40, 1 annonce) et en liquidation (×0,05, 3 annonces) ; aucune erreur.
+- 6 tests ; suite complète : 255 tests OK.
+
+**Prochaine étape :**
+- Quand T32 sera poussée : vérifier que la phrase s'affiche dans la fiche. Avec T22 : ajouter le chiffre d'affaires.
+
+---
+
 ## 2026-11-27 — Tâche T23 : BODACC, entreprises en difficulté (D24)
 
 **Fait :**

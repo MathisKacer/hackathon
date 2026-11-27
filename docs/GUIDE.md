@@ -1,4 +1,4 @@
-# Guide des fonctionnalités : comptes, historique, sécurité, SIRENE, BODACC
+# Guide des fonctionnalités : comptes, historique, sécurité, SIRENE, BODACC, fiche entreprise
 
 > **Mode d'emploi** des parties construites par @celia : à quoi elles servent, comment les utiliser, comment elles marchent, comment les régler, et ce qu'on peut faire ensuite.
 > Pour le reste de l'app (carte, score, poids, P(réponse)) : `ARCHITECTURE.md` et les décisions D19 à D23.
@@ -15,6 +15,7 @@
 7. [Où sont les données ?](#7-où-sont-les-données-)
 8. [Commandes utiles](#8-commandes-utiles)
 9. [Ce qu'on peut faire ensuite](#9-ce-quon-peut-faire-ensuite)
+10. [Fiche entreprise (T43)](#10-fiche-entreprise-t43)
 
 ---
 
@@ -27,6 +28,7 @@
 | Comptes facultatifs + profil | T48 | « Se connecter / Créer un compte » ; réglages retrouvés à la connexion | `radar/accounts.py`, `app/compte.py` | D14 |
 | Historique des recherches | T49 | « 🕘 Mes recherches » avec « ↻ Relancer » | `radar/accounts.py`, `app/compte.py` | D14 |
 | Sécurité des mots de passe | — | Règles affichées, blocage après 5 échecs | `radar/accounts.py`, `docs/SECURITE.md` | D16 |
+| Fiche entreprise | T43 | « 🔎 Fiche entreprise » sous la liste orange : tout sur une entreprise | `radar/fiche.py`, `app/fiche_ui.py` | — |
 
 Principe commun : **la démo marche sans rien configurer**, en mode anonyme, et chaque fonctionnalité se règle en un seul endroit du code.
 
@@ -197,7 +199,7 @@ Par ordre d'intérêt (✅ = déjà une tâche dans `TACHES.md`) :
 
 | Idée | Intérêt | Effort | Tâche |
 |---|---|---|---|
-| **Fiche entreprise complète** : situation BODACC détaillée (historique des jugements), effectif, secteur, offres en cours | Va vers « tout savoir sur une entreprise dès qu'on la cherche » | moyen | ✅ T43 |
+| **Fiche entreprise** : enrichir avec le chiffre d'affaires (T22), le site web, la carte de l'établissement | Va vers « tout savoir sur une entreprise dès qu'on la cherche » | faible | T43 fait, suite avec T22 |
 | **Rechercher une entreprise par son nom** et voir toutes ses infos (recrutement en cours, situation, score) | Vision à terme : recenser un maximum d'entreprises | moyen | à créer |
 | **Suivi des candidatures** (envoyée, relancée, réponse) dans le compte | Fournirait de **vraies réponses** pour remplacer les réponses simulées du modèle (D6) | moyen | à créer |
 | Base des comptes **hébergée** (Supabase, région UE) avec repli sur SQLite | Comptes partagés et sauvegardés | 1 h 30–2 h | ✅ T52 (très optionnel) |
@@ -207,3 +209,31 @@ Par ordre d'intérêt (✅ = déjà une tâche dans `TACHES.md`) :
 | Données financières (chiffre d'affaires) pour la composante « dynamisme » | Score plus riche | moyen (fichiers INPI à vérifier) | ✅ T22 |
 
 **Pour le pitch** : « Pas de compte obligatoire ; mots de passe hachés et règles CNIL ; entreprises en difficulté signalées d'après le BODACC, avec une pénalité qui dépend du contrat visé ; tout est réglable et expliqué. »
+
+---
+
+## 10. Fiche entreprise (T43)
+
+**À quoi ça sert.** Voir d'un coup d'œil tout ce qu'on sait d'une entreprise de la couche orange, et **pourquoi** elle est recommandée. Premier pas vers « tout savoir sur une entreprise dès qu'on la cherche ».
+
+**Ce que voit l'utilisateur.** Sous la liste orange, le panneau « 🔎 Fiche entreprise » : un sélecteur avec toute la liste dans l'ordre du classement (on peut **taper un nom** pour chercher), puis la fiche :
+
+| Bloc | Contenu | D'où ça vient |
+|---|---|---|
+| Identité | nom, établissement, secteur, taille, catégorie (PME, ETI, grande entreprise), siège ou non ; **alerte** si procédure collective | SIRENE (T20), BODACC (T23) |
+| Pourquoi elle est recommandée | phrase « Recommandée car… » si la colonne `explication` existe (T32, Mathis) ; score, distance, P(réponse) simulée ; **décomposition du score** en barres (apport de chaque composante) | score (T30, T42), T32, T37 |
+| Besoin dans le domaine | **niveau de preuve** (🟢 élevé ≥ 5 offres, 🟡 moyen 1 à 4, ⚪ faible 0, ⚪ non collecté si la zone n'a pas été collectée) ; offres du domaine dont stages et alternances ; intensité estimée (offres pour 100 salariés) avec **intervalle crédible à 90 %** et moyenne du secteur | `scores.parquet` (D13) |
+| Offres récentes | jusqu'à 10 offres de l'entreprise (toute l'entreprise, par SIREN ; sans les intermédiaires), avec lien vers l'annonce | `offres.parquet` (T13, T21) |
+| Situation (BODACC) | historique de toutes les annonces de procédure collective sur 2 ans, avec lien | cache BODACC (T23) |
+| Coordonnées et liens | adresse (masquée si diffusion partielle), SIRET, SIREN ; liens Annuaire des entreprises, OpenStreetMap, annonce BODACC | SIRENE |
+
+**Comment ça marche.**
+- `radar/fiche.py` (données, testable sans Streamlit) : chaque fonction lit **un seul** établissement avec DuckDB (`load_company`, `company_offers`, `bodacc_history`), calcule le niveau de preuve (`evidence`) et les liens (`links`). Si un fichier manque (pas d'offres, pas de cache BODACC), le bloc correspondant est simplement vide.
+- `app/fiche_ui.py` (affichage) : `render_fiche(spontaneous)`, appelée dans `app/streamlit_app.py` juste après la liste orange. Résultats mis en cache (`st.cache_data`).
+- La sélection (`fiche_siret`) n'est pas enregistrée dans le profil : ce n'est pas un réglage de recherche.
+- **Coordination avec T32** : le popup de la carte est à Mathis ; ce panneau à Celia ; la fiche affiche la colonne `explication` dès qu'elle existe.
+
+**Régler.** Nombre d'entreprises dans le sélecteur : `MAX_CHOICES` (`app/fiche_ui.py`) ; nombre d'offres : `OFFERS_SHOWN` ; seuils du niveau de preuve : `evidence` (`radar/fiche.py`).
+
+**Tests.** `uv run pytest -q tests/test_fiche.py` (6 tests, dont l'affichage avec AppTest).
+
