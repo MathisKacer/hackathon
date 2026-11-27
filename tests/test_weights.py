@@ -44,7 +44,7 @@ def test_weighted_score_is_a_mean_and_apports_sum_to_score():
     assert out["score"].tolist() == pytest.approx([(2 + 0.5) / 4, (0.5 + 1) / 4])
     apports = out[[f"apport_{c}" for c in COMPONENTS]].sum(axis=1)
     assert apports.tolist() == pytest.approx(out["score"].tolist())
-    assert (out["apport_c_dynamisme"] == 0).all()  # poids 0 → aucun apport
+    assert out["apport_c_dynamisme"].isna().all()  # poids 0 → apport masqué
 
 
 def test_all_weights_zero_falls_back_to_d13():

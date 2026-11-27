@@ -130,6 +130,11 @@ COMPONENTS: dict[str, tuple[str, str]] = {
         "Opportunité cachée",
         "1 si l'entreprise publie des offres du domaine, mais aucune pour ton contrat.",
     ),
+    "c_recruteur_lba": (
+        "Recruteur d'alternants (LBA)",
+        "1 si La bonne alternance signale l'entreprise comme recruteur potentiel d'alternants "
+        "sur un métier du domaine, sans offre publiée (T51). Compte en alternance et « Tous ».",
+    ),
     "c_dynamisme": (
         "Dynamisme",
         "Croissance de l'entreprise (T22) ; neutre (0,5) tant que les finances manquent.",
@@ -141,12 +146,25 @@ DEFAULT_WEIGHTS: dict[str, int] = {
     "c_embauche": 3,
     "c_proximite": 1,
     "c_cachee": 1,
+    "c_recruteur_lba": 2,
     "c_dynamisme": 0,
+}
+# Composantes qui n'ont de sens que pour certains contrats visés : ailleurs, leur poids est
+# ignoré (sinon elles valent 0 partout et font baisser tous les scores sans rien classer).
+COMPONENT_CONTRACTS: dict[str, tuple[str, ...]] = {
+    "c_cachee": ("stage", "alternance", "emploi"),
+    "c_recruteur_lba": ("alternance", "tous"),
 }
 
 
+def applicable_weights(weights: dict[str, float], contrat: str) -> dict[str, float]:
+    """Poids sans les composantes hors sujet pour le contrat visé."""
+    c = contrat.lower()
+    return {k: v for k, v in weights.items() if c in COMPONENT_CONTRACTS.get(k, (c,))}
+
+
 def add_user_components(df: pd.DataFrame, radius_km: float, contrat: str) -> pd.DataFrame:
-    """Ajoute les composantes qui dépendent de l'étudiant : proximité et opportunité cachée."""
+    """Composantes qui dépendent de l'étudiant : proximité, opportunité cachée, recruteur LBA."""
     out = df.copy()
     out["c_proximite"] = (1 - out["distance_km"] / max(radius_km, 1e-9)).clip(0, 1)
     suffix = "_siren" if "n_offres_domaine_siren" in out.columns else ""
@@ -155,20 +173,27 @@ def add_user_components(df: pd.DataFrame, radius_km: float, contrat: str) -> pd.
     out["c_cachee"] = (has_domain_offers & no_matching).astype(float)
     if "c_dynamisme" not in out.columns:
         out["c_dynamisme"] = 0.5
+    # T51 : recruteur LBA sur un métier du domaine (colonne posée par radar.recruteurs).
+    lba = out["recruteur_lba"] if "recruteur_lba" in out.columns else False
+    in_scope = contrat.lower() in COMPONENT_CONTRACTS["c_recruteur_lba"]
+    out["c_recruteur_lba"] = (pd.Series(lba, index=out.index).fillna(False) & in_scope).astype(
+        float
+    )
     return out
 
 
 def weighted_score(df: pd.DataFrame, weights: dict[str, float]) -> pd.DataFrame:
     """score = Σ wⱼ·cⱼ / Σ wⱼ (dans [0, 1]) + une colonne `apport_<composante>` par composante.
 
-    L'apport est la part du score due à la composante (la somme des apports = le score).
-    Tous les poids à 0 : repli sur le score D13 (apports à NaN).
+    L'apport est la part du score due à la composante (la somme des apports = le score) ;
+    NaN pour une composante de poids nul. Tous les poids à 0 : repli sur le score D13.
     """
     out = df.copy()
     w = {k: float(v) for k, v in weights.items() if k in COMPONENTS and float(v) > 0}
     total = sum(w.values())
     for k in COMPONENTS:
-        out[f"apport_{k}"] = out[k].clip(0, 1).fillna(0) * w.get(k, 0) / total if total else np.nan
+        # Composante sans poids (ou hors sujet pour le contrat) : apport NaN, masqué dans l'app.
+        out[f"apport_{k}"] = out[k].clip(0, 1).fillna(0) * w[k] / total if k in w else np.nan
     out["score"] = (
         out[[f"apport_{k}" for k in COMPONENTS]].sum(axis=1) if total else spontaneous_score(out)
     )
@@ -204,7 +229,7 @@ def rank_spontaneous(
     if weights is None:
         out["score"] = spontaneous_score(out)
     else:
-        out = weighted_score(out, weights)
+        out = weighted_score(out, applicable_weights(weights, contrat))
     out = apply_procedures(out, contrat, show_liquidation)
     out["url_annuaire"] = out["siret"].map(lambda s: ANNUAIRE_URL.format(siret=s))
     return out.sort_values(["score", "distance_km"], ascending=[False, True]).reset_index(drop=True)

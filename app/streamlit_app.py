@@ -26,6 +26,7 @@ from radar.filters import SECTIONS, TAILLES, filter_companies
 from radar.geo import region_of
 from radar.geocode import Place, geocode
 from radar.process.quick_filter import load_raw_offers, prepare_offers
+from radar.recruteurs import mark_lba_recruiters
 from radar.response.predict import add_p_reponse, contracts_for, load_coefficients
 from radar.spontaneous import (
     COMPONENTS,
@@ -89,7 +90,8 @@ def get_coefficients() -> dict[str, float] | None:
 def get_nearby(lat: float, lon: float, radius_km: float, domaine: str) -> pd.DataFrame:
     if not (FILES["entreprises"].exists() and FILES["scores"].exists()):
         return pd.DataFrame()
-    return load_nearby(lat, lon, radius_km, domaine)
+    # T51 : marque les recruteurs potentiels LBA sur un métier du domaine (`recruteur_lba`).
+    return mark_lba_recruiters(load_nearby(lat, lon, radius_km, domaine), domaine)
 
 
 def filter_offers(
