@@ -48,3 +48,29 @@ def test_reproducible():
     a = generate(n_entreprises=100, seed=7).entreprises
     b = generate(n_entreprises=100, seed=7).entreprises
     assert a.equals(b)
+
+
+def test_recruteurs_lba(data):
+    from radar.domains import load_domains
+
+    rec = data.recruteurs_lba
+    check_columns(rec, "recruteurs_lba")
+    assert rec["siret"].is_unique and rec["siret"].map(luhn_ok).all()
+    in_ref = rec["siret"].isin(data.entreprises["siret"])
+    assert 0.6 < in_ref.mean() < 1  # surtout des entreprises du référentiel, plus des petites
+    assert set(rec.loc[~in_ref, "taille"]) <= {"0-0", "1-2", "3-5", "6-9"}
+    # « recruteur potentiel » = aucune offre d'alternance publiée
+    with_alt = data.offres.loc[data.offres["contrat"] == "alternance", "siret_match"].dropna()
+    assert not rec["siret"].isin(with_alt).any()
+    # codes ROME réels, tirés de domains.yaml
+    known = {c for d in load_domains().values() for c in d.rome}
+    codes = rec["code_rome"].dropna().str.split(",").explode()
+    assert set(codes) <= known
+
+
+def test_recruiters_do_not_change_other_tables():
+    """Les recruteurs sont tirés en dernier : les autres tables restent identiques (graine)."""
+    a = generate(n_entreprises=200, seed=11)
+    assert a.scores["c_intensite"].round(6).sum() > 0
+    b = generate(n_entreprises=200, seed=11)
+    assert a.offres.equals(b.offres) and a.recruteurs_lba.equals(b.recruteurs_lba)

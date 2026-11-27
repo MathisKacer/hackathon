@@ -14,6 +14,9 @@ Realism choices (so that the score has something to chew on):
 - Adzuna offers carry no SIRET (name variants, ~20 % not matched), La bonne alternance
   offers carry one.
 
+- La bonne alternance "potential recruiters" (T7): companies without a published
+  apprenticeship offer + small firms outside the reference, with real ROME codes.
+
 `scores`, `candidatures_simulees` and `p_reponse` are PLACEHOLDERS with the right columns
 so that the app can be built; their formulas are NOT the real model (T30/T31, T35/T36).
 
@@ -28,6 +31,8 @@ from datetime import date, timedelta
 import numpy as np
 import pandas as pd
 from scipy import stats
+
+from radar.domains import load_domains
 
 FAKE_TAG = "[DONNÉE FACTICE]"
 
@@ -224,6 +229,7 @@ class FakeData:
     scores: pd.DataFrame
     candidatures_simulees: pd.DataFrame
     p_reponse: pd.DataFrame
+    recruteurs_lba: pd.DataFrame
 
 
 # --------------------------------------------------------------------------- helpers
@@ -448,6 +454,90 @@ def make_offres(
     return raw_by_source, offres
 
 
+# --------------------------------------------------------------------------- LBA recruiters (T7)
+
+# LBA size bands (text, cf. docs/SOURCES.md: "0-0", "10-19"…), keyed by INSEE band code.
+LBA_SIZE = {"11": "10-19", "12": "20-49", "21": "50-99", "22": "100-199", "31": "200-249",
+            "32": "250-499", "41": "500-999", "42": "1000-1999", "51": "2000-4999",
+            "52": "5000-9999", "53": "10000+"}  # fmt: skip
+SMALL_LBA_SIZES = ["0-0", "1-2", "3-5", "6-9"]
+OPCOS = ["ATLAS", "AKTO", "OPCO 2i", "OPCO EP", "OPCOMMERCE", "OPCO Santé", "Constructys",
+         "Uniformation", "AFDAS", "OCAPIAT", "OPCO Mobilités"]  # fmt: skip
+
+
+def make_recruteurs(
+    rng: np.random.Generator, ent: pd.DataFrame, offres: pd.DataFrame, share: float = 0.3
+) -> pd.DataFrame:
+    """Fake La bonne alternance "potential recruiters" (schema `recruteurs_lba`).
+
+    - mostly companies of `entreprises` WITHOUT a published apprenticeship offer (that is what
+      LBA recruiters are), more likely when bigger;
+    - plus ~15 % small firms (< 10 employees) that are NOT in `entreprises`, as in the real
+      export (sizes "0-0"…), to exercise joins that do not match;
+    - `code_rome`: 1 to 4 real ROME 4.0 codes taken from radar/domains.yaml, drawn according to
+      the sector's domain mix (so data recruiters are mostly in IT / consulting / finance).
+    """
+    domains = load_domains()
+    domain_keys = list(domains) + ["autre"]
+    rome_by_domain = {k: list(d.rome) for k, d in domains.items()}
+
+    with_alt = set(offres.loc[offres["contrat"] == "alternance", "siret_match"].dropna())
+    pool = ent[~ent["siret"].isin(with_alt) & ~ent["procedure_collective"]]
+    p_pick = share * (0.5 + 0.5 * np.log10(pool["_headcount"]) / np.log10(12000))
+    picked = pool[rng.random(len(pool)) < p_pick]
+
+    # Small firms outside the reference (new SIRETs, same cities and sectors).
+    n_small = int(0.15 / 0.85 * len(picked))
+    small = make_entreprises(rng, n_small)
+    small = small[~small["siret"].isin(ent["siret"])]
+
+    def rome_codes(sector_idx: int) -> str | None:
+        w = np.array(SECTORS[sector_idx][4], dtype=float)
+        drawn = rng.choice(len(domain_keys), size=rng.integers(1, 5), p=w / w.sum())
+        codes = {
+            rome_by_domain[domain_keys[k]][rng.integers(len(rome_by_domain[domain_keys[k]]))]
+            for k in drawn
+            if domain_keys[k] != "autre"
+        }
+        return ",".join(sorted(codes)) or None
+
+    rows = []
+    for kind, df in (("ref", picked), ("small", small)):
+        # itertuples() renames "_"-prefixed columns: give them plain names first.
+        df = df.rename(columns={"_code_postal": "code_postal", "_sector_idx": "sector_idx"})
+        for e in df.itertuples(index=False):
+            k = len(rows)
+            rows.append(
+                {
+                    "source": "lba",
+                    "recruteur_id": f"rec-{k:07d}",
+                    "siret": e.siret,
+                    "nom": e.nom,
+                    "raison_sociale": e.nom.upper(),
+                    "naf": e.naf,
+                    "naf_libelle": e.naf_libelle,
+                    "taille": LBA_SIZE[e.tranche_effectif]
+                    if kind == "ref"
+                    else SMALL_LBA_SIZES[rng.integers(len(SMALL_LBA_SIZES))],
+                    "adresse": f"{rng.integers(1, 200)} rue Factice {e.code_postal} {e.commune}",
+                    "code_postal": e.code_postal,
+                    "commune": e.commune,
+                    "lat": e.lat,
+                    "lon": e.lon,
+                    "site_web": f"https://example.org/factice/{e.siret}"
+                    if rng.random() < 0.4
+                    else None,
+                    "opco": OPCOS[rng.integers(len(OPCOS))],
+                    "idcc": int(rng.choice([1486, 2120, 1672, 2098, 2216, 1597, 3248, 1527])),
+                    "code_rome": rome_codes(e.sector_idx),
+                    "url": f"https://example.org/factice/recruteur/{k}",
+                }
+            )
+    rec = pd.DataFrame(rows)
+    rec.insert(2, "date_collecte", offres["date_collecte"].iloc[0] if len(offres) else pd.NaT)
+    return rec
+
+
 # --------------------------------------------------------------------------- placeholder scores
 
 
@@ -575,6 +665,8 @@ def generate(
     raw, offres = make_offres(rng, ent, collect_date)
     scores = make_scores(ent, offres)
     cand, p_rep = make_response(rng, ent, scores)
+    # Drawn last, so that the tables above stay identical for a given seed.
+    recruteurs = make_recruteurs(rng, ent, offres)
     public = [c for c in ent.columns if not c.startswith("_")]
     return FakeData(
         offres_raw=raw,
@@ -583,4 +675,5 @@ def generate(
         scores=scores,
         candidatures_simulees=cand,
         p_reponse=p_rep,
+        recruteurs_lba=recruteurs,
     )

@@ -5,6 +5,7 @@
 
 Fichiers produits (contrat de docs/ARCHITECTURE.md) :
     data/raw/offres_raw/{adzuna,lba}.parquet
+    data/raw/lba_recruteurs.parquet            (recruteurs potentiels LBA, T7)
     data/processed/{offres,entreprises,scores,candidatures_simulees,p_reponse}.parquet
 
 Par sécurité, le script refuse d'écraser des fichiers existants (qui pourraient être de
@@ -38,8 +39,9 @@ def main() -> int:
         for name in ("offres", "entreprises", "scores", "candidatures_simulees", "p_reponse")
     }
     raw_targets = {src: raw_dir / f"{src}.parquet" for src in ("adzuna", "lba")}
+    rec_target = PATHS.raw / "lba_recruteurs.parquet"
 
-    existing = [p for p in [*targets.values(), *raw_targets.values()] if p.exists()]
+    existing = [p for p in [*targets.values(), *raw_targets.values(), rec_target] if p.exists()]
     if existing and not args.force:
         print(
             "Fichiers déjà présents (vraies données ?), rien n'est écrit. Relancer avec --force :"
@@ -58,9 +60,11 @@ def main() -> int:
         df = getattr(data, name)
         check_columns(df, name)
         df.to_parquet(path, index=False)
+    check_columns(data.recruteurs_lba, "recruteurs_lba")
+    data.recruteurs_lba.to_parquet(rec_target, index=False)
 
     print(f"Données FACTICES écrites (graine {args.seed}) :")
-    for path in [*raw_targets.values(), *targets.values()]:
+    for path in [*raw_targets.values(), rec_target, *targets.values()]:
         print(
             f"  {path.relative_to(PATHS.root)} : {len(pd.read_parquet(path)):>7,} lignes".replace(
                 ",", " "
