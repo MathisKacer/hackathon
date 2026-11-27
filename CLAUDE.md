@@ -52,6 +52,7 @@ Ce fichier est lu par **toutes** les sessions Claude Code de l'équipe. Plusieur
 
 - **Clés d'API** : `cp .env.example .env`, puis remplir. Le `.env` est **local à chaque pod Onyxia** (non versionné) : chaque membre crée le sien, et les clés se partagent par message privé, jamais via Git. Claude ne doit jamais afficher, journaliser ni committer le contenu du `.env`.
 - **Ne jamais committer de données** ni de secrets : jeux de données dans `data/` (ignoré par Git) ou sur le stockage S3 Onyxia/SSP Cloud ; identifiants dans des variables d'environnement ou `.env` (ignoré).
+- **Partager des données avec l'équipe** (y compris ceux qui ne sont pas sur Onyxia) : depuis un service Onyxia, `python3 scripts/share_s3.py data/<fichier>` dépose le fichier dans l'espace S3 **privé** et affiche une commande `curl` avec un lien temporaire (24 h). Envoyer cette commande en **message privé**. ⚠️ Le dépôt GitHub est **public** : jamais de données dedans, ni dans le dossier public `diffusion/` de S3 (les offres Adzuna ne doivent pas être redistribuées publiquement).
 - Ne pas committer de notebooks avec des sorties volumineuses (vider les sorties avant commit).
 
 ## Stack et commandes
