@@ -18,15 +18,17 @@ from functools import partial
 import pandas as pd
 import streamlit as st
 from carte import _family_html, _tier_html, offer_signal
-from commun import CHANCE_HELP, get_place
+from commun import CHANCE_HELP, get_families, get_place
 from favoris import star_button
 from style import LINK_STYLE
 
 from radar import fiche
+from radar.candidature import candidature_facts, load_company_scores
 from radar.collect.sirene import tranche_display
 from radar.domains import load_domains
-from radar.familles import family_signal
+from radar.familles import family_signal, mark_family_offers
 from radar.paliers import rule_text, tier_text
+from radar.recruteurs import lba_recruiter_sirets
 from radar.spontaneous import COMPONENTS
 
 MAX_CHOICES = 5000  # entreprises proposées (le sélecteur permet de taper pour chercher)
@@ -305,7 +307,7 @@ def fiche_content(siret: str, row: pd.Series | None = None, domaine: str | None 
         _parent_company(siren)
     _star(siret, row, c)
     if row.get("score") is None or pd.isna(row.get("score")):
-        _site_not_candidate(siret, siren)  # explique pourquoi (au lieu de ne rien afficher)
+        _site_not_candidate(siret, siren, row, domaine)  # l'essentiel, même sans ville (T78)
     _why(row)
     _need(row, domaine)
     _offers_block(siren, siret)
@@ -368,17 +370,49 @@ def _candidature_row(siret: str) -> pd.Series | None:
     return hit.iloc[0] if not hit.empty else None
 
 
-def _site_not_candidate(siret: str, siren: str | None) -> None:
-    """Fiche d'un site absent des candidatures de la recherche : dire pourquoi (T76, @maxence).
+def _facts_block(
+    row: pd.Series,
+    sirets: list[str],
+    siren: str | None,
+    domaine: str | None,
+    site_phrase: str = "de ce site",
+) -> None:
+    """T78 : ce qu'on sait sans ville (offres pour le contrat, besoin, LBA, groupe)."""
+    if not domaine:
+        return
+    contrat = st.session_state.get("contrat") or "Tous"
+    groupe = ""
+    if siren:
+        fam = mark_family_offers(pd.DataFrame({"siren": [siren]}), get_families(domaine), contrat)
+        groupe = family_signal(fam.iloc[0])
+    facts = candidature_facts(
+        row,
+        contrat,
+        domaine,
+        recruteur_lba=bool(lba_recruiter_sirets(sirets, domaine)) if sirets else None,
+        groupe=groupe,
+        site_phrase=site_phrase,
+    )
+    st.markdown(f"**{facts['verdict']}**" + (f" *(contrat : {contrat})*" if contrat else ""))
+    for line in facts["lignes"]:
+        st.markdown(f"- {line}")
 
-    Sans ce bloc, la fiche du site restait muette alors que celle de l'entreprise expliquait.
+
+def _site_not_candidate(
+    siret: str, siren: str | None, row: pd.Series | None = None, domaine: str | None = None
+) -> None:
+    """Fiche d'un site absent des candidatures de la recherche (T76, T78, @maxence).
+
+    Donne l'essentiel même sans ville (T78), puis dit pourquoi le site n'est pas classé.
     """
     st.markdown("#### Candidature spontanée")
     df, ctx = _candidatures(), st.session_state.get("_candidatures_ctx")
+    if row is not None:
+        _facts_block(row, [siret], siren, domaine)
     if df.empty or ctx is None:
         st.caption(
-            "Choisis une ville dans Explorer pour savoir si ce site est une bonne cible de "
-            "candidature spontanée autour de toi."
+            "Choisis ta ville dans Explorer pour la distance et le classement (Cible "
+            "prioritaire, Bonne cible…) parmi les entreprises autour de toi."
         )
         return
     sirens = df["siren"] if "siren" in df else df["siret"].astype(str).str[:9]
@@ -406,19 +440,33 @@ def _site_not_candidate(siret: str, siren: str | None) -> None:
     )
 
 
-def _company_candidature(siren: str) -> None:
+def _company_facts(siren: str, domaine: str | None) -> None:
+    """T78 : l'essentiel pour toute l'entreprise, sans ville (site au meilleur besoin attendu)."""
+    if not domaine:
+        return
+    sc = load_company_scores(siren, domaine)
+    if sc.empty:
+        st.caption("Entreprise non notée dans ce domaine (pas de score).")
+        return
+    sirets = sc["siret"].astype(str).tolist()
+    _facts_block(sc.iloc[0], sirets, siren, domaine, site_phrase="de son site le plus actif")
+
+
+def _company_candidature(siren: str, domaine: str | None = None) -> None:
     """Fiche entreprise : ses sites dans la recherche en cours, le mieux classé, le signal."""
     st.markdown("#### Candidature spontanée")
     df, ctx = _candidatures(), st.session_state.get("_candidatures_ctx")
     if df.empty or ctx is None:
+        _company_facts(siren, domaine)  # T78 : l'essentiel même sans ville
         st.caption(
-            "Choisis une ville dans Explorer pour voir si ses sites sont de bonnes cibles "
-            "de candidature spontanée autour de toi."
+            "Choisis ta ville dans Explorer pour savoir quels sites sont proches de toi et "
+            "comment ils se classent (Cible prioritaire, Bonne cible…)."
         )
         return
     sirens = df["siren"] if "siren" in df else df["siret"].astype(str).str[:9]
     mine = df[sirens.astype(str) == str(siren)]
     if mine.empty:
+        _company_facts(siren, domaine)  # T78 : l'essentiel quand même
         st.caption(
             f"Aucun de ses sites n'est une cible dans ta recherche ({ctx['lieu']}, "
             f"{ctx['rayon']} km) : soit ils sont hors du rayon, soit l'entreprise a déjà "
@@ -514,7 +562,7 @@ def company_content(siren: str, domaine: str | None = None) -> None:
         },
         key=f"fav_entreprise_{siren}",
     )
-    _company_candidature(siren)
+    _company_candidature(siren, domaine)
 
     st.markdown("#### Offres de l'entreprise (tous ses sites)")
     offers = _offers(siren, None)
