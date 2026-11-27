@@ -301,8 +301,8 @@ if place is None:
         (
             ":material/map:",
             "Repère sur la carte",
-            "en bleu les offres publiées, en orange les entreprises qui recrutent dans ton domaine "
-            "sans offre pour ton contrat.",
+            "Bleu : les offres en ligne. Orange : les entreprises de ton domaine qui n'ont pas "
+            "d'offre pour ton contrat, à contacter directement.",
         ),
         (
             ":material/apartment:",
