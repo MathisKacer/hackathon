@@ -67,6 +67,7 @@
 
 ## 🔵 En cours
 
+- [ ] T57 — **Entreprise et sites (SIREN / SIRET)** : fiche **entreprise** (tous les sites d'un même SIREN : identité, offres de tous les sites, BODACC, liste des sites) reliée à la fiche **site** (« Fait partie de … · N sites · Voir toute l'entreprise ») ; recherche d'entreprises : l'entreprise entière d'abord, puis ses sites ; candidatures spontanées : « + N autres sites » et option « Une ligne par entreprise » ; favori possible sur toute l'entreprise. Groupes et filiales (plusieurs SIREN) : hors périmètre, voir T26 — @celia
 - _…_
 
 ## ✅ Fait
