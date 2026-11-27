@@ -70,12 +70,12 @@
 
 ## 🔵 En cours
 
-- [ ] T31 — 🔗T30 **Rétrécissement bêta-binomial** : a priori par secteur NAF, a posteriori, intervalle crédible — @mathis
-- [ ] T30 — 🔗T5 **Score v0** sur données factices : composantes simples (part brute des offres du domaine, opportunité cachée, distance, taille) → `scores.parquet` — @mathis
 - [ ] T17 — 🔗T11 **Partager les données LBA sur S3** (`offres_raw/lba.parquet`, `lba_recruteurs.parquet`) : relancer `scripts/collect_lba.py` sur Onyxia puis `scripts/share_s3.py` — @maxence
 
 ## ✅ Fait
 
+- [x] T31 — 🔗T30 **Rétrécissement bêta-binomial** : a priori par secteur NAF, a posteriori, intervalle crédible — @mathis → fusionnée dans T30 : gamma-Poisson au lieu de bêta-binomial (D13)
+- [x] T30 — 🔗T5 **Score v0** sur données factices : composantes simples (part brute des offres du domaine, opportunité cachée, distance, taille) → `scores.parquet` — @mathis → gamma-Poisson réel (D13), `scripts/build_scores.py`
 - [x] T7 — **Recruteurs LBA factices** : `make_fake_data.py` écrit aussi `data/raw/lba_recruteurs.parquet` (schéma `recruteurs_lba`, codes ROME réels de `domains.yaml`) — @emma
 - [x] T21 — 🔗T11,T12 **Rapprochement nom + commune → SIRET** pour les offres Adzuna (rapidfuzz sur le référentiel T20) ; mesurer le taux de rapprochement et le noter dans `SOURCES.md` — @mathis → **63 % des offres d'employeurs rapprochées** (50 % confiance haute), intermédiaires écartés (17 %) ; pipeline D10 : `classify_offres.py` (Emma) puis `match_offres.py` complète `offres.parquet`
 - [x] T13 — **Classifieur d'offres** : `uv run python scripts/classify_offres.py` → `offres.parquet` avec `domaine`, `contrat`, la règle qui a décidé et le SIRET donné par la source ; les offres Adzuna restent `a_rapprocher` pour T21 — @emma

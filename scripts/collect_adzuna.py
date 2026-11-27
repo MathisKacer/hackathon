@@ -11,6 +11,7 @@ seules les pages manquantes consomment du quota. Relancer chaque jour pour compl
 """
 
 import argparse
+import json
 import logging
 
 from radar.collect.adzuna import DEFAULT_DAILY_LIMIT, REGIONS, Quota, collect
@@ -37,6 +38,19 @@ def main() -> None:
     out = PATHS.raw / "offres_raw" / "adzuna.parquet"
     out.parent.mkdir(parents=True, exist_ok=True)
     df.to_parquet(out, index=False)
+    # Couverture par région : sert au score (exposition pondérée, T30).
+    (out.parent / "adzuna_couverture.json").write_text(
+        json.dumps(
+            {
+                "date_collecte": df["date_collecte"].max() if len(df) else None,
+                "requete": args.what,
+                "max_days_old": args.max_days_old,
+                "regions": df.attrs["coverage"],
+            },
+            ensure_ascii=False,
+            indent=1,
+        )
+    )
 
     print(f"\n{len(df)} offres uniques → {out.relative_to(PATHS.root)}")
     print(

@@ -1,0 +1,145 @@
+"""Construction de data/processed/scores.parquet (T30) — contrat « scores » (une ligne par
+(siret, domaine), composantes c_* dans [0, 1]).
+
+Entrées : entreprises.parquet (T20), offres.parquet rapprochées (T13 + T21),
+data/raw/offres_raw/adzuna_couverture.json (couverture de la collecte par région).
+
+Composantes (v0, D13) :
+- c_intensite : rang centile de l'intensité a posteriori (offres du domaine / 100 salariés) ;
+- c_embauche  : rang centile du besoin attendu de l'établissement (intensité × effectif local),
+                en attendant La Bonne Boîte / recruteurs LBA (T24) → `c_embauche_source` ;
+- c_dynamisme : 0,5 (neutre) tant que les finances ne sont pas chargées (T22) →
+                `c_dynamisme_disponible`.
+Les établissements d'agences d'intérim / de placement (NAF 78.*) ne sont pas notés.
+`volume_suspect` signale les entreprises avec plus d'offres du domaine que la moitié de leur
+effectif (intermédiaire non repéré ou entité juridique d'un groupe) : à écarter dans l'app.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+
+import numpy as np
+import pandas as pd
+
+from radar.config import FILES, PATHS
+from radar.geo import region_of
+from radar.schemas import check_columns
+from radar.score.intensity import fit_priors, posterior
+
+log = logging.getLogger(__name__)
+
+COVERAGE_FILE = PATHS.raw / "offres_raw" / "adzuna_couverture.json"
+SCORED_DOMAINS = ("data",)  # la collecte Adzuna ne porte que sur « data » (voir D13)
+EXCLUDED_NAF_PREFIX = ("78.",)
+
+
+def load_coverage(path=COVERAGE_FILE) -> dict[str, float]:
+    """Région → part des offres collectées (0 si total inconnu ou région non collectée)."""
+    if not path.exists():
+        log.warning("%s absent : couverture supposée nulle partout", path)
+        return {}
+    regions = json.loads(path.read_text())["regions"]
+    return {
+        r: (v["collectees"] / v["total"]) if v.get("total") else 0.0 for r, v in regions.items()
+    }
+
+
+def pct_rank(s: pd.Series) -> pd.Series:
+    return s.rank(pct=True, method="average")
+
+
+def _company_table(ent: pd.DataFrame, offres: pd.DataFrame, domain: str, cov: dict) -> pd.DataFrame:
+    """Une ligne par SIREN : k (offres du domaine), E (exposition), section NAF, effectif."""
+    e = ent.copy()
+    e["couv"] = e["departement"].map(region_of).map(cov).fillna(0.0)
+    e["eff"] = e["effectif_estime"].fillna(0.0)
+    main = e.sort_values("eff", ascending=False).drop_duplicates("siren")
+    comp = (
+        e.assign(eff_couv=e["eff"] * e["couv"])
+        .groupby("siren")
+        .agg(effectif_entreprise=("eff", "sum"), eff_couv=("eff_couv", "sum"))
+        .join(main.set_index("siren")[["naf_section", "naf_division"]])
+    )
+    comp["E"] = comp["eff_couv"] / 100.0
+    comp["couverture"] = (comp["eff_couv"] / comp["effectif_entreprise"]).fillna(0.0)
+
+    o = offres[(offres["domaine"] == domain) & ~offres["intermediaire"].fillna(False)]
+    o = o.dropna(subset=["siren_match"])
+    by_siren = o.assign(stage=o["contrat"].eq("stage"), alt=o["contrat"].eq("alternance")).groupby(
+        "siren_match"
+    )
+    comp["k"] = by_siren.size().reindex(comp.index).fillna(0).astype(int)
+    comp["n_stage_domaine_siren"] = (
+        by_siren["stage"].sum().reindex(comp.index).fillna(0).astype(int)
+    )
+    comp["n_alternance_domaine_siren"] = (
+        by_siren["alt"].sum().reindex(comp.index).fillna(0).astype(int)
+    )
+    return comp.reset_index()
+
+
+def _siret_counts(offres: pd.DataFrame, domain: str) -> pd.DataFrame:
+    o = offres[~offres["intermediaire"].fillna(False)].dropna(subset=["siret_match"])
+    n_tot = o.groupby("siret_match").size().rename("n_offres")
+    d = o[o["domaine"] == domain]
+    by = d.assign(stage=d["contrat"].eq("stage"), alt=d["contrat"].eq("alternance")).groupby(
+        "siret_match"
+    )
+    out = pd.concat(
+        [
+            n_tot,
+            by.size().rename("n_offres_domaine"),
+            by["stage"].sum().rename("n_stage_domaine"),
+            by["alt"].sum().rename("n_alternance_domaine"),
+        ],
+        axis=1,
+    )
+    out.index.name = "siret"
+    return out.fillna(0).astype(int).reset_index()
+
+
+def build_scores(ent: pd.DataFrame, offres: pd.DataFrame, cov: dict[str, float]) -> pd.DataFrame:
+    ent = ent[~ent["naf"].fillna("").str.startswith(EXCLUDED_NAF_PREFIX)]
+    frames = []
+    for domain in SCORED_DOMAINS:
+        comp = _company_table(ent, offres, domain, cov)
+        priors = fit_priors(comp)
+        comp = posterior(comp, priors)
+        # Plus d'offres du domaine que la moitié de l'effectif en 60 jours : invraisemblable pour
+        # un employeur direct (intermédiaire non repéré, ou offres d'un groupe rattachées à une
+        # petite entité juridique — SIRENE ne relie pas les sociétés d'un même groupe).
+        comp["volume_suspect"] = comp["k"] > 0.5 * comp["effectif_entreprise"]
+
+        s = ent[["siret", "siren", "effectif_estime"]].merge(
+            comp.rename(columns={"k": "n_offres_domaine_siren"}), on="siren", how="left"
+        )
+        s = s.merge(_siret_counts(offres, domain), on="siret", how="left")
+        counts = ["n_offres", "n_offres_domaine", "n_stage_domaine", "n_alternance_domaine"]
+        s[counts] = s[counts].fillna(0).astype(int)
+        s["domaine"] = domain
+        s["c_intensite"] = pct_rank(s["intensite_post"])
+        # Besoin attendu au niveau de l'ÉTABLISSEMENT (intensité de l'entreprise × effectif local) :
+        # au niveau entreprise, chaque bureau de La Poste hériterait de 250 000 salariés.
+        s["besoin_attendu"] = s["intensite_post"] * s["effectif_estime"].fillna(0) / 100.0
+        s["c_embauche"] = pct_rank(s["besoin_attendu"])
+        s["c_embauche_source"] = "proxy_besoin_attendu"
+        s["c_dynamisme"] = 0.5
+        s["c_dynamisme_disponible"] = False
+        frames.append(s)
+
+    out = pd.concat(frames, ignore_index=True)
+    floats = out.select_dtypes("float64").columns
+    out[floats] = out[floats].astype(np.float32)
+    check_columns(out, "scores_reels")
+    return out
+
+
+def run() -> pd.DataFrame:
+    ent = pd.read_parquet(FILES["entreprises"])
+    offres = pd.read_parquet(FILES["offres"])
+    check_columns(offres, "offres_rapprochees")
+    out = build_scores(ent, offres, load_coverage())
+    out.to_parquet(FILES["scores"], index=False)
+    return out

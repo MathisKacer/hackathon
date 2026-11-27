@@ -200,8 +200,9 @@ def collect(
     collected_at = datetime.now(UTC).isoformat(timespec="seconds")
     rows: list[dict] = []
     status: dict[str, str] = {}
+    coverage: dict[str, dict] = {}  # région → {collectees, total} (total None si inconnu)
     for region in regions or REGIONS:
-        n_before, total = len(rows), 0
+        n_before, total = len(rows), None
         try:
             for page_count, results in client.iter_search(what, region, max_days_old):
                 total = page_count
@@ -210,8 +211,10 @@ def collect(
             # Plafond de pages atteint avant la fin → région incomplète (à découper par département)
             label = "complet" if got >= total else "tronqué (plafond de pages)"
             status[region] = f"{label} ({got}/{total})"
+            coverage[region] = {"collectees": got, "total": total}
         except QuotaExceeded as e:
             status[region] = f"partiel ({len(rows) - n_before} offres) — {e}"
+            coverage[region] = {"collectees": len(rows) - n_before, "total": total}
             log.warning("Arrêt : %s", e)
             break
         log.info("%s : %s", region, status[region])
@@ -221,6 +224,7 @@ def collect(
     df = pd.DataFrame(rows, columns=COLUMNS).drop_duplicates("offre_id")
     check_columns(df, "offres_raw")
     df.attrs["status"] = status
+    df.attrs["coverage"] = coverage
     df.attrs["real_calls"] = client.real_calls
     df.attrs["quota_used_today"] = client.quota.used_today
     return df

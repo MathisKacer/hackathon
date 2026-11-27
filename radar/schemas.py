@@ -118,3 +118,20 @@ def check_columns(df: pd.DataFrame, name: str) -> None:
     missing = [c for c in SCHEMAS[name] if c not in df.columns]
     if missing:
         raise ValueError(f"{name} : colonnes manquantes {missing} (voir docs/ARCHITECTURE.md)")
+
+
+# scores.parquet RÉEL (T30, D13) : colonnes en plus du contrat, utilisées par l'app.
+# `couverture` = part de l'effectif situé dans une région collectée (0 → score = a priori du
+# secteur) ; `volume_suspect` → à écarter ; `n_offres_domaine_siren` → exclusion couche orange.
+SCHEMAS["scores_reels"] = SCHEMAS["scores"] + [
+    "siren",
+    "couverture",
+    "prior_moyenne",
+    "besoin_attendu",
+    "n_offres_domaine_siren",
+    "n_stage_domaine_siren",
+    "n_alternance_domaine_siren",
+    "volume_suspect",
+    "c_embauche_source",
+    "c_dynamisme_disponible",
+]

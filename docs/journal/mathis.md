@@ -2,6 +2,25 @@
 
 ---
 
+## 2026-11-27 — T30/T31 : score v0 sur vraies données
+
+**Fait :**
+- `radar/score/intensity.py` : gamma-Poisson bayésien empirique (Clayton & Kaldor), a priori par division NAF lissée vers la section. `radar/score/build.py` + `scripts/build_scores.py` → `scores.parquet` (schéma `scores_reels`, D7). Décision **D13**.
+- `radar/geo.py` (département → région) ; le collecteur Adzuna écrit `adzuna_couverture.json` (couverture par région), reconstitué pour la collecte du jour.
+- 5 tests : l'estimateur retrouve les vrais paramètres sur 20 000 entreprises simulées (moyenne à 3 %), rétrécissement, région non couverte = a priori, contrat.
+
+**Résultats / chiffres clés :**
+- 403 550 établissements notés (276 890 entreprises), 54 % dans une zone couverte ; 10 s de calcul.
+- A priori les plus élevés : divisions 62 (programmation, 0,28 offre data / 100 salariés), 60, 59, 63.
+- Ille-et-Vilaine, sans offre data, top √(intensité × besoin) : France Télévisions, Hellowork, Tessi, Claranet, Luminess, Klaxoon, Ouest-France, SFR.
+- 3 entreprises `volume_suspect` (Sanofi, Mistral, Orel Services).
+
+**Points d'attention pour l'équipe :**
+- **Maxence (couche orange)** : filtrer `n_offres_domaine_siren == 0` et `volume_suspect == False`, trier par √(c_intensite × c_embauche) ; afficher `couverture == 0` comme « estimation par secteur seulement ».
+- Limites : SFR (non rapproché en T21) apparaît « sans offre » ; division 59 (cinéma) proche de l'a priori de sa section.
+
+---
+
 ## 2026-11-27 — T21 : rapprochement offres → SIRET + offres.parquet
 
 **Fait :**
