@@ -19,7 +19,6 @@
 - [x] T1 — Créer la **clé Adzuna** (developer.adzuna.com) → l'ajouter au `.env`
 - [ ] T2 — Créer le **jeton La bonne alternance** (espace développeurs) → `.env`
 - [x] T3 — Compte **francetravail.io** : souscrire à La Bonne Boîte, Marché du travail et ROME 4.0, et envoyer la demande d'accès à Offres d'emploi via le formulaire de contact
-- [ ] T5 — **Générateur de données factices** qui respecte les schémas de `ARCHITECTURE.md` (pour que le score et l'app démarrent sans attendre la collecte)
 - [ ] T6 — **Dictionnaire « domaines »** : pour chaque domaine (data en premier, puis 3 ou 4 autres : finance, marketing, informatique, RH…), ses codes ROME et ses mots-clés → `radar/domains.yaml`
 
 ## 🟠 P1 — Chemin critique vers la V1 (H+2 → H+8)
@@ -78,8 +77,7 @@
 
 ## 🔵 En cours
 
-- _…_
-
+- [ ] T5 — **Générateur de données factices** qui respecte les schémas de `ARCHITECTURE.md` (pour que le score et l'app démarrent sans attendre la collecte) — @emma
 
 ## ✅ Fait
 

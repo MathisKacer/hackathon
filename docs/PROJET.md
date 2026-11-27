@@ -9,7 +9,7 @@
 | Mathis | _TBD_ | [journal](journal/mathis.md) |
 | Celia | _TBD_ | `journal/celia.md` |
 | Maxence | _TBD_ | `journal/maxence.md` |
-| Emma | _TBD_ | `journal/emma.md` |
+| Emma | _TBD_ | [journal](journal/emma.md) |
 
 ## Contexte
 
