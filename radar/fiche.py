@@ -15,6 +15,7 @@ Coordination avec T32 (@mathis) : la fiche affiche la colonne `explication` si e
 from __future__ import annotations
 
 from pathlib import Path
+from urllib.parse import quote_plus
 
 import duckdb
 import pandas as pd
@@ -163,6 +164,26 @@ def evidence(row: pd.Series) -> dict:
         "couverture": couverture,
         "niveau": level,
         "explication_niveau": why,
+    }
+
+
+def contact_searches(name: str | None, commune: str | None = None) -> dict[str, str]:
+    """T88 : recherches pré-remplies pour trouver comment contacter une entreprise.
+
+    Aucune de nos données ne donne l'adresse des sites web (le champ `site_web` de La bonne
+    alternance est vide) : on propose des recherches avec le nom de l'entreprise.
+    Libellé du bouton → adresse. Vide si on n'a pas de nom.
+    """
+    name = " ".join(str(name or "").split())
+    if not name:
+        return {}
+    city = " ".join(str(commune or "").split()).title()
+    web = "https://www.google.com/search?q="
+    return {
+        "Son site web": web + quote_plus(" ".join(x for x in (name, city, "site officiel") if x)),
+        "Sa page recrutement": web + quote_plus(f"{name} recrutement candidature spontanée"),
+        "Sur LinkedIn": "https://www.linkedin.com/search/results/companies/?keywords="
+        + quote_plus(name),
     }
 
 

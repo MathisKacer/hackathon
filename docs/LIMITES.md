@@ -50,6 +50,12 @@
 |---|---|---|---|---|---|
 | L24 | « Entreprise » = un **SIREN** (une société). Les **filiales d'un groupe** (Orange SA, Orange Business Services, Orange Cyberdéfense…) sont des entreprises distinctes, non reliées : le lien groupe → filiales n'existe pas en données ouvertes. Seuls les sites d'au moins 10 salariés sont listés | Une recherche « orange » montre plusieurs entreprises ; la fiche d'Orange SA ne liste pas les sites des filiales | ✅ en partie : rapprocher par le nom (familles de marque) | T26 | « Une entreprise = un SIREN ; les groupes viendront avec les familles de marque » |
 
+## Contacter une entreprise (T88)
+
+| # | Limite | Impact | Réglable ? | Tâche | À dire au pitch |
+|---|---|---|---|---|---|
+| L30 | **Aucune adresse de site web ni contact** dans nos données (SIRENE n'en publie pas ; `site_web` de La bonne alternance est vide) | La fiche propose des **recherches pré-remplies** (site, page recrutement, LinkedIn), pas un lien direct ; la recherche peut tomber sur un homonyme | ✅ en partie : source de sites web (Wikidata, annuaires) | — | « On t'amène à un clic de la bonne recherche ; on ne collecte pas de contacts » |
+
 ## Données personnelles
 
 | # | Limite | Impact | Réglable ? | Tâche |

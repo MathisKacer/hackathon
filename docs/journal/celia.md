@@ -4,6 +4,18 @@
 
 ---
 
+## 2026-11-27 — Tâche T88 : « Comment la contacter ? » (T89 à T91 ajoutées)
+
+**Fait :**
+- Trois boutons de recherche pré-remplie dans les deux fiches (`contact_searches`).
+- Constat : le champ `site_web` de La bonne alternance est vide (0 sur 382 180) → pas de lien direct vers les sites.
+- Ajouté au tableau : T89 (fiche plus claire), T90 (rappels de relance), T91 (export, facultatif).
+
+**Résultats / chiffres clés :**
+- 384 tests OK.
+
+---
+
 ## 2026-11-27 — Tâche T84 : recherches enregistrées (D43)
 
 **Fait :**

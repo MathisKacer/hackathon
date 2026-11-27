@@ -283,6 +283,24 @@ def _situation(siren: str | None) -> None:
         )
 
 
+CONTACT_ICONS = {
+    "Son site web": ":material/language:",
+    "Sa page recrutement": ":material/work:",
+    "Sur LinkedIn": ":material/group:",
+}
+
+
+def _how_to_contact(name: str | None, commune: str | None = None) -> None:
+    """T88 : trois recherches pré-remplies pour trouver à qui envoyer sa candidature."""
+    searches = fiche.contact_searches(name, commune)
+    if not searches:
+        return
+    st.markdown("#### Comment la contacter ?")
+    for col, (label, url) in zip(st.columns(len(searches)), searches.items(), strict=True):
+        col.link_button(label, url, icon=CONTACT_ICONS.get(label), width="stretch")
+    st.caption("Chaque bouton ouvre une recherche avec le nom de l'entreprise.")
+
+
 def _contact(r: pd.Series, c: pd.Series) -> None:
     st.markdown("#### Coordonnées et liens")
     adresse = _value(c.get("adresse"))
@@ -328,6 +346,9 @@ def fiche_content(siret: str, row: pd.Series | None = None, domaine: str | None 
     if NAV_KEY in st.session_state and siren:
         _parent_company(siren)
     _star(siret, row, c)
+    _how_to_contact(
+        _value(c.get("nom"), row.get("nom")), _value(c.get("commune"), row.get("commune"))
+    )
     if row.get("score") is None or pd.isna(row.get("score")):
         _site_not_candidate(siret, siren, row, domaine)  # l'essentiel, même sans ville (T78)
     _why(row)
@@ -584,6 +605,7 @@ def company_content(siren: str, domaine: str | None = None) -> None:
         },
         key=f"fav_entreprise_{siren}",
     )
+    _how_to_contact(s["nom"])
     _company_candidature(siren, domaine)
 
     st.markdown("#### Offres de l'entreprise (tous ses sites)")

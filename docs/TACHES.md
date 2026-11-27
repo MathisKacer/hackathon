@@ -87,12 +87,12 @@
 
 ## 🔵 En cours
 
-- [ ] T88 — **« Comment la contacter ? » dans la fiche** : boutons « Site web » (quand il est connu, ex. La bonne alternance `site_web`), « Chercher sa page recrutement » et « Chercher sur LinkedIn » (recherches pré-remplies avec le nom de l'entreprise) — @celia
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
 - _…_
 
 ## ✅ Fait
 
+- [x] T88 — **« Comment la contacter ? » dans la fiche** — @celia : trois boutons (fiche site et fiche entreprise) ouvrant une recherche pré-remplie : « Son site web », « Sa page recrutement », « Sur LinkedIn » (`radar.fiche.contact_searches`). Pas de lien direct vers les sites : le champ `site_web` de La bonne alternance est **vide** (0 sur 382 180 recruteurs)
 - [x] T87 — 🔗T80 **Correspondance plus visible** : message quand aucune compétence n'est reconnue (liste, fenêtre de la carte, fiche) ; colonne « Correspondance » juste après « Priorité » ; correspondance juste sous la priorité dans la fenêtre de la carte (demandée par @emma, qui ne la voyait pas : profil avec une seule compétence non reconnue) — @emma → `NO_MATCH_MESSAGE` (`radar/competences.py`, colonne `correspondance_info`), colonne déplacée, ligne 🎯 sous la priorité dans la carte
 - [x] T86 — 🔗T83 **Compétences : supprimer et enregistrer une à une** — @emma → D44 : Mon espace › Mes compétences : une étiquette ✕ par compétence (retirée aussitôt), « Ajouter une compétence » (liste ou texte libre, enregistrée aussitôt), dépôt du CV (ajout d'un coup) ; **bouton « Enregistrer mes compétences » retiré** (choix d'Emma) ; changements répercutés sur la recherche en cours ; la liste d'Explorer ne touche pas au profil
 - [x] T84 — **Recherches enregistrées** (D43) — @celia : bouton « Enregistrer cette recherche » sur Explorer (nom facultatif), liste dans Mon espace › Mes recherches (« Relancer », « Supprimer »), 20 au maximum avec message à la 21ᵉ, sans compte gardées le temps de la visite puis reprises à la connexion ; **remplace l'historique automatique** de T49. ℹ️ @maxence : le compteur « Recherches » de l'administration compte maintenant les recherches enregistrées

@@ -465,3 +465,9 @@ Case vide quand SIRENE n'a pas l'information. **Pas de total calculé** : additi
 - Les libellés d'onglets n'ont **pas de compteurs** : un libellé qui change ramènerait au premier onglet.
 - Code : `account_page` (`app/compte.py`), sections de `app/vues/mon_espace.py`, styles dans `app/style.py` (`profile_header`, blocs à clé `espace_…`).
 
+---
+
+## Comment contacter une entreprise (T88)
+
+Dans la fiche d'un site et dans la fiche d'une entreprise, bloc **« Comment la contacter ? »** : « Son site web » et « Sa page recrutement » (recherches Google), « Sur LinkedIn » (recherche d'entreprises ; LinkedIn demande d'être connecté). Rien n'est envoyé tant qu'on ne clique pas. Nos données ne contiennent aucune adresse de site (L30). Code : `radar.fiche.contact_searches`, `_how_to_contact` (`app/fiche_ui.py`).
+

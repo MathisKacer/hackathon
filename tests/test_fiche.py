@@ -415,3 +415,19 @@ open_fiche(st.session_state.get("s"), None, "data", siren=st.session_state.get("
         m.value.startswith("**Candidature spontanée** · 2 offres du domaine") for m in site.markdown
     )
     st.cache_data.clear()
+
+
+def test_contact_searches():
+    """T88 : recherches pré-remplies, nom encodé dans l'adresse."""
+    from urllib.parse import unquote_plus
+
+    from radar.fiche import contact_searches
+
+    out = contact_searches("  CRÉDIT  AGRICOLE & CO ", "SAINT-GREGOIRE")
+    assert list(out) == ["Son site web", "Sa page recrutement", "Sur LinkedIn"]
+    assert all(u.startswith("https://www.") for u in out.values())
+    assert unquote_plus(out["Son site web"]).endswith(
+        "q=CRÉDIT AGRICOLE & CO Saint-Gregoire site officiel"
+    )
+    assert "&" not in out["Sur LinkedIn"].split("keywords=")[1]  # nom bien encodé
+    assert contact_searches(None) == {} and contact_searches("  ") == {}
