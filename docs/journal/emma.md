@@ -4,6 +4,33 @@
 
 ---
 
+## 2026-11-27 — T67 : niveau d'études attendu ✅
+
+**Fait :**
+- `radar/niveau.py` : niveaux du cadre européen comme LBA (« 3 » CAP … « 7 » Bac+5, « 8 » Doctorat). Champ `niveau_diplome` de LBA d'abord ; sinon expressions sur titre + description (Bac+N, Bac5, Master 1/2, M1/M2, MSc, Licence, Bachelor, BTS, DUT, école d'ingénieurs, Doctorat/PhD…), sans « Master Data », « Scrum Master », « BUT », « CAP », « ingénieur » seul. Plusieurs niveaux possibles (« 6,7 » → « Bac+3/4 à Bac+5 »). D34.
+- App : filtre « Niveau d'études » (libellés, enregistrés dans le profil) + case « Garder les offres sans niveau précisé » (cochée par défaut) dans le panneau Filtres ; colonne « Niveau » dans l'onglet Offres ; 📚 niveau dans la fenêtre des offres de la carte ; colonne « Niveau » dans les offres de la fiche (`radar/fiche.py › company_offers`).
+- Réglage ajouté selon la règle de CLAUDE.md (`WIDGET_KEYS`, `profile_keys()`, `PROFILE_LABELS`, `init_defaults()`).
+- Docs : DECISIONS (D34), LIMITES (L27), GUIDE (section 15), ARCHITECTURE, TACHES (T67 fait, T71 ajoutée).
+
+**Fichiers touchés :**
+- `radar/niveau.py` (nouveau), `radar/fiche.py`, `app/commun.py`, `app/vues/explorer.py`, `app/carte.py`, `app/fiche_ui.py`, `tests/test_niveau.py` (nouveau), `tests/test_fiche.py`
+- `docs/DECISIONS.md`, `docs/LIMITES.md`, `docs/GUIDE.md`, `docs/ARCHITECTURE.md`, `docs/TACHES.md`, `docs/journal/emma.md`
+
+**Résultats / chiffres clés :**
+- Vraie collecte Adzuna : **2,1 %** des offres avec un niveau détecté (221/10 776) — descriptions tronquées ; data : 18/42 alternances, 16/572 stages, 12/2 595 emplois. Surtout Bac+5.
+- App testée (AppTest, vraies données) : Rennes 68 offres → « Bac+5 » seul : 0 ; avec les non précisées : 68. Paris : 1 483 → 1 482 → 25. Aucune exception liée à T67.
+- `pytest` : 343/343 ; ruff OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- 🐞 **T71** : à Paris (20 km), la liste « Candidatures spontanées » plante (Styler pandas limité à 262 144 cellules, 575 560 ici) — code de T65, signalé, **non corrigé**.
+- Fichiers d'autres tâches touchés (le minimum) : `app/vues/explorer.py`, `app/carte.py`, `app/fiche_ui.py`, `radar/fiche.py` (colonne/filtre « Niveau » seulement).
+- Les vraies offres LBA ne sont pas sur mon pod (factices) : le taux de niveaux connus sur LBA réel reste à mesurer.
+
+**Prochaine étape :**
+- Mesurer la part de `niveau_diplome` renseignée sur les vraies offres LBA.
+
+---
+
 ## 2026-11-27 — T19 : données factices alignées sur les vrais collecteurs ✅
 
 **Fait :**

@@ -40,6 +40,7 @@ hackathon/
 │   ├── communes.py             # T55 : communes « Nom (CP) » pour le suggesteur de ville (geo.api.gouv.fr, cache ; repli référentiel) (D28)
 │   ├── geocode.py              # T40 : adresse → lat/lon (Géoplateforme IGN, sans clé, cache disque PATHS.cache)
 │   ├── filters.py              # T41 : filtres taille (4 tranches) et secteur (section NAF) des entreprises (D20)
+│   ├── niveau.py               # T67 : niveau d'études attendu d'une offre (champ LBA, sinon lu dans le texte) (D34)
 │   ├── paliers.py              # T65 : score → paliers de priorité (mots, couleurs), règle mixte rang + minimum (D32)
 │   ├── recruteurs.py           # T51 : recruteurs potentiels LBA sur un ROME du domaine → `recruteur_lba` (D26)
 │   ├── spontaneous.py          # T40 : couche orange — entreprises du rayon sans offre correspondante, classées (D19)

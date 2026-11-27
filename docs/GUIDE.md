@@ -23,6 +23,7 @@
 12. [Recherche d'entreprises (page Entreprises)](#12-recherche-dentreprises-page-entreprises)
 13. [Favoris (T54)](#13-favoris-t54)
 14. [Entreprise et sites (T57)](#14-entreprise-et-sites-t57)
+15. [Niveau d'études attendu (T67)](#15-niveau-détudes-attendu-t67-d34)
 
 ---
 
@@ -38,10 +39,10 @@
 
 **Explorer, de haut en bas :**
 1. **La recherche** : « Où ? » (suggesteur de ville, T55 : on tape le début du nom et on choisit « Ville (code postal) »), « Contrat » (Tous / Stage / Alternance / Emploi), « Domaine », « Rayon ».
-2. **Le bouton « Filtres »** : un panneau avec les régions, le mot-clé, l'ancienneté des offres, la taille et le secteur des entreprises, « Afficher aussi les entreprises en liquidation », le classement (score ou chance de réponse) et l'importance de chaque critère du score. Le bouton affiche le nombre de filtres actifs (« Filtres (2) »).
+2. **Le bouton « Filtres »** : un panneau avec les régions, le mot-clé, l'ancienneté des offres, le **niveau d'études** (avec « Garder les offres sans niveau précisé », section 15), la taille et le secteur des entreprises, « Afficher aussi les entreprises en liquidation », le classement (score ou chance de réponse) et l'importance de chaque critère du score. Le bouton affiche le nombre de filtres actifs (« Filtres (2) »).
 3. **Une phrase de résultat** : « Autour de Rennes (35000) (20 km) : 42 entreprises pourraient t'accueillir en alternance sans avoir publié d'offre, et 18 offres sont publiées. » Sans ville : un « Comment ça marche » en 3 étapes.
 4. **La carte** : offres en bleu, candidatures spontanées en orange (`app/carte.py`, inchangé).
-5. **Deux onglets** : « Candidatures spontanées » (Entreprise, Lieu, Distance, Autres sites, Taille, Situation, La Bonne Boîte ✔, Score, **Chance de réponse** — estimation issue de réponses simulées, expliquée en info-bulle, D31) et « Offres » (lien vers chaque annonce).
+5. **Deux onglets** : « Candidatures spontanées » (Entreprise, Lieu, Distance, Autres sites, Taille, Situation, La Bonne Boîte ✔, Score, **Chance de réponse** — estimation issue de réponses simulées, expliquée en info-bulle, D31) et « Offres » (niveau d'études, lien vers chaque annonce).
 6. **Un clic sur une ligne** de « Candidatures spontanées » ouvre la **fiche dans une fenêtre** par-dessus la page (section 10). Fermer la fenêtre permet d'en ouvrir une autre.
 
 **Principes.**
@@ -385,4 +386,16 @@ Temps de réponse : 0,05 à 0,4 s.
 **Tests.** `tests/test_fiche.py` (sites, résumé, navigation site ↔ entreprise dans la fenêtre) et `tests/test_recherche.py` (`with_companies`).
 
 **Suites possibles.** Regrouper aussi les filiales d'un groupe (T26, par le nom) ; afficher les sites de l'entreprise sur une petite carte dans sa fiche.
+
+---
+
+## 15. Niveau d'études attendu (T67, D34)
+
+**Utilisation.** Panneau « Filtres » › « Niveau d'études » : choisir un ou plusieurs niveaux (CAP, Bac, Bac+2, Bac+3/4, Bac+5, Doctorat). La case « Garder les offres sans niveau précisé » (cochée par défaut) garde aussi les offres qui ne disent rien : la plupart. Le niveau s'affiche dans la colonne « Niveau » de l'onglet « Offres », dans la fenêtre des offres sur la carte (📚) et dans la liste des offres de la fiche entreprise.
+
+**Fonctionnement** (`radar/niveau.py`). La bonne alternance donne le diplôme visé : il est repris tel quel. Pour Adzuna, le niveau est lu dans le titre et le début de l'annonce (« Bac+5 », « Master 2 », « M1 », « Licence », « Bachelor », « BTS », « Doctorat »…). Une offre « Bac+3 à Bac+5 » correspond aux deux niveaux. Les candidatures spontanées n'ont pas de niveau (il n'y a pas d'offre).
+
+**Réglages.** Mots reconnus : `_BAC_PLUS` et `_KEYWORDS` dans `radar/niveau.py` ; tests dans `tests/test_niveau.py` (ajouter un cas avant d'ajouter un mot). Le filtre est enregistré dans le profil (clés `niveaux`, `niveau_inconnu`).
+
+**Limites et suites.** Adzuna tronque les annonces : seules ~2 % ont un niveau détecté (L27). Suite possible : lire l'annonce complète, ou un modèle de langage (T68).
 
