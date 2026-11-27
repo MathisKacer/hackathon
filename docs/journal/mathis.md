@@ -2,6 +2,21 @@
 
 ---
 
+## 2026-11-27 — Données La bonne alternance de production + ajustement T32
+
+**Fait :**
+- `collect_lba.py` : d'abord avec une clé **sandbox** → export de recette (972 offres fictives) détecté par l'alerte du collecteur, mis en quarantaine puis supprimé, rien n'a été intégré. Avec la clé **production** : 12 748 offres, 382 180 recruteurs (comme Maxence).
+- `build_all.py --share` avec Adzuna + LBA : 23 524 offres, **76,8 %** des offres d'employeurs avec SIRET (65,1 % avant, grâce aux SIRET fournis par LBA), 546 entreprises avec offre data ; modèle de réponse toujours 7/7. `--share` inclut maintenant `lba_recruteurs.parquet` et `lbb.parquet`.
+- T32 : les signaux externes (La Bonne Boîte, recruteur LBA) passent avant les rangs centiles (sinon écartés par la limite de 3 raisons). Test ajouté.
+
+**Résultats / chiffres clés :**
+- Rennes 20 km, alternance : 204 recruteurs LBA dans la couche orange ; ex. Hellowork (aucune offre data) : « Recommandée car La bonne alternance la repère comme recruteur d'alternants sans offre publiée ; … ».
+
+**Points d'attention pour l'équipe :**
+- Une clé LBA **sandbox** donne des données de test : vérifier l'absence d'alerte « RECETTE » à la collecte.
+
+---
+
 ## 2026-11-27 — T32 : explication « Recommandée car … »
 
 **Fait :**

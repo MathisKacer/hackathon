@@ -133,10 +133,13 @@ def explain(row, contrat: str = "tous") -> str:
     cands = reasons(row, contrat)
 
     def weight(c: tuple[str, str, float]) -> tuple[int, float, float]:
-        # L'opportunité cachée d'abord : c'est la raison même d'être dans la couche orange.
-        # Puis par apport au score décroissant (suit les curseurs), sinon ordre par défaut.
+        # 1. l'opportunité cachée (raison même d'être dans la couche orange) ;
+        # 2. les signaux externes vérifiables (La Bonne Boîte, La bonne alternance) : plus
+        #    parlants qu'un centile, et souvent écartés sinon par la limite de 3 raisons ;
+        # 3. le reste par apport au score décroissant (suit les curseurs), sinon ordre fixe.
+        group = 0 if c[0] == "c_cachee" else 1 if c[1].startswith("La ") else 2
         apport = _num(row, f"apport_{c[0]}")
-        return (0 if c[0] == "c_cachee" else 1, -(apport if apport is not None else -1.0), c[2])
+        return (group, -(apport if apport is not None else -1.0), c[2])
 
     chosen = sorted(cands, key=weight)[:MAX_REASONS]
     if chosen:

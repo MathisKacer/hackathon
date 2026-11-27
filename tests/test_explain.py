@@ -58,3 +58,13 @@ def test_add_explanations_limits_rows():
     out = add_explanations(df, "stage", limit=3)
     assert out["explication"].notna().sum() == 3 and out["explication"].iloc[3] is None
     assert add_explanations(df.head(0), "stage").empty
+
+
+def test_external_signals_are_not_crowded_out():
+    """Recruteur LBA et La Bonne Boîte passent avant les raisons statistiques (rang centile)."""
+    r = _row(n_offres_domaine_siren=4, recruteur_lba=True, c_intensite=0.99, c_embauche=0.97,
+             apport_c_intensite=0.3, apport_c_embauche=0.29, apport_c_recruteur_lba=0.2,
+             apport_c_cachee=0.1)  # fmt: skip
+    txt = explain(r, "alternance")
+    assert "La bonne alternance la repère comme recruteur" in txt
+    assert txt.index("aucune offre d'alternance") < txt.index("La bonne alternance")

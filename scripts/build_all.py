@@ -143,6 +143,9 @@ def main() -> None:
         ]
         cov = PATHS.raw / "offres_raw" / "adzuna_couverture.json"
         files += [cov] if cov.exists() else []
+        # Lues directement par l'app : recruteurs LBA (T51) ; La Bonne Boîte (T28, rejouer le score)
+        files += [f for f in (PATHS.raw / "lba_recruteurs.parquet", PATHS.raw / "lbb.parquet")
+                  if f.exists()]  # fmt: skip
         rel = [str(f.relative_to(PATHS.root)) for f in files]
         # share_s3.py utilise botocore, présent dans le Python d'Onyxia mais pas dans l'env uv
         cmd = ["/usr/bin/env", "-u", "VIRTUAL_ENV", "python3", "scripts/share_s3.py", *rel]
