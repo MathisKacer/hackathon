@@ -30,6 +30,8 @@ n_fav = st.session_state.pop("_toast_favoris", 0)
 if n_fav:
     s = "s" if n_fav > 1 else ""
     st.toast(f"{n_fav} favori{s} enregistré{s} dans ton compte.")
+if n_lost := st.session_state.pop("_toast_recherches_perdues", 0):
+    st.toast(f"{n_lost} recherche(s) non reprise(s) : tu as atteint le maximum.")
 pages = [
     st.Page(PAGES_DIR / "explorer.py", title="Explorer", icon=":material/explore:", default=True),
     st.Page(PAGES_DIR / "entreprises.py", title="Entreprises", icon=":material/apartment:"),

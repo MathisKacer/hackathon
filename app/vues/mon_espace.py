@@ -8,6 +8,7 @@ from compte import _con, account_page, current_user
 from cv_ui import cv_and_skills
 from favoris import favorites, remove
 from fiche_ui import open_fiche
+from recherches import saved_section
 from style import GREEN, RED, pill
 
 from radar import accounts
@@ -179,4 +180,5 @@ account_page(
     # T83 : déposer son CV et ajouter / retirer des compétences ici aussi
     profile_editor=lambda: cv_and_skills("cv_fichier_profil"),
     candidatures_section=candidatures_section,
+    searches_section=saved_section,  # T84 : recherches enregistrées
 )

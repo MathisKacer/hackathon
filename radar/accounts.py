@@ -107,6 +107,13 @@ SEARCH_TOP_MAX = 5
 FAVORITE_KINDS = ("offre", "entreprise")
 FAVORITES_MAX_PER_USER = 500
 NOTE_MAX = 500
+# Recherches enregistrées à la demande (T84) : les réglages seulement, ni entreprises ni résultats.
+SAVED_SEARCH_MAX = 20
+SAVED_SEARCH_NAME_MAX = 80
+SAVED_SEARCH_FULL = (
+    f"Tu as déjà {SAVED_SEARCH_MAX} recherches enregistrées : supprimes-en une dans "
+    "Mon espace › Mes recherches pour continuer."
+)
 # Statut d'une candidature (T82), affiché dans « Mes candidatures » ; le premier est le défaut.
 CANDIDATURE_STATUTS = (
     "Envoyée",
@@ -143,6 +150,14 @@ CREATE TABLE IF NOT EXISTS recherches (
     top_resultats TEXT    NOT NULL
 );
 CREATE INDEX IF NOT EXISTS recherches_user ON recherches (user_id, created_at);
+CREATE TABLE IF NOT EXISTS recherches_enregistrees (
+    id         INTEGER PRIMARY KEY,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    nom        TEXT    NOT NULL,
+    params     TEXT    NOT NULL,
+    created_at TEXT    NOT NULL,
+    UNIQUE (user_id, params)
+);
 CREATE TABLE IF NOT EXISTS favoris (
     id         INTEGER PRIMARY KEY,
     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -560,3 +575,72 @@ def favorite_refs(con: sqlite3.Connection, user_id: int, kind: str) -> set[str]:
         "SELECT ref FROM favoris WHERE user_id = ? AND kind = ?", (user_id, kind)
     ).fetchall()
     return {r[0] for r in rows}
+
+
+# --- Recherches enregistrées (T84) ---------------------------------------------------------
+# Elles remplacent l'historique automatique (T49) : la table `recherches` n'est plus alimentée
+# par l'app (les fonctions log_search / list_searches restent pour les anciennes bases).
+
+
+def save_search(
+    con: sqlite3.Connection,
+    user_id: int,
+    name: str,
+    params: dict,
+    now: datetime | None = None,
+) -> bool:
+    """Enregistre les réglages d'une recherche. False si les mêmes réglages le sont déjà.
+
+    Lève AccountError au-delà de SAVED_SEARCH_MAX recherches.
+    """
+    name = " ".join(str(name).split())[:SAVED_SEARCH_NAME_MAX]
+    if not name:
+        raise AccountError("Donne un nom à ta recherche.")
+    if not isinstance(params, dict):
+        raise AccountError("Les paramètres de recherche doivent être un dictionnaire.")
+    data = _dump(params)
+    if len(data.encode()) > PROFILE_MAX_BYTES:
+        raise AccountError("Recherche trop volumineuse.")
+    with con:
+        if con.execute(
+            "SELECT 1 FROM recherches_enregistrees WHERE user_id = ? AND params = ?",
+            (user_id, data),
+        ).fetchone():
+            return False
+        n = con.execute(
+            "SELECT count(*) FROM recherches_enregistrees WHERE user_id = ?", (user_id,)
+        ).fetchone()[0]
+        if n >= SAVED_SEARCH_MAX:
+            raise AccountError(SAVED_SEARCH_FULL)
+        con.execute(
+            "INSERT INTO recherches_enregistrees (user_id, nom, params, created_at) "
+            "VALUES (?, ?, ?, ?)",
+            (user_id, name, data, _now(now)),
+        )
+    return True
+
+
+def list_saved_searches(con: sqlite3.Connection, user_id: int) -> list[dict]:
+    """Recherches enregistrées, les plus récentes d'abord."""
+    rows = con.execute(
+        "SELECT id, nom, params, created_at FROM recherches_enregistrees WHERE user_id = ? "
+        "ORDER BY created_at DESC, id DESC",
+        (user_id,),
+    ).fetchall()
+    return [
+        {
+            "id": r[0],
+            "nom": r[1],
+            "params": json.loads(r[2]),
+            "created_at": datetime.fromisoformat(r[3]),
+        }
+        for r in rows
+    ]
+
+
+def delete_saved_search(con: sqlite3.Connection, user_id: int, search_id: int) -> None:
+    with con:
+        con.execute(
+            "DELETE FROM recherches_enregistrees WHERE user_id = ? AND id = ?",
+            (user_id, search_id),
+        )

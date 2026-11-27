@@ -14,6 +14,12 @@
 
 ---
 
+### D43 — Recherches enregistrées à la demande, à la place de l'historique automatique (2026-11-27, @celia)
+**Contexte :** T84. L'historique automatique (T49) gardait chaque recherche avec ses 5 premières entreprises ; il se remplissait de recherches faites par hasard.
+**Décision :** seules les recherches enregistrées avec le bouton d'Explorer sont gardées (réglages seulement), **20 au maximum** avec un message à la 21ᵉ ; sans compte, gardées le temps de la visite puis enregistrées à la connexion (comme les favoris, T54). L'historique automatique n'est plus alimenté ni affiché. La page Administration compte les recherches enregistrées.
+**Alternatives écartées :** garder les deux listes ; garder l'historique sans les entreprises.
+**Conséquences :** moins de données personnelles. La table `recherches` et ses fonctions restent dans `radar/accounts.py` pour les anciennes bases ; leurs lignes ne sont pas effacées automatiquement.
+
 ### D42 — Compétences tapées à la main : gardées telles quelles, comptées seulement si reconnues (2026-11-27, @emma)
 **Contexte :** T83, demande d'Emma : ajouter soi-même des compétences en plus du CV (y compris hors de la liste, « QGIS »), et pouvoir déposer son CV depuis « Mes compétences » de Mon espace.
 **Décision :** liste « Tes compétences » en **saisie libre** (`st.multiselect(..., accept_new_options=True)`), dans un module partagé `app/cv_ui.py` (`cv_and_skills`) utilisé par Explorer › Filtres › Ton CV **et** par Mon espace › Mes compétences (dépôt du CV + liste modifiable + « Enregistrer mes compétences »). Nettoyage `clean_skills` (`radar/competences.py`) : espaces, doublons (casse et accents ignorés), 40 caractères et 60 compétences au plus ; « python », « power bi » reprennent le libellé de la liste. **Correspondance (T80)** : `match_skills` compte les compétences de la liste, plus celles **reconnues** dans un texte tapé (« SQL Server » → SQL) ; une compétence inconnue (« QGIS ») est gardée et affichée mais **ne compte pas** (on ne sait pas la chercher de façon fiable dans les offres ; dit dans l'info-bulle). Réglage `competences` du profil : texte libre (`None` dans `profile_keys()`).

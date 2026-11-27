@@ -1,11 +1,9 @@
-"""Parcours du bloc compte (T48) et de l'historique (T49) dans Streamlit, avec AppTest.
+"""Parcours du bloc compte (T48) dans Streamlit, avec AppTest.
 
 La mini-app reproduit le branchement de app/streamlit_app.py : bloc compte, widgets de
-recherche portant les clés du profil, puis historique après le calcul des résultats.
+recherche portant les clés du profil.
 Base temporaire, jamais data/app/radar.db.
 """
-
-from datetime import timedelta
 
 import pytest
 import streamlit as st
@@ -21,22 +19,18 @@ def _mini_app():
     import streamlit as st
 
     sys.path.insert(0, str(Path.cwd() / "app"))
-    from compte import account_sidebar, search_history
+    from compte import account_sidebar
 
     keys = {"contrat": ["Tous", "Stage", "Alternance"], "regions": ["Bretagne", "Normandie"]}
     with st.sidebar:
         account_sidebar(keys)
         st.radio("Contrat visé", keys["contrat"], key="contrat")
         st.multiselect("Régions", keys["regions"], key="regions")
-    n = {"Tous": 30, "Stage": 12, "Alternance": 5}[st.session_state["contrat"]]
-    search_history(keys, n_results=n, top=["ACME", "BETA"], labels={"contrat": "Contrat"})
 
 
 @pytest.fixture
 def app(tmp_path, monkeypatch):
     monkeypatch.setattr(accounts, "DB_PATH", tmp_path / "radar.db")
-    # Pas de regroupement dans le temps : chaque réglage différent = une nouvelle recherche.
-    monkeypatch.setattr(accounts, "SEARCH_MERGE_WINDOW", timedelta(0))
     st.cache_resource.clear()  # oublie la connexion d'un test précédent
     at = AppTest.from_function(_mini_app, default_timeout=30)
     at.run()
@@ -146,62 +140,6 @@ def test_lockout_survives_page_reload(app):
     assert any("bloqué jusqu'à" in e.value for e in fresh.sidebar.error)
 
 
-# --- Historique (T49) ---------------------------------------------------------------------
-
-
-def _history_label(at):
-    return next((e.label for e in at.sidebar.expander if "Mes recherches" in e.label), None)
-
-
-def test_anonymous_has_no_history(app, tmp_path):
-    app.sidebar.radio[0].set_value("Stage")
-    app.run()
-    assert _history_label(app) is None
-    con = accounts.connect(tmp_path / "radar.db")
-    assert con.execute("SELECT count(*) FROM recherches").fetchone()[0] == 0
-
-
-def test_connected_searches_are_logged(app):
-    _signup(app)
-    assert _history_label(app) == "🕘 Mes recherches (1)"
-    app.sidebar.radio[0].set_value("Stage")
-    app.run()
-    app.sidebar.radio[0].set_value("Stage")  # même recherche : pas de doublon
-    app.run()
-    assert _history_label(app) == "🕘 Mes recherches (2)"
-    uid = app.session_state["compte_user"]["id"]
-    latest = accounts.list_searches(accounts.connect(), uid)[0]
-    assert latest["params"]["contrat"] == "Stage" and latest["n_resultats"] == 12
-    assert latest["top_resultats"] == ["ACME", "BETA"]
-    assert any("Contrat : Stage" in m.value for m in app.sidebar.markdown)
-
-
-def test_relaunch_restores_search(app):
-    _signup(app)  # recherche 1 : Tous
-    app.sidebar.radio[0].set_value("Alternance")
-    app.sidebar.multiselect[0].set_value(["Normandie"])
-    app.run()  # recherche 2 : Alternance + Normandie
-    app.sidebar.radio[0].set_value("Stage")
-    app.sidebar.multiselect[0].set_value([])
-    app.run()  # recherche 3 (en cours) : Stage
-    relaunch = [b for b in app.sidebar.button if b.label == "↻ Relancer"]
-    assert len(relaunch) == 2  # pas de bouton pour la recherche en cours
-    relaunch[0].click()  # la plus récente après celle en cours : Alternance + Normandie
-    app.run()
-    assert not app.exception
-    assert app.sidebar.radio[0].value == "Alternance"
-    assert app.sidebar.multiselect[0].value == ["Normandie"]
-
-
-def test_clear_history(app):
-    _signup(app)
-    app.sidebar.radio[0].set_value("Stage")
-    app.run()
-    _button(app, "Effacer mon historique")
-    # seule la recherche en cours, réenregistrée après l'effacement, reste
-    assert _history_label(app) == "🕘 Mes recherches (1)"
-
-
 def test_full_app_runs_with_account_box(tmp_path, monkeypatch):
     """Lance le vrai app/streamlit_app.py sur des offres factices (dossier temporaire)."""
     from dataclasses import replace
@@ -235,12 +173,12 @@ def test_full_app_runs_with_account_box(tmp_path, monkeypatch):
     assert at.slider(key="max_age").value == 60  # dans le panneau « Filtres »
     assert not at.warning  # pas d'avertissement « valeur par défaut + session_state »
 
-    # Connecté : la recherche est enregistrée (T49) et visible dans « Mon espace »
+    # Connecté : rien n'est enregistré tout seul (T84) ; Mon espace s'affiche
     uid = accounts.create_user(accounts.connect(), "celia", "Radar-Demo-2026")
     at.session_state["compte_user"] = {"id": uid, "username": "celia"}
     at.run()
     assert not at.exception, at.exception
-    assert accounts.list_searches(accounts.connect(), uid)[0]["params"]["contrat"] == "Tous"
+    assert accounts.list_saved_searches(accounts.connect(), uid) == []
     at.switch_page(str(app_dir / "vues" / "mon_espace.py"))
     at.run()
     assert not at.exception, at.exception

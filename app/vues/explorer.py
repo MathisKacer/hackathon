@@ -42,10 +42,10 @@ from commun import (
     profile_keys,
     reset_weights,
 )
-from compte import record_search
 from cv_ui import cv_and_skills
 from favoris import favorite_refs, offer_ref, sync_offers_editor, temp_banner
 from fiche_ui import open_fiche
+from recherches import save_button
 from streamlit_folium import st_folium
 from style import GREEN, LINK_STYLE, RED, Tile, fmt_int, hero, kpi_tiles, pill
 
@@ -242,16 +242,6 @@ else:
     st.session_state.pop("_candidatures", None)
     st.session_state.pop("_candidatures_ctx", None)
 
-# Connecté : la recherche est enregistrée (« Mes recherches », page Mon espace).
-record_search(
-    PROFILE_KEYS,
-    n_results=len(view) + len(spontaneous),
-    top=(
-        spontaneous["nom"].head(5).astype(str).tolist()
-        if not spontaneous.empty
-        else view["entreprise_nom"].value_counts().head(5).index.tolist()
-    ),
-)
 
 # ------------------------------------------------------------------ résultat
 contrat_txt = {
@@ -321,6 +311,8 @@ else:
     if spontaneous.empty and not FILES["scores"].exists():
         st.caption("Équipe : `scores.parquet` manquant (lancer `scripts/build_all.py`).")
 
+if place is not None:
+    save_button(PROFILE_KEYS)  # T84 : garder les réglages de cette recherche
 temp_banner(PAGES_DIR / "mon_espace.py")  # favoris temporaires (anonyme, T54)
 
 if not (view.empty and spontaneous.empty):

@@ -185,17 +185,17 @@ Sinon le réglage n'est pas enregistré dans l'historique. Pour qu'il entre auss
 
 ## 5. Historique des recherches (T49)
 
-**Ce que voit l'utilisateur (connecté seulement).** Page **Mon espace**, partie « Mes recherches » : pour chaque recherche, la date, un résumé lisible (« Ville : Rennes (35000, 35200, 35700) · Contrat : Stage »), le nombre de résultats et les premières entreprises. Bouton « Relancer » (remet tous les réglages **et ramène sur Explorer**) et « Effacer mon historique ». En anonyme, rien n'est enregistré.
+**Remplacé par les recherches enregistrées (T84, D43).** Plus rien n'est enregistré automatiquement.
 
-**Comment ça marche.**
-- `record_search(...)` est appelée par Explorer **après** le calcul des résultats ; Mon espace affiche la liste.
-- Streamlit relance la page à chaque changement de réglage : pour ne pas créer une entrée par cran de curseur, les changements faits **à moins de 2 minutes** de la dernière recherche la mettent à jour. Une recherche identique à la précédente n'est pas dupliquée. **50 recherches max** par compte.
-- « Relancer » passe par un rappel `on_click` (qui remplit les réglages) puis `st.switch_page` vers Explorer.
-- `top=` reçoit les **noms** des premières entreprises (affichés tels quels), pas les SIRET.
+**Ce que voit l'utilisateur.**
+- Sur **Explorer**, une fois la ville choisie : bouton **« Enregistrer cette recherche »**, avec un nom facultatif (sinon « Stage · Data · Rennes (20 km) »).
+- Dans **Mon espace › Mes recherches** : nom, résumé des réglages différents de ceux par défaut, date, **« Relancer »** (recharge les réglages et ouvre Explorer) et **« Supprimer »**.
+- **20 au maximum** ; à la 21ᵉ, un message demande d'en supprimer une. Les mêmes réglages ne sont pas enregistrés deux fois.
+- **Sans compte** : gardées le temps de la visite (rien sur le disque), enregistrées à la connexion.
 
-**Régler.** `SEARCH_MERGE_WINDOW`, `SEARCH_MAX_PER_USER`, `SEARCH_TOP_MAX` dans `radar/accounts.py` ; nombre affiché : `HISTORY_SHOWN` dans `app/compte.py`.
+**Ce qui est gardé.** Les réglages (ville, rayon, domaine, contrat, filtres, poids, classement, compétences). Ni les entreprises ni les résultats.
 
----
+**Code.** `radar/accounts.py` (table `recherches_enregistrees`, `save_search`, `SAVED_SEARCH_MAX`), `app/recherches.py` (bouton, liste, mode sans compte), `compte._flush_temp_searches`. Tests : `tests/test_recherches_enregistrees.py`.
 
 ## 6. Sécurité des mots de passe (D16)
 

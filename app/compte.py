@@ -13,12 +13,8 @@ Usage dans streamlit_app.py, AVANT de créer les widgets de recherche :
 Chaque clé du dictionnaire est la `key` d'un widget ; la valeur liste les options permises
 (None = texte ou nombre libre). Les valeurs d'un profil qui ne sont plus permises sont ignorées.
 
-Historique (T49), APRÈS le calcul des résultats :
-
-    search_history(PROFILE_KEYS, n_results=len(view), top=[...], labels={"contrat": "Contrat"})
-
-Ne fait rien en mode anonyme. Connecté : enregistre la recherche et affiche « Mes recherches »
-en bas de la barre latérale, avec un bouton « Relancer » par recherche.
+Les recherches enregistrées (T84) sont dans app/recherches.py ; elles remplacent
+l'historique automatique (T49).
 """
 
 from __future__ import annotations
@@ -32,8 +28,8 @@ from style import NAVY, Tile, hero, kpi_tiles, profile_header
 from radar import accounts
 
 TEMP_FAVORITES_KEY = "_favoris_temporaires"  # favoris d'un visiteur anonyme (T54, app/favoris.py)
+TEMP_SEARCHES_KEY = "_recherches_temporaires"  # visite anonyme (T84, app/recherches.py)
 USER_KEY = "compte_user"  # {"id": int, "username": str} quand on est connecté
-HISTORY_SHOWN = 10
 TZ = ZoneInfo("Europe/Paris")
 
 
@@ -80,12 +76,32 @@ def _flush_temp_favorites(user_id: int) -> int:
     return n
 
 
+def _flush_temp_searches(user_id: int) -> tuple[int, int]:
+    """Enregistre les recherches gardées pendant la visite anonyme (T84).
+
+    Renvoie (enregistrées, non reprises parce que le maximum est atteint).
+    """
+    temp = st.session_state.pop(TEMP_SEARCHES_KEY, []) or []
+    saved = lost = 0
+    for s in temp:
+        try:
+            saved += accounts.save_search(
+                _con(), user_id, s["nom"], s["params"], now=s["created_at"]
+            )
+        except accounts.AccountError:
+            lost += 1
+    return saved, lost
+
+
 def _log_in(user_id: int, username: str, profile_keys: dict) -> None:
     st.session_state[USER_KEY] = {"id": user_id, "username": username}
     _apply_profile(accounts.load_profile(_con(), user_id), profile_keys)
     n = _flush_temp_favorites(user_id)
     if n:
         st.session_state["_toast_favoris"] = n
+    _, lost = _flush_temp_searches(user_id)
+    if lost:
+        st.session_state["_toast_recherches_perdues"] = lost
     st.rerun()
 
 
@@ -174,73 +190,10 @@ def account_sidebar(profile_keys: dict[str, list | None]) -> dict | None:
 # --- Historique des recherches (T49) -----------------------------------------------------
 
 
-def _format_value(value) -> str:
-    if isinstance(value, bool):
-        return "oui" if value else "non"
-    if isinstance(value, list):
-        return ", ".join(map(str, value))
-    return str(value)
-
-
-def summarize(params: dict, labels: dict[str, str] | None = None) -> str:
-    """Résumé lisible d'une recherche : « Contrat : Stage · Rayon (km) : 20 »."""
-    labels = labels or {}
-    parts = [
-        f"{labels.get(k, k)} : {_format_value(v)}"
-        for k, v in params.items()
-        if v not in ("", [], None)
-    ]
-    return " · ".join(parts) or "réglages par défaut"
-
-
 def _relaunch(params: dict, profile_keys: dict) -> None:
     # Rappel de bouton : exécuté avant que la page soit redessinée, donc avant la création des
     # widgets → on peut modifier leurs valeurs ici.
     _apply_profile(params, profile_keys)
-
-
-def _clear_history(user_id: int) -> None:
-    accounts.clear_searches(_con(), user_id)
-
-
-def search_history(
-    profile_keys: dict[str, list | None],
-    n_results: int,
-    top: list[str] | None = None,
-    labels: dict[str, str] | None = None,
-) -> None:
-    """Connecté : enregistre la recherche en cours et affiche « Mes recherches »."""
-    user = current_user()
-    if user is None:
-        return  # mode anonyme : rien n'est écrit
-    con = _con()
-    current_id = accounts.log_search(
-        con, user["id"], _current_settings(profile_keys), n_results, top
-    )
-    searches = accounts.list_searches(con, user["id"], limit=HISTORY_SHOWN)
-    with st.sidebar, st.expander(f"🕘 Mes recherches ({len(searches)})"):
-        for s in searches:
-            date = s["created_at"].astimezone(TZ).strftime("%d/%m à %H:%M")
-            st.markdown(
-                f"**{date}**{' · *en cours*' if s['id'] == current_id else ''}  \n"
-                f"{summarize(s['params'], labels)}  \n"
-                f"{s['n_resultats']} résultat(s)"
-                + (f" · {', '.join(s['top_resultats'][:3])}" if s["top_resultats"] else "")
-            )
-            if s["id"] != current_id:
-                st.button(
-                    "↻ Relancer",
-                    key=f"compte_relancer_{s['id']}",
-                    on_click=_relaunch,
-                    args=(s["params"], profile_keys),
-                )
-        st.button(
-            "Effacer mon historique",
-            key="compte_effacer_historique",
-            on_click=_clear_history,
-            args=(user["id"],),
-            disabled=not searches,
-        )
 
 
 # --- Version « pages » (Explorer enregistre, Mon espace affiche) ----------------------------
@@ -254,16 +207,6 @@ def _validated_user() -> dict | None:
         st.session_state.pop(USER_KEY, None)  # compte supprimé ailleurs ou base réinitialisée
         return None
     return user
-
-
-def record_search(
-    profile_keys: dict[str, list | None], n_results: int, top: list[str] | None = None
-) -> int | None:
-    """Connecté : enregistre la recherche en cours (page Explorer). Anonyme : ne fait rien."""
-    user = _validated_user()
-    if user is None:
-        return None
-    return accounts.log_search(_con(), user["id"], _current_settings(profile_keys), n_results, top)
 
 
 def _relaunch_and_go(params: dict, profile_keys: dict) -> None:
@@ -318,36 +261,6 @@ def _profile_section(con, user: dict, saved_keys: dict, labels: dict, editor=Non
         st.rerun()
 
 
-def _searches_section(con, user: dict, profile_keys: dict, labels: dict) -> None:
-    """Onglet « Mes recherches » : historique avec « Relancer » (T49)."""
-    searches = accounts.list_searches(con, user["id"], limit=HISTORY_SHOWN)
-    if not searches:
-        st.write("Tes recherches apparaîtront ici.")
-        return
-    for s in searches:
-        with st.container(border=True, key=f"espace_recherche_{s['id']}"):
-            left, right = st.columns([5, 1], vertical_alignment="center")
-            date = s["created_at"].astimezone(TZ).strftime("%d/%m à %H:%M")
-            left.markdown(f"**{summarize(s['params'], labels)}**")
-            top = f" · {', '.join(s['top_resultats'][:3])}" if s["top_resultats"] else ""
-            left.caption(f"{date} · {s['n_resultats']} résultat(s){top}")
-            right.button(
-                "Relancer",
-                icon=":material/replay:",
-                key=f"page_relancer_{s['id']}",
-                on_click=_relaunch_and_go,
-                args=(s["params"], profile_keys),
-                width="stretch",
-            )
-    st.button(
-        "Effacer mon historique",
-        type="tertiary",
-        icon=":material/delete_sweep:",
-        on_click=_clear_history,
-        args=(user["id"],),
-    )
-
-
 def _delete_account_box(con, user: dict) -> None:
     with st.expander("Supprimer mon compte", icon=":material/warning:"):
         st.caption("Efface définitivement ton compte, ton profil et ton historique.")
@@ -360,7 +273,7 @@ def _delete_account_box(con, user: dict) -> None:
             st.rerun()
 
 
-def _anonymous_page(saved_keys: dict, favorites_section) -> None:
+def _anonymous_page(saved_keys: dict, favorites_section, searches_section, keys: dict) -> None:
     """Sans compte : à gauche ce qu'apporte un compte, à droite la connexion."""
     hero("Mon espace", "Ton compte, tes favoris et tes recherches.", compact=True)
     left, right = st.columns([1, 1], gap="large")
@@ -379,6 +292,9 @@ def _anonymous_page(saved_keys: dict, favorites_section) -> None:
     if favorites_section is not None:
         st.divider()
         favorites_section()
+    if searches_section is not None:
+        st.subheader("Mes recherches")
+        searches_section(keys)
 
 
 def account_page(
@@ -389,6 +305,7 @@ def account_page(
     saved_keys: dict[str, list | None] | None = None,
     candidatures_section=None,
     profile_editor=None,
+    searches_section=None,
 ) -> None:
     """Page « Mon espace » : connexion, ou résumé chiffré + onglets (T85).
 
@@ -406,7 +323,7 @@ def account_page(
         st.switch_page(st.Page(explorer_page))
     user = _validated_user()
     if user is None:
-        _anonymous_page(saved_keys, favorites_section)
+        _anonymous_page(saved_keys, favorites_section, searches_section, profile_keys)
         return
 
     con = _con()
@@ -420,14 +337,19 @@ def account_page(
     favs = accounts.list_favorites(con, user["id"])
     applied = [f for f in favs if f["candidate"]]
     interviews = sum(f["statut"] == "Entretien" for f in applied)
-    searches = accounts.list_searches(con, user["id"], limit=accounts.SEARCH_MAX_PER_USER)
+    searches = accounts.list_saved_searches(con, user["id"])
     counts = (
         (len(applied), "candidature", "#1a56db"),
         (interviews, "entretien", "#6d28d9"),
         (len(favs), "favori", "#e8590c"),
-        (len(searches), "recherche", NAVY),
+        (len(searches), "recherche enregistrée", NAVY),
     )
-    kpi_tiles([Tile(str(n), word + ("s" if n > 1 else ""), color) for n, word, color in counts])
+    kpi_tiles(
+        [
+            Tile(str(n), " ".join(w + ("s" if n > 1 else "") for w in words.split()), color)
+            for n, words, color in counts
+        ]
+    )
 
     names = [":material/send: Mes candidatures", ":material/star: Mes favoris"]
     names += [":material/history: Mes recherches", ":material/person: Mon profil"]
@@ -439,7 +361,8 @@ def account_page(
         if favorites_section is not None:
             favorites_section()
     with tab_search:
-        _searches_section(con, user, profile_keys, labels)
+        if searches_section is not None:
+            searches_section(profile_keys)
     with tab_profile:
         _profile_section(con, user, saved_keys, labels, profile_editor)
         st.divider()

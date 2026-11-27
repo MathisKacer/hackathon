@@ -97,7 +97,7 @@ def test_change_password_rules(con):
 
 def test_list_users_shows_counts_not_content(con):
     a = _mk(con, "maxence")
-    accounts.log_search(con, a, {"ville": "Rennes (35000)"}, n_results=3, top=["X"])
+    accounts.save_search(con, a, "Rennes", {"ville": "Rennes (35000)"})
     users = admin.list_users(con)
     assert users.loc[0, "n_recherches"] == 1
     assert "params" not in users.columns and "ville" not in " ".join(users.columns)

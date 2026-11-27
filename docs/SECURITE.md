@@ -9,7 +9,7 @@
 - **Mots de passe jamais stockés en clair** : hachés avec **scrypt** et un sel par compte.
 - **Règles inspirées de la CNIL** : au moins 12 caractères et 3 types de caractères ; mots de passe courants refusés.
 - **Blocage après 5 échecs** : compte bloqué 15 minutes, même en rechargeant la page.
-- **Minimum de données personnelles** : pas d'e-mail, et « Supprimer mon compte » efface tout (profil, historique).
+- **Minimum de données personnelles** : pas d'e-mail, et « Supprimer mon compte » efface tout (profil, favoris, recherches).
 - **Administrateurs = l'équipe seulement** (T79, D39) : nommés uniquement en ligne de commande sur le serveur, jamais depuis le site ; ils voient des nombres, pas le contenu des comptes ; chaque action est journalisée.
 
 ## Choix du mot de passe (à la création du compte)
@@ -72,8 +72,8 @@ Conséquence pour la démo : créer les comptes de démonstration **sur le pod q
 
 ## Données personnelles
 
-- Données stockées : identifiant, empreinte du mot de passe, profil (compétences tirées du CV seulement, D41 ; le CV n'est jamais conservé), historique des recherches (50 max, avec tous les réglages, dont la ville saisie). **Pas d'e-mail, pas de nom.**
-- « Supprimer mon compte » efface le compte, le profil et l'historique (suppression en cascade).
+- Données stockées : identifiant, empreinte du mot de passe, profil (compétences tirées du CV seulement, D41 ; le CV n'est jamais conservé), favoris, et recherches **enregistrées à la demande** (20 max, réglages seulement dont la ville ; ni entreprises ni résultats, T84). Une base créée avant T84 peut encore contenir l'ancien historique automatique (table `recherches`, plus alimentée ni affichée). **Pas d'e-mail, pas de nom.**
+- « Supprimer mon compte » efface le compte, le profil, les favoris et les recherches (suppression en cascade).
 - En mode anonyme, rien n'est écrit sur le disque.
 
 ## Ce qui manque (assumé pour un hackathon de 24 h)

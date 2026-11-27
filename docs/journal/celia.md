@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-11-27 — Tâche T84 : recherches enregistrées (D43)
+
+**Fait :**
+- Table `recherches_enregistrees` (20 max, sans doublon), `app/recherches.py` (bouton Explorer, liste Mon espace, mode sans compte repris à la connexion).
+- Historique automatique retiré de l'app (décision B) ; compteur de l'administration rebranché ; tests de l'ancien historique remplacés par `tests/test_recherches_enregistrees.py`.
+
+**Résultats / chiffres clés :**
+- Parcours vérifié dans l'app avec les vraies données (enregistrer, relancer, sans compte). 382 tests OK après le développement.
+
+**Problèmes / points d'attention pour l'équipe :**
+- Les lignes de l'ancien historique restent dans les bases existantes (non affichées) : à effacer si l'équipe le souhaite.
+
+---
+
 ## 2026-11-27 — Tâche T85 : Mon espace repensé
 
 **Fait :**

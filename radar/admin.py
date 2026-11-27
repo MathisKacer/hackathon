@@ -140,7 +140,8 @@ def list_users(con: sqlite3.Connection, now: datetime | None = None) -> pd.DataF
         """
         SELECT u.id, u.username, u.created_at, u.is_admin, u.locked_until,
                u.must_change_password,
-               (SELECT COUNT(*) FROM recherches r WHERE r.user_id = u.id) AS n_recherches,
+               (SELECT COUNT(*) FROM recherches_enregistrees r WHERE r.user_id = u.id)
+                   AS n_recherches,
                (SELECT COUNT(*) FROM favoris f WHERE f.user_id = u.id) AS n_favoris,
                EXISTS (SELECT 1 FROM profils p WHERE p.user_id = u.id) AS a_profil
         FROM users u ORDER BY u.is_admin DESC, u.created_at
