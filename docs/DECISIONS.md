@@ -14,6 +14,12 @@
 
 ---
 
+### D10 — Référentiel entreprises : SIRENE lu à distance, ≥ 10 salariés (2026-11-27, @celia)
+**Contexte :** T20 doit fournir `entreprises.parquet` France entière sans saturer le pod.
+**Décision :** DuckDB lit les trois stocks parquet SIRENE de data.gouv à distance (httpfs) et les joint (établissement + unité légale + géolocalisation). Filtre : établissement actif, tranche d'effectif dans la liste explicite '11'…'53' (≥ 10 salariés ; `'NN'` exclu, car `'NN' > '11'` en texte), NAF rév. 2. Nom affiché = nom usuel de l'établissement, sinon enseigne, sinon dénomination de l'unité légale. Les libellés NAF viennent d'un petit CSV INSEE versionné (`radar/naf_rev2.csv`, exception ajoutée au `.gitignore`). L'adresse est vidée quand la diffusion est partielle (`diffusible = False`).
+**Alternatives écartées :** l'API Recherche d'entreprises (trop d'appels pour la France entière) ; garder les établissements < 10 salariés (17 M de lignes, dont 15 M sans effectif connu).
+**Conséquences :** ~406 k lignes, 19 Mo, régénérable en ~40 s par chacun (`uv run python -m radar.collect.sirene`). Les TPE ne sont pas recommandées. Au prochain millésime SIRENE, mettre à jour les 3 URL en tête de `sirene.py`.
+
 ### D9 — Dictionnaire des domaines : codes ROME sûrs, codes ambigus et mots-clés (2026-11-27, @emma)
 **Contexte :** classer chaque offre par domaine (T6 → T13). La bonne alternance fournit des codes ROME, mais pas Adzuna (titre seulement). Certains codes ROME sont ambigus (« Chargé d'études commerciales » peut être un poste data ou marketing).
 **Décision :** `radar/domains.yaml` décrit 5 domaines, dans l'ordre data, informatique, finance, marketing, rh (l'ordre départage les cas ambigus : data gagne). Pour chacun :

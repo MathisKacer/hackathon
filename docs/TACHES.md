@@ -75,10 +75,10 @@
 ## 🔵 En cours
 
 - [ ] T11 — 🔗T2 **Collecteur La bonne alternance**, France entière : offres + recruteurs potentiels, avec SIRET → `offres_raw/lba/` — @maxence
-- [ ] T20 — **Référentiel SIRENE France** : stock parquet géolocalisé (data.gouv) → établissements actifs et employeurs, avec NAF, tranche d'effectif et lat/lon → `entreprises.parquet` (DuckDB) — @celia
 
 ## ✅ Fait
 
+- [x] T20 — **Référentiel SIRENE France** : `uv run python -m radar.collect.sirene` (≈ 40 s, lecture à distance) → `data/processed/entreprises.parquet`, 406 k établissements actifs ≥ 10 salariés, géolocalisés, avec libellé NAF — @celia
 - [x] T6 — **Dictionnaire « domaines »** : `radar/domains.yaml` (data, informatique, finance, marketing, rh ; codes ROME 4.0 vérifiés + mots-clés) et `radar/domains.py` (`load_domains`, `classify`) — @emma
 - [x] T39 — 🔗T4 **Carte couche 1 « Offres réelles » (bleu)** : afficher les offres de `data/raw/offres_raw/*.parquet` (Adzuna maintenant, La bonne alternance ensuite), avec popup titre / entreprise / lien vers l'annonce ; filtre v0 par mots-clés dans le titre en attendant T13 — @mathis
 - [x] T12 — 🔗T10 **Collecteur Adzuna** France entière dans la limite du quota (offres « data » région par région, Bretagne et Île-de-France d'abord, offres de moins de 60 jours) + cache disque + compteur de quota → `data/raw/offres_raw/adzuna.parquet` — @mathis

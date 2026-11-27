@@ -36,6 +36,7 @@ hackathon/
 │   ├── fake_data.py            # T5 : générateur de données FACTICES respectant le contrat
 │   ├── domains.yaml            # T6 : domaines (data, informatique, finance, marketing, rh) → codes ROME 4.0 + mots-clés
 │   ├── domains.py              # chargement de domains.yaml + classify(titre, code_rome) → domaine (base de T13)
+│   ├── naf_rev2.csv            # libellés NAF rév. 2 (INSEE, 732 sous-classes), versionné
 │   ├── collect/                # un module par source : adzuna.py, lba.py, ats.py, sirene.py, bodacc.py…
 │   ├── process/
 │   │   ├── classify.py         # domaine de l'offre + type de contrat (stage / alternance / emploi)
@@ -66,7 +67,7 @@ Données factices pour développer sans la collecte : `uv run python scripts/mak
 |---|---|---|---|
 | `data/raw/offres_raw/<source>.parquet` | collect/* | process | `source, offre_id, date_collecte, date_publication, titre, description, entreprise_nom, commune, code_postal, lat, lon, contrat_brut, code_rome, url, siret (si fourni)` — ces 15 colonnes en premier, dans cet ordre ; une source peut ajouter ses propres colonnes après (ex. Adzuna : `contrat_temps, categorie, salaire_min, salaire_max, salaire_predit, zone, requete, region_requete`) |
 | `offres.parquet` | process | score, app | ci-dessus + `domaine: str` (clé de `domains.yaml` ou `autre`), `contrat: stage/alternance/emploi`, `siret_match, match_score, match_methode` |
-| `entreprises.parquet` | collect/sirene… | process, score, app | `siret, siren, nom, naf, naf_libelle, tranche_effectif, categorie, lat, lon, commune, ca_n, ca_n_1, procedure_collective: bool, lbb_proba` |
+| `entreprises.parquet` | collect/sirene… | process, score, app | `siret, siren, nom, naf, naf_libelle, tranche_effectif, categorie, lat, lon, commune, ca_n, ca_n_1, procedure_collective: bool, lbb_proba` — en plus (T20) : `nom_entreprise, sigle, tranche_libelle, effectif_min, effectif_max, annee_effectifs, siege, qualite_xy, code_postal, code_commune, departement, adresse` (vide si non diffusible), `diffusible`. Une ligne par SIRET, ~406 k établissements actifs ≥ 10 salariés. `ca_n, ca_n_1, lbb_proba` vides et `procedure_collective = False` tant que T22–T24 ne sont pas faites |
 | `scores.parquet` | score | app | **une ligne par (`siret`, `domaine`)** : composantes dans [0, 1] (`c_intensite, c_dynamisme, c_embauche…`) + `n_offres, n_offres_domaine, n_stage_domaine, n_alternance_domaine, intensite_post, intensite_ic_bas, intensite_ic_haut` |
 | `candidatures_simulees.parquet` | response/simulate | response/model | `siret, profil_id, domaine, contrat_vise, distance_km, <variables>, p_vraie, repondu: bool` — **données simulées** |
 | `p_reponse.parquet` | response/model | app | `siret, domaine, contrat_vise, p_reponse, contributions…` |
