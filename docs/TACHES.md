@@ -17,7 +17,7 @@
 ## 🔴 P0 — Tout de suite (H+0 → H+2)
 
 - [x] T1 — Créer la **clé Adzuna** (developer.adzuna.com) → l'ajouter au `.env`
-- [x] T2 — Créer le **jeton La bonne alternance** (espace développeurs) → `.env` _(fait, signalé par @emma)_
+- [x] T2 — Créer le **jeton La bonne alternance** (espace développeurs) → `.env` _(fait, signalé par @emma)_ — @celia (jeton à demander à Celia en message privé)
 - [x] T3 — Compte **francetravail.io** : souscrire à La Bonne Boîte, Marché du travail et ROME 4.0, et envoyer la demande d'accès à Offres d'emploi via le formulaire de contact
 
 ## 🟠 P1 — Chemin critique vers la V1 (H+2 → H+8)
