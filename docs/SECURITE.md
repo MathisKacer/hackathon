@@ -31,6 +31,28 @@ Les règles sont affichées sous le champ « Mot de passe » du formulaire de cr
 - **Comparaison à temps constant** (`hmac.compare_digest`).
 - **Base** : `data/app/radar.db` (SQLite), **jamais dans Git ni sur S3**. Le mot de passe en clair n'est ni stocké, ni journalisé, ni affiché.
 
+## Où est la base ? (hébergement)
+
+Il n'y a **pas de serveur de base de données** : on utilise **SQLite**, une base qui tient entièrement dans **un fichier**, `data/app/radar.db`. L'app Streamlit ouvre ce fichier et y écrit directement, comme on écrirait dans un fichier Excel.
+
+```
+Navigateur ──(internet, proxy Onyxia …/proxy/8501/)──► service VS Code Onyxia (SSP Cloud)
+                                                       ├─ app Streamlit (Python)
+                                                       │     └─ lit / écrit ─► data/app/radar.db
+                                                       └─ /home/onyxia/work = disque persistant
+                                                          (datacenter du SSP Cloud, rattaché au service)
+```
+
+| Action | La base… |
+|---|---|
+| Arrêter / relancer l'app Streamlit | est conservée |
+| Mettre en pause / relancer le service VS Code | est conservée (disque persistant) |
+| `git pull` / `git push` | n'est pas touchée (hors Git) |
+| **Supprimer le service** sur Onyxia | **est perdue** (avec tout le dossier `work`) |
+| Ouvrir l'app depuis le pod d'un coéquipier | **c'est une autre base** : chaque pod a la sienne |
+
+Conséquence pour la démo : créer les comptes de démonstration **sur le pod qui sert à la présentation**. Comparaison : aujourd'hui, c'est un fichier Excel sur un ordinateur ; une base hébergée (Supabase, PostgreSQL) serait l'équivalent d'un Google Sheets partagé et sauvegardé (tâche T51, très optionnelle).
+
 ## Connexion
 
 - **Blocage par compte, enregistré en base** : après **5 échecs d'affilée**, le compte est bloqué **15 minutes**. Pendant le blocage, même le bon mot de passe est refusé. Une connexion réussie remet le compteur à zéro. Recharger la page ou ouvrir un autre onglet ne contourne pas le blocage. Réglages : `LOGIN_MAX_FAILS`, `LOGIN_LOCK_DURATION`.
@@ -47,7 +69,7 @@ Les règles sont affichées sous le champ « Mot de passe » du formulaire de cr
 
 | Manque | Risque | Ce qu'il faudrait en production |
 |---|---|---|
-| Base locale au pod Onyxia (L17) | Comptes perdus au redémarrage | Base hébergée (PostgreSQL) avec sauvegardes |
+| Base locale au service Onyxia (L17) | Comptes perdus si le service est supprimé ; un compte n'existe que sur le pod où il a été créé ; pas de sauvegarde | Base hébergée avec sauvegardes (Supabase : tâche T51, très optionnelle) |
 | Pas de « mot de passe oublié » (L18) | Mot de passe perdu = nouveau compte | Récupération par e-mail (donc collecter un e-mail) |
 | Pas de « se souvenir de moi » (L18) | Recharger la page déconnecte | Cookie de session signé, avec expiration |
 | Le message de blocage révèle qu'un compte existe (L19) | Un attaquant peut tester si un identifiant existe en provoquant un blocage | Bloquer aussi les identifiants inconnus, ou limiter par adresse IP |

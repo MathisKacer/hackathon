@@ -7,8 +7,9 @@ Le mode démo anonyme n'appelle jamais ce module : rien n'est écrit tant qu'on 
   docs/SECURITE.md.
 - Profil = dictionnaire JSON des réglages de recherche (domaine, contrat, adresse, rayon,
   filtres, poids…). Le module ne connaît pas les clés : c'est l'app qui décide quoi enregistrer.
-- Base : data/app/radar.db (ignorée par Git). Un pod Onyxia est éphémère : la base est
-  perdue au redémarrage (acceptable pour la démo, voir docs/LIMITES.md).
+- Base : data/app/radar.db (ignorée par Git), un simple fichier sur le disque persistant du
+  service Onyxia : conservée tant que le service existe, perdue s'il est supprimé, une base
+  par membre de l'équipe (voir docs/SECURITE.md et LIMITES.md L17 ; base hébergée : T51).
 
 Usage :
     con = connect()
