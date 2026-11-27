@@ -32,7 +32,6 @@
 
 **App**
 - [ ] T51 — 🔗T40,T17 **Recruteurs LBA dans la couche orange** : quand le contrat visé est l'alternance, marquer (ou bonifier) les entreprises présentes dans `lba_recruteurs.parquet` avec un ROME du domaine (signal « recrute des alternants sans offre publiée »)
-- [ ] T42 — 🔗T40 **Curseurs de poids** → recalcul du score en direct
 
 **Intégration**
 
@@ -76,6 +75,7 @@
 ## 🔵 En cours
 
 - [ ] T23 — BODACC : écarter ou pénaliser les entreprises en procédure collective — @celia
+- [ ] T42 — 🔗T40 **Curseurs de poids** → recalcul du score en direct — @maxence
 - _…_
 
 ## ✅ Fait
