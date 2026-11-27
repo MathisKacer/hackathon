@@ -28,7 +28,8 @@ CSS = f"""
 <style>
 /* Fond très légèrement teinté et respiration générale */
 .stApp {{ background: linear-gradient(180deg, #F4F6FA 0%, #FAFAF7 320px); }}
-.block-container {{ padding-top: 1.2rem; }}
+/* Pas de padding-top sur .block-container : Streamlit le règle pour que la page commence
+   sous la barre de navigation fixée en haut (sinon le bandeau passe sous la barre). */
 
 /* Nos cartes (blocs avec une clé) : fond blanc, coins arrondis, ombre légère.
    Les clés `st.container(key=...)` donnent la classe `st-key-<clé>`, stable d'une version à
