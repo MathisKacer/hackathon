@@ -41,6 +41,7 @@ def test_company_offers_by_siren_or_source_siret_without_intermediaries(tmp_path
     ).to_parquet(p)
     out = company_offers("111111111", "11111111100029", p)
     assert out["titre"].tolist() == ["Stage data", "Data analyst", "Alternance BI"]  # récentes
+    assert out["niveau"].tolist() == ["Non précisé"] * 3  # T67 : rien dans ces titres
     assert company_offers(None, None, p).empty
     assert company_offers("111111111", None, tmp_path / "absent.parquet").empty
 

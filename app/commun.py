@@ -17,6 +17,7 @@ from radar.domains import classify, load_domains
 from radar.filters import SECTIONS, TAILLES
 from radar.geo import region_of
 from radar.geocode import Place
+from radar.niveau import LEVEL_LABELS, LEVELS, add_levels, matches_levels
 from radar.process.quick_filter import load_raw_offers, prepare_offers
 from radar.recruteurs import mark_lba_recruiters
 from radar.response.predict import load_coefficients
@@ -42,6 +43,8 @@ CHANCE_HELP = (
     "Modèle entraîné sur des réponses simulées : aucune donnée publique ne dit encore "
     "quelles entreprises répondent."
 )
+# Niveaux d'études proposés dans le filtre (T67), en libellés : « CAP », « Bac »… « Doctorat ».
+NIVEAUX = [LEVEL_LABELS[c] for c in LEVELS]
 DOMAINS = load_domains()  # radar/domains.yaml : clé → Domain (libellé, ROME, mots-clés)
 DOMAINES = list(DOMAINS)
 
@@ -59,6 +62,8 @@ WIDGET_KEYS = [
     "secteurs",
     "show_liquidation",
     "une_par_entreprise",
+    "niveaux",
+    "niveau_inconnu",
     "tri",
     *WEIGHT_KEYS.values(),
 ]
@@ -79,7 +84,9 @@ def get_offers() -> pd.DataFrame:
     pairs = pairs.where(pairs.notna(), None)
     keys = list(zip(pairs["titre"], pairs["code_rome"], strict=True))
     domains = {k: classify(*k) for k in set(keys)}
-    return df.assign(region_requete=region.fillna(from_cp), domaine=[domains[k] for k in keys])
+    df = df.assign(region_requete=region.fillna(from_cp), domaine=[domains[k] for k in keys])
+    # T67 (D33) : niveau d'études attendu (champ LBA, sinon cherché dans le titre et le texte).
+    return add_levels(df)
 
 
 @st.cache_data(show_spinner="Chargement de la liste des communes…", ttl=24 * 3600)
@@ -113,8 +120,15 @@ def filter_offers(
     domaine: str | None,
     max_age: int,
     query: str,
+    niveaux: list[str] | None = None,
+    niveau_inconnu: bool = True,
 ) -> pd.DataFrame:
-    """Offres affichées en bleu ; `domaine=None` : tous domaines confondus."""
+    """Offres affichées en bleu ; `domaine=None` : tous domaines confondus.
+
+    `niveaux` (T67) : niveaux d'études voulus, en libellés (« Bac+5 »… : lisibles dans « Mes
+    recherches ») ; vide = tous.
+    `niveau_inconnu` : garder aussi les offres qui ne précisent pas de niveau (la plupart).
+    """
     out = df
     if domaine:
         out = out[out["domaine"] == domaine]
@@ -129,6 +143,9 @@ def filter_offers(
             out["titre"].fillna("").str.lower() + " " + out["entreprise_nom"].fillna("").str.lower()
         )
         out = out[hay.str.contains(q, regex=False)]
+    if niveaux and "niveaux_etudes" in out:
+        codes = [c for c, label in LEVEL_LABELS.items() if label in niveaux]
+        out = out[matches_levels(out["niveaux_etudes"], codes, niveau_inconnu)]
     return out
 
 
@@ -150,6 +167,8 @@ def profile_keys(all_regions: list[str]) -> dict[str, list | None]:
         "tri": TRIS,
         "show_liquidation": [True, False],
         "une_par_entreprise": [True, False],
+        "niveaux": NIVEAUX,
+        "niveau_inconnu": [True, False],
     }
 
 
@@ -169,6 +188,8 @@ PROFILE_LABELS = {
     "tri": "Classement",
     "show_liquidation": "Avec liquidations",
     "une_par_entreprise": "Une ligne par entreprise",
+    "niveaux": "Niveau d'études",
+    "niveau_inconnu": "Avec niveau non précisé",
 }
 
 
@@ -187,6 +208,8 @@ def init_defaults() -> None:
     st.session_state.setdefault("tri", TRI_SCORE)
     st.session_state.setdefault("show_liquidation", False)
     st.session_state.setdefault("une_par_entreprise", False)
+    st.session_state.setdefault("niveaux", [])
+    st.session_state.setdefault("niveau_inconnu", True)
     for c, key in WEIGHT_KEYS.items():
         st.session_state.setdefault(key, DEFAULT_WEIGHTS[c])
 
@@ -213,5 +236,6 @@ def current_weights() -> dict[str, int]:
 
 __all__ = [
     "FILES",
+    "LEVEL_LABELS",
     "Place",
 ]

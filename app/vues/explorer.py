@@ -16,6 +16,7 @@ from commun import (
     DOMAINES,
     DOMAINS,
     FILES,
+    NIVEAUX,
     PAGES_DIR,
     PROFILE_LABELS,
     RAYONS,
@@ -41,6 +42,7 @@ from streamlit_folium import st_folium
 
 from radar.collect.sirene import TRANCHE_LIBELLES
 from radar.filters import SECTIONS, TAILLES, filter_companies
+from radar.niveau import levels_label
 from radar.paliers import add_tiers, rule_text, score_color, text_color_on, tier_color
 from radar.response.predict import add_p_reponse
 from radar.spontaneous import COMPONENTS, haversine_km, rank_spontaneous, signaled_by_lbb
@@ -72,6 +74,7 @@ def _n_filters_on() -> int:
             bool(ss.get("show_liquidation")),
             ss.get("tri") == TRI_P,
             bool(ss.get("une_par_entreprise")),
+            bool(ss.get("niveaux")),
         ]
     )
 
@@ -119,6 +122,20 @@ with st.container(border=True):
         query = st.text_input("Mot-clé", key="query", placeholder="ex. python, Arkéa…")
         max_age = st.slider("Publiées il y a moins de (jours)", 7, 60, step=7, key="max_age")
         only_data = st.toggle("Seulement les offres du domaine", key="only_data")
+        # T67 (D33) : niveau d'études attendu, indiqué par La bonne alternance ou lu dans l'offre.
+        niveaux = st.multiselect(
+            "Niveau d'études",
+            NIVEAUX,
+            key="niveaux",
+            placeholder="Tous les niveaux",
+            help="Niveau demandé par l'offre : donné par La bonne alternance, sinon lu dans "
+            "le titre et le début de l'annonce. La plupart des offres ne le précisent pas.",
+        )
+        niveau_inconnu = st.checkbox(
+            "Garder les offres sans niveau précisé",
+            key="niveau_inconnu",
+            disabled=not niveaux,
+        )
         st.markdown("**Entreprises**")
         tailles = st.multiselect(
             "Taille", list(TAILLES), key="tailles", placeholder="Toutes les tailles"
@@ -152,7 +169,14 @@ weights = current_weights()
 
 # ------------------------------------------------------------------ calculs
 view = filter_offers(
-    offers, regions, contrat, domaine if only_data else None, max_age, query.strip()
+    offers,
+    regions,
+    contrat,
+    domaine if only_data else None,
+    max_age,
+    query.strip(),
+    niveaux,
+    niveau_inconnu,
 )
 place = get_place(ville)
 spontaneous = pd.DataFrame()
@@ -334,17 +358,19 @@ with tab_offers:
         ordered = view.sort_values("age_jours")
         fav_offers = favorite_refs("offre")
         table = ordered[
-            ["titre", "entreprise_nom", "commune", "contrat", "age_jours", "url"]
+            ["titre", "entreprise_nom", "commune", "contrat", "niveaux_etudes", "age_jours", "url"]
         ].rename(
             columns={
                 "titre": "Offre",
                 "entreprise_nom": "Entreprise",
                 "commune": "Lieu",
                 "contrat": "Contrat",
+                "niveaux_etudes": "Niveau",
                 "age_jours": "Publiée il y a",
                 "url": "Annonce",
             }
         )
+        table["Niveau"] = table["Niveau"].map(levels_label)  # T67 : « Bac+5 », « Non précisé »
         table.insert(0, "★", [offer_ref(r) in fav_offers for _, r in ordered.iterrows()])
         # La clé change avec la liste et les favoris : les cases repartent de l'état enregistré.
         editor_key = f"offres_{hash((tuple(table.index), tuple(sorted(fav_offers))))}"

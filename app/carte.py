@@ -16,6 +16,7 @@ from commun import BLUE, ORANGE, WEIGHT_KEYS
 from folium.plugins import MarkerCluster
 
 from radar.geocode import Place
+from radar.niveau import levels_label
 from radar.paliers import score_color, tier_color, tier_text
 from radar.spontaneous import COMPONENTS, LBB_SOURCE
 
@@ -35,6 +36,8 @@ def _popup_html(group: pd.DataFrame) -> str:
         url = html.escape(str(r["url"] or ""), quote=True)
         age = "" if pd.isna(r["age_jours"]) else f" · il y a {int(r['age_jours'])} j"
         badge = {"stage": "🎓 Stage", "alternance": "🔁 Alternance"}.get(r["contrat"], "💼 Emploi")
+        if isinstance(r.get("niveaux_etudes"), str):  # T67 : niveau d'études, s'il est connu
+            badge += f" · 📚 {levels_label(r['niveaux_etudes'])}"
         link = f'<a href="{url}" target="_blank" rel="noopener">{title}</a>' if url else title
         items.append(
             f"<li style='margin-bottom:6px'>{link}<br>"

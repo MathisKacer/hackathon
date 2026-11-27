@@ -22,6 +22,7 @@ import pandas as pd
 from radar.collect.bodacc import RAW_FILE as BODACC_FILE
 from radar.collect.bodacc import _parse_jugement, classify_nature
 from radar.config import FILES
+from radar.niveau import levels_label, offer_levels
 
 ANNUAIRE_URL = "https://annuaire-entreprises.data.gouv.fr/etablissement/{siret}"
 OSM_URL = "https://www.openstreetmap.org/?mlat={lat}&mlon={lon}#map=17/{lat}/{lon}"
@@ -50,8 +51,11 @@ def company_offers(
     """Offres de l'entreprise (toute l'entreprise, par SIREN), les plus récentes d'abord.
 
     Rattachement : `siren_match` (T21) ou SIRET donné par la source (La bonne alternance).
+    `niveau` (T67) : niveau d'études attendu, « Bac+5 »… ou « Non précisé ».
     """
-    cols_out = ["date_publication", "titre", "contrat", "domaine", "commune", "source", "url"]
+    cols_out = [
+        "date_publication", "titre", "contrat", "niveau", "domaine", "commune", "source", "url"
+    ]  # fmt: skip
     path = Path(path)
     if not path.exists() or not (siren or siret):
         return pd.DataFrame(columns=cols_out)
@@ -69,7 +73,8 @@ def company_offers(
         params.append(str(siret))
     if not conds:
         return pd.DataFrame(columns=cols_out)
-    keep = [c for c in cols_out if c in cols]
+    # description et niveau_diplome : seulement pour calculer `niveau` (retirées ensuite)
+    keep = [c for c in cols_out + ["description", "niveau_diplome"] if c in cols]
     where = " OR ".join(conds)
     if "intermediaire" in cols:  # offres d'intermédiaires : pas l'employeur (T21)
         where = f"({where}) AND NOT coalesce(intermediaire, false)"
@@ -78,6 +83,7 @@ def company_offers(
         f"SELECT DISTINCT {', '.join(keep)} FROM '{path}' WHERE {where} {order} LIMIT {int(limit)}",
         params,
     ).df()
+    df["niveau"] = [levels_label(offer_levels(r)) for r in df.to_dict("records")]
     return df.reindex(columns=cols_out)
 
 
