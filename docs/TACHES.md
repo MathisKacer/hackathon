@@ -78,6 +78,8 @@
 ## 🔵 En cours
 
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
+- [ ] T79 — 🔗T48 **Administrateurs et gestion des comptes** : seuls les 4 membres de l'équipe peuvent être administrateurs (nommés **uniquement** par un script en ligne de commande sur le pod, jamais depuis le site) ; page « Administration » (liste des comptes avec des nombres seulement, débloquer, mot de passe provisoire, supprimer un compte classique, journal des actions) ; « Changer mon mot de passe » dans Mon espace — @maxence
+  ℹ️ @celia : touche aux comptes (ton domaine T48/T49) : nouveau module `radar/admin.py`, `docs/SECURITE.md` mis à jour
 - _…_
 
 ## ✅ Fait
