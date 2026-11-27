@@ -51,7 +51,6 @@
 **Favoris**
 
 **CV et correspondance de profil (suite de T45, demandées par @emma)**
-- [ ] T81 — 🔗T45,T48 **Profil enregistré = compétences du CV seulement** : dans Mon espace, une partie « CV / Compétences » qui affiche seulement les compétences trouvées (« Compétences : Python, R, SQL, SAS, Machine learning… », bien mis en forme, par ex. en étiquettes) ; **les autres réglages (ville, rayon, contrat, domaine, filtres, poids) ne sont plus enregistrés** dans le profil. ⚠️ Change le principe de D14/T48 (« la connexion enregistre le profil = les réglages de recherche ») et la règle de CLAUDE.md (« tout nouveau réglage → `profile_keys()` ») : **à valider avec l'équipe, surtout @celia (comptes)** ; mettre à jour D14 (ou nouvelle décision), CLAUDE.md, GUIDE, et décider ce que devient l'historique « Mes recherches » (T49, il réutilise `PROFILE_LABELS`) et les anciens profils déjà enregistrés (ignorer les autres clés). Code : `profile_keys()` / `PROFILE_LABELS` (`app/commun.py`), `_current_settings` / `_apply_profile` (`app/compte.py`), `app/vues/mon_espace.py`. ℹ️ @maxence travaille sur les comptes (T79) : se coordonner
 
 **Lisibilité des résultats et filtres** _(ajoutées par @emma ; elles touchent toutes `app/vues/explorer.py`, en cours de modification par Celia pour T57 : se coordonner avec elle)_
 
@@ -81,6 +80,7 @@
 ## 🔵 En cours
 
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
+- [ ] T81 — 🔗T45,T48 **Profil enregistré = compétences du CV seulement** : dans Mon espace, une partie « CV / Compétences » qui affiche seulement les compétences trouvées (« Compétences : Python, R, SQL, SAS, Machine learning… », bien mis en forme, par ex. en étiquettes) ; **les autres réglages (ville, rayon, contrat, domaine, filtres, poids) ne sont plus enregistrés** dans le profil. ⚠️ Change le principe de D14/T48 (« la connexion enregistre le profil = les réglages de recherche ») et la règle de CLAUDE.md (« tout nouveau réglage → `profile_keys()` ») : **à valider avec l'équipe, surtout @celia (comptes)** ; mettre à jour D14 (ou nouvelle décision), CLAUDE.md, GUIDE, et décider ce que devient l'historique « Mes recherches » (T49, il réutilise `PROFILE_LABELS`) et les anciens profils déjà enregistrés (ignorer les autres clés). Code : `profile_keys()` / `PROFILE_LABELS` (`app/commun.py`), `_current_settings` / `_apply_profile` (`app/compte.py`), `app/vues/mon_espace.py`. ℹ️ @maxence travaille sur les comptes (T79) : se coordonner — @emma (choix d'Emma : historique « Mes recherches » gardé tel quel ; compétences enregistrées par un bouton)
 - _…_
 
 ## ✅ Fait
