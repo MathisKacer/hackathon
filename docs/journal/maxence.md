@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-11-27 — T26 (suite) : case « Masquer » retirée
+
+**Fait :**
+- Discussion : les cases « Une ligne par entreprise » et « Masquer… » ne cachent aucune **offre** (couche bleue), seulement des entreprises de la couche orange. Mais le nombre d'offres du groupe compte toute la France : masquer pouvait faire perdre une société proche sans montrer d'offre du groupe à côté.
+- Décision : **tout reste affiché sur la carte**. Case « Masquer les sociétés dont le groupe publie déjà des offres » retirée (`app/vues/explorer.py`, `app/commun.py` : `WIDGET_KEYS`, profil, libellés). La mention « Groupe … : N offres » reste.
+- « Une ligne par entreprise » (T57, Celia) : inchangée.
+- D36, L7 et T26 mises à jour. 348 tests OK, ruff OK ; AppTest Toulouse : plus de case, 22 lignes signalées.
+
+---
+
 ## 2026-11-27 — T26 : familles de marque
 
 **Fait :**
