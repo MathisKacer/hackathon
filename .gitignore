@@ -26,3 +26,7 @@ venv/
 # Divers
 .DS_Store
 *.log
+
+# Outils
+.ruff_cache/
+.pytest_cache/

@@ -88,7 +88,7 @@ Le score final **n'est pas stocké** : l'app le calcule à la volée, `score = �
 
 ## Conventions
 
-- Code et noms en **anglais**, docs et commits en **français** _(à confirmer)_.
+- Code et noms en **anglais**, docs et commits en **français**.
 - Formatage : `ruff format` + `ruff check`.
 - Chemins relatifs à la racine du dépôt via `radar/config.py`, jamais de chemins absolus.
 - Secrets dans `.env` (non versionné), noms des variables listés dans `.env.example`.

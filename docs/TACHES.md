@@ -78,10 +78,12 @@
 
 ## 🔵 En cours
 
-- [ ] T4 — **Squelette du dépôt** : `pyproject.toml` (uv), package `radar/`, `radar/config.py`, `.env.example`, ruff, `app/streamlit_app.py` vide — @mathis
+- _…_
+
 
 ## ✅ Fait
 
+- [x] T4 — **Squelette du dépôt** : `pyproject.toml` (uv), package `radar/`, `radar/config.py`, `.env.example`, ruff, `app/streamlit_app.py` vide — @mathis
 - [x] T0 — Structure de coordination (`CLAUDE.md`, `docs/`) — @mathis
 - [x] T00 — Inventaire et test des sources (`docs/SOURCES.md`), architecture proposée — @mathis
 

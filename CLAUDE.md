@@ -56,13 +56,19 @@ Ce fichier est lu par **toutes** les sessions Claude Code de l'équipe. Plusieur
 
 ## Stack et commandes
 
-> À compléter dès que la stack est choisie (langage, gestionnaire de dépendances, commandes pour installer / lancer / tester).
+Python ≥ 3.11, dépendances gérées avec **uv** (`pyproject.toml` + `uv.lock` versionnés). Package `radar/`, app dans `app/`.
 
 ```bash
-# installer :  TBD
-# lancer :     TBD
-# tester :     TBD
+uv sync                                   # installer / mettre à jour l'environnement (.venv)
+uv add <paquet>                           # ajouter une dépendance (commit pyproject.toml + uv.lock)
+uv run streamlit run app/streamlit_app.py # lancer l'app (port 8501)
+uv run pytest -q                          # tests
+uv run ruff format . && uv run ruff check --fix .   # formatage + lint, avant chaque commit
 ```
+
+- Voir l'app depuis Onyxia (VS Code) : ouvrir `<URL de ton service>/proxy/8501/`.
+- Chemins et clés : toujours via `from radar.config import PATHS, FILES, settings` ; jamais de chemin en dur ni de `os.getenv` dispersé.
+- Appels HTTP : passer par un cache disque dans `PATHS.cache` (quota Adzuna ~250 appels/jour).
 
 ## Style de réponse attendu de Claude
 

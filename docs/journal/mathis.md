@@ -2,6 +2,21 @@
 
 ---
 
+## 2026-11-27 — T4 : squelette du dépôt
+
+**Fait :**
+- `pyproject.toml` (uv, hatchling, ruff, pytest) + `uv.lock` ; package `radar/` avec `collect/`, `process/`, `score/`, `response/`, `llm/`.
+- `radar/config.py` : `PATHS` (data/raw, processed, cache), `FILES` (fichiers du contrat), `settings` (clés lues depuis `.env`, jamais affichées ; `settings.require(...)` pour une erreur claire).
+- `app/streamlit_app.py` minimal : lit `entreprises.parquet` s'il existe (carte + tableau), sinon message.
+- Commandes ajoutées dans `CLAUDE.md` › Stack.
+
+**Vérifié :** `uv sync` OK, ruff OK, `pytest` 2/2, l'app Streamlit démarre et s'affiche sans exception.
+
+**Prochaine étape :**
+- T5 (données factices) ou T20 (extraction SIRENE) pour avoir quelque chose à afficher.
+
+---
+
 ## 2026-11-27 — Exploration SIRENE (préparation de T20)
 
 **Résultats / chiffres clés :**
