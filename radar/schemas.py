@@ -135,3 +135,15 @@ SCHEMAS["scores_reels"] = SCHEMAS["scores"] + [
     "c_embauche_source",
     "c_dynamisme_disponible",
 ]
+
+# Modèle de réponse RÉEL (T35/T36) : données SIMULÉES (D6), toujours signalées par
+# `donnees_simulees`. `p_reponse` est calculée à distance nulle : l'app ajoute le terme de
+# distance (coefficient dans data/processed/modele_reponse.json). Les contrib_* expliquent la fiche.
+SCHEMAS["p_reponse_modele"] = SCHEMAS["p_reponse"] + [
+    "donnees_simulees",
+    "contrib_c_intensite",
+    "contrib_c_embauche",
+    "contrib_log10_effectif",
+    "contrib_alternance",
+    "contrib_a_offre_domaine",
+]

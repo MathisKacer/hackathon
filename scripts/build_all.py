@@ -9,6 +9,7 @@ Ordre (D10, D13) :
   2. classify_offres  → data/processed/offres.parquet        (T13 : domaine, contrat, SIRET source)
   3. match_offres     → offres.parquet complété              (T21 : SIRET par nom + position)
   4. build_scores     → data/processed/scores.parquet        (T30 : gamma-Poisson)
+  5. build_response   → p_reponse.parquet + modele_reponse.json (T35/T36, réponses SIMULÉES)
 La collecte (collect_adzuna.py, collect_lba.py) n'est pas relancée ici : quotas et clés.
 Chaque fichier produit est vérifié contre son schéma (radar/schemas.py, D7).
 """
@@ -85,6 +86,14 @@ def scores() -> None:
     check_columns(pd.read_parquet(FILES["scores"]), "scores_reels")
 
 
+@step("5. Modèle de réponse (T35/T36, réponses SIMULÉES)")
+def response() -> None:
+    import runpy
+
+    runpy.run_path(str(PATHS.root / "scripts" / "build_response.py"), run_name="__main__")
+    check_columns(pd.read_parquet(FILES["p_reponse"]), "p_reponse_modele")
+
+
 def summary() -> None:
     o = pd.read_parquet(FILES["offres"])
     s = pd.read_parquet(FILES["scores"], columns=["siren", "couverture", "n_offres_domaine_siren"])
@@ -103,6 +112,7 @@ def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     p.add_argument("--sirene", action="store_true", help="ré-extraire SIRENE (~2 min)")
     p.add_argument("--share", action="store_true", help="partager les fichiers produits (Onyxia)")
+    p.add_argument("--no-response", action="store_true", help="sans le modèle de réponse (~45 s)")
     args = p.parse_args()
     logging.basicConfig(level=logging.WARNING, format="  %(message)s")
 
@@ -111,11 +121,16 @@ def main() -> None:
     classify()
     match()
     scores()
+    if not args.no_response:
+        response()
     summary()
     print(f"\nTerminé en {time.monotonic() - t0:.0f} s.")
 
     if args.share:
         files = [FILES["entreprises"], FILES["offres"], FILES["scores"]]
+        files += [
+            f for f in (FILES["p_reponse"], PATHS.processed / "modele_reponse.json") if f.exists()
+        ]
         cov = PATHS.raw / "offres_raw" / "adzuna_couverture.json"
         files += [cov] if cov.exists() else []
         rel = [str(f.relative_to(PATHS.root)) for f in files]

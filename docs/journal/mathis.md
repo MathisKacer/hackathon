@@ -2,6 +2,22 @@
 
 ---
 
+## 2026-11-27 — T35/T36 : modèle de réponse démonstrateur
+
+**Fait :**
+- `radar/response/params.yaml` (règle de simulation documentée), `simulate.py` (T35), `model.py` (T36), `scripts/build_response.py` ; étape 5 de `build_all.py` (pipeline complet : 103 s). Schéma `p_reponse_modele` (D7). Décision **D18**. 3 tests (dont une étude de simulation).
+- Rapport généré pour le pitch : `docs/MODELE_REPONSE.md`.
+
+**Résultats / chiffres clés :**
+- 3 000 étudiants simulés, 45 000 candidatures vers 38 251 établissements réels, 17,7 % de réponses positives.
+- Test (étudiants jamais vus) : **AUC 0,646** (plafond 0,692), Brier 0,138, calibration quasi parfaite, **7/7 paramètres retrouvés** dans l'IC 95 % (après atténuation ≈ 0,96 due à l'effet entreprise non observé).
+
+**Points d'attention pour l'équipe :**
+- T37 (app) : `p_reponse.parquet` est à distance nulle → ajouter le terme de distance (`modele_reponse.json`) ; bandeau « réponses simulées » obligatoire.
+- Les valeurs de `params.yaml` sont des hypothèses : les présenter comme telles.
+
+---
+
 ## 2026-11-27 — T50 (pipeline) + T25 (rattrapage du rapprochement)
 
 **Fait :**

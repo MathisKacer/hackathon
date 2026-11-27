@@ -16,6 +16,7 @@ Ce fichier est lu par **toutes** les sessions Claude Code de l'équipe. Plusieur
 | Fichier | Rôle | Qui écrit |
 |---|---|---|
 | `docs/PROJET.md` | Pitch, objectifs, livrables, critères du jury | Toute l'équipe (rarement modifié) |
+| `docs/MODELE_REPONSE.md` | Rapport du modèle de réponse (réponses simulées) : AUC, calibration, paramètres retrouvés — **généré**, ne pas éditer | `scripts/build_response.py` |
 | `docs/LIMITES.md` | Limites connues : impact, réglable ou non, tâche associée, ce qu'il faut en dire au pitch | Quiconque découvre ou lève une limite |
 | `docs/SECURITE.md` | Sécurité des comptes : règles des mots de passe, stockage, blocage, ce qui manque | Quiconque touche aux comptes |
 | `docs/SOURCES.md` | Inventaire des API et données (accès, quotas, statut testé) | Quiconque teste une source |

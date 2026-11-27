@@ -1,0 +1,43 @@
+# Règle de SIMULATION des réponses aux candidatures spontanées (T35, D6).
+# ⚠️ Ce sont des HYPOTHÈSES choisies par l'équipe, pas des résultats : aucune donnée ouverte ne
+# dit qui répond. Elles servent à montrer que la chaîne « données → modèle → probabilité »
+# fonctionne et retrouve une vérité connue. À afficher comme « réponses simulées » partout.
+#
+# « Réponse » = réponse POSITIVE (entretien proposé) à une candidature spontanée.
+# logit P(réponse) = constante + Σ coef × variable + u_entreprise,  u ~ N(0, sigma_entreprise²)
+
+graine: 42
+n_etudiants: 3000
+candidatures_par_etudiant: 15
+rayon_km: 40                 # un étudiant candidate dans ce rayon autour de chez lui
+part_alternance: 0.4         # le reste vise un stage
+# Les étudiants ciblent plutôt les entreprises bien notées (comme avec Radar) :
+# probabilité d'être choisie ∝ exp(selection_force × c_intensite)
+selection_force: 2.0
+
+coefficients:
+  constante: -2.3
+  c_intensite: 1.4           # besoin data de l'entreprise (score T30)
+  c_embauche: 0.5            # volume de recrutement attendu de l'établissement
+  log10_effectif: -0.45      # les très grandes structures répondent moins aux spontanées
+  distance_10km: -0.15       # par tranche de 10 km entre l'étudiant et l'établissement
+  alternance: 0.35           # l'alternance (aides à l'embauche) favorise les réponses
+  a_offre_domaine: 0.4       # l'entreprise recrute déjà dans le domaine (offre visible)
+sigma_entreprise: 0.5        # hétérogénéité non observée entre entreprises
+
+# Villes de résidence des étudiants simulés (poids ≈ effectifs étudiants, ordre de grandeur)
+villes:
+  - {nom: Paris,       lat: 48.8566, lon: 2.3522,  poids: 30}
+  - {nom: Lyon,        lat: 45.7640, lon: 4.8357,  poids: 9}
+  - {nom: Toulouse,    lat: 43.6047, lon: 1.4442,  poids: 7}
+  - {nom: Lille,       lat: 50.6292, lon: 3.0573,  poids: 6}
+  - {nom: Bordeaux,    lat: 44.8378, lon: -0.5792, poids: 6}
+  - {nom: Montpellier, lat: 43.6108, lon: 3.8767,  poids: 5}
+  - {nom: Nantes,      lat: 47.2184, lon: -1.5536, poids: 5}
+  - {nom: Rennes,      lat: 48.1173, lon: -1.6778, poids: 5}
+  - {nom: Grenoble,    lat: 45.1885, lon: 5.7245,  poids: 4}
+  - {nom: Strasbourg,  lat: 48.5734, lon: 7.7521,  poids: 4}
+  - {nom: Marseille,   lat: 43.2965, lon: 5.3698,  poids: 4}
+  - {nom: Nice,        lat: 43.7102, lon: 7.2620,  poids: 3}
+  - {nom: Brest,       lat: 48.3904, lon: -4.4861, poids: 2}
+  - {nom: Angers,      lat: 47.4784, lon: -0.5632, poids: 2}

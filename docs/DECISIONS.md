@@ -14,6 +14,12 @@
 
 ---
 
+### D18 — Modèle de réponse : simulation sur entreprises réelles et logistique (2026-11-27, @mathis)
+**Contexte :** mise en œuvre de D6. Aucune donnée ouverte ne dit qui répond aux candidatures spontanées ; il faut montrer que la chaîne fonctionne et l'expliquer à un jury de statisticiens.
+**Décision :** T35 `radar/response/simulate.py` : 3 000 étudiants simulés dans 14 villes étudiantes, 15 candidatures chacun dans un rayon de 40 km, ciblant plutôt les entreprises bien notées (comme avec Radar). Réponse positive tirée selon une règle logistique documentée dans **`radar/response/params.yaml`** (c_intensite, c_embauche, log effectif, distance, alternance, offre visible) + **effet entreprise non observé** (σ = 0,5). T36 `radar/response/model.py` : logistique (statsmodels), test sur des étudiants jamais vus ; P(réponse) par (siret, contrat) **à distance nulle** + contributions ; l'app ajoute le terme de distance avec le coefficient de `modele_reponse.json`. Rapport régénéré automatiquement : `docs/MODELE_REPONSE.md`.
+**Alternatives écartées :** réponses générées par un LLM (règle inconnue, rien à vérifier) ; un modèle à arbres (moins lisible, les paramètres ne se comparent pas à la règle) ; un GLMM avec effet entreprise (plus juste, mais l'intérêt pédagogique est justement de montrer l'atténuation).
+**Conséquences :** AUC 0,646 (plafond 0,692 avec la vraie règle), calibration quasi parfaite, **7 paramètres sur 7 retrouvés** dans l'IC 95 % une fois l'atténuation (≈ 0,96, non-collapsibilité du logit) prise en compte. Toujours afficher « réponses simulées » (`donnees_simulees`). T37 (app) : trier la couche orange par P(réponse) ajustée de la distance.
+
 ### D17 — Titres anglais : mots-clés ajoutés d'après les vraies offres (2026-11-27, @emma)
 **Contexte :** T8. Sur les 10 776 offres Adzuna réelles, 41,6 % étaient classées `autre`, dont ~940 titres en anglais (« Analytics Engineer », « Business Analyst », « Talent Acquisition »…).
 **Décision :** ajout dans `radar/domains.yaml` de motifs anglais **complets** (marqués `# T8`), retenus un par un après avoir regardé **toutes** les bascules d'un domaine à l'autre, pas seulement les sorties de `autre`. Choix à connaître :

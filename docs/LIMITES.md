@@ -33,7 +33,7 @@
 | L12 | Intensité calculée au niveau de l'entreprise (SIREN) et héritée par tous ses établissements | Un site de production d'un groupe très data hérite de son intensité | ⚠️ partiel : pondérer par la division NAF de l'établissement | T28 | — |
 | L13 | Divisions NAF sans offres (ex. 59 « cinéma ») : a priori proche de celui de leur section | Quelques secteurs légèrement surévalués | ✅ hiérarchie à 3 niveaux (classe NAF) ou a priori par division seulement si assez d'entreprises | (faible priorité) | — |
 | L14 | Effectifs SIRENE = tranches, millésime 2024 | Exposition approximative (moyenne géométrique de la tranche) | ❌ | — | — |
-| L15 | **Pas de vérité terrain** : on ne sait pas qui répond aux candidatures spontanées | Le modèle de réponse est un **démonstrateur sur réponses simulées** (D6) | ⏳ retours des utilisateurs après lancement | T35–T37, T34 | « Entreprises réelles, réponses simulées ; chaîne prête à être réentraînée » |
+| L15 | **Pas de vérité terrain** : on ne sait pas qui répond aux candidatures spontanées | Le modèle de réponse est un **démonstrateur sur réponses simulées** (D6) : ses probabilités reflètent les hypothèses de `params.yaml`, pas le réel | ⏳ retours des utilisateurs après lancement (historique des recherches D14 + bouton « on m'a répondu ») | T35–T36 ✅, T37, T34 | « Entreprises réelles, réponses simulées ; le modèle retrouve la règle cachée (7/7 paramètres, bien calibré) : il est prêt à apprendre des vrais retours » |
 
 ## Données personnelles
 
