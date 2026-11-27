@@ -47,7 +47,6 @@
 - [ ] T44 — Affichage du **niveau de preuve** (nombre d'offres observées) et du taux de rapprochement global
 
 **Comptes (optionnels, D14) : le mode démo anonyme reste le parcours par défaut**
-- [ ] T19 — **Données factices vs vraies offres** : dans `fake_data`, `date_collecte` est une date alors que les offres Adzuna l'ont en texte → l'app plante sur les données factices (`offers['date_collecte'].max()[:10]`, dernière ligne de `streamlit_app.py`) et elles n'ont pas `region_requete`. Aligner l'un ou l'autre — 🟡 **dates : corrigé** par @emma (`d3dbff2`, le générateur écrit du texte ISO comme les collecteurs) ; **reste : `region_requete`** absente des offres factices
 
 **Favoris**
 
@@ -73,6 +72,7 @@
 
 ## 🔵 En cours
 
+- [ ] T19 — **Données factices vs vraies offres** : dans `fake_data`, `date_collecte` est une date alors que les offres Adzuna l'ont en texte → l'app plante sur les données factices (`offers['date_collecte'].max()[:10]`, dernière ligne de `streamlit_app.py`) et elles n'ont pas `region_requete`. Aligner l'un ou l'autre — 🟡 **dates : corrigé** par @emma (`d3dbff2`, le générateur écrit du texte ISO comme les collecteurs) ; **reste : `region_requete`** absente des offres factices — @emma
 - [ ] T69 — 🔗T30,T27 **Score v1 : bayésien empirique avec covariables** (régression binomiale négative) + évaluation honnête. Constat (audit du 27/11) : la moyenne du secteur seule (AUC 0,895) bat l'intensité par entreprise (0,830) pour retrouver les recruteurs d'alternants data de LBA ; faux positifs (avocats, vétérinaires) dus au lissage fixe et au rang centile ; « 0 offre » traité à tort comme une preuve. Plan : covariables (âge, nb d'établissements, catégorie, augmentation de capital BODACC, densité d'entreprises data à proximité), probabilité de détection, a priori NAF hiérarchique à lissage estimé, comparaison à LightGBM ; découpage train/test par département ; tableau avant/après pour les slides (couvre l'essentiel de T34) — @mathis
 - [ ] T64 — **Afficher la probabilité de réponse en pourcentage** sur le site (liste des candidatures spontanées, popup de la carte, fiche), pas seulement quand on classe par « Chance de réponse » (aujourd'hui la colonne « Chance de réponse (démo) » n'apparaît qu'avec ce tri). ⚠️ P(réponse) vient d'un modèle entraîné sur des réponses **simulées** (D6, D23) : garder la mention « démo / simulé » à côté du pourcentage — @celia
   Choix (avec Celia) : libellé « Chance de réponse » partout ; mention « simulé » seulement en info-bulle (plus de bandeau ni de « (démo) » à l'écran), dite au pitch.
