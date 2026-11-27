@@ -54,6 +54,7 @@
 - [ ] T23 — BODACC : écarter ou pénaliser les entreprises en procédure collective
 - [ ] T24 — La Bonne Boîte (si l'accès est obtenu) → composante probabilité d'embauche
 - [ ] T43 — **Fiche entreprise** : décomposition du score, intervalle crédible, offres récentes, effectif, CA, lien vers l'Annuaire des entreprises
+- [ ] T9 — 🔗T6,T8 **Nouvelles catégories de métiers (domaines)** dans `radar/domains.yaml`. Pistes tirées des offres encore classées `autre` après T8 (36,6 %) : **commercial / vente** (Account Executive, SDR, conseiller commercial, business developer), **ingénierie / industrie** (CVC-PLB, automaticien, QARA, FPGA), **santé / recherche clinique** (CRA, clinical trial, pharmacovigilance), **gestion de projet / conseil** (Project Manager, PMO, Chief of Staff), **immobilier**. Pour chacune : codes ROME 4.0 vérifiés via l'API (comme T6) + mots-clés FR/EN, mesure avant/après sur les vraies offres, tests ; garder `fake_data.DOMAINS` aligné (un test le vérifie). ⚠️ Pour qu'une catégorie soit **notée** et proposée dans l'app, il faut aussi collecter ses offres (Adzuna ne collecte que « data » : quota, voir D13) et l'ajouter à `SCORED_DOMAINS` (`radar/score/build.py`) et au choix du domaine dans l'app
 - [ ] T44 — Affichage du **niveau de preuve** (nombre d'offres observées) et du taux de rapprochement global
 
 **Comptes (optionnels, D14) : le mode démo anonyme reste le parcours par défaut**
