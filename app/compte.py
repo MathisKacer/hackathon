@@ -26,6 +26,7 @@ from __future__ import annotations
 from zoneinfo import ZoneInfo
 
 import streamlit as st
+from admin_ui import must_change_banner, password_change_box
 from style import hero
 
 from radar import accounts
@@ -299,6 +300,7 @@ def account_page(
         f"Bonjour {user['username']}", "Tes réglages, tes favoris et tes recherches.", compact=True
     )
     con = _con()
+    must_change_banner(con, user)  # T79 : mot de passe provisoire donné par un administrateur
     c1, c2, _ = st.columns([1, 1, 2])
     if c1.button(
         "Enregistrer mes réglages",
@@ -346,6 +348,7 @@ def account_page(
     if searches:
         st.button("Effacer mon historique", on_click=_clear_history, args=(user["id"],))
 
+    password_change_box(con, user)  # T79 (D39)
     with st.expander("Supprimer mon compte"):
         st.caption("Efface définitivement ton compte, ton profil et ton historique.")
         ok = st.checkbox("Je confirme la suppression", key="page_confirm_suppr")

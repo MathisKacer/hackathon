@@ -14,8 +14,10 @@ from __future__ import annotations
 
 import streamlit as st
 from commun import PAGES_DIR, init_defaults, persist_widget_state
-from compte import current_user
+from compte import _con, current_user
 from style import inject_css
+
+from radar import admin
 
 st.set_page_config(page_title="Radar", page_icon="🧭", layout="wide")
 
@@ -38,4 +40,14 @@ pages = [
         url_path="mon-espace",
     ),
 ]
+# T79 (D39) : page Administration, seulement pour les administrateurs (membres de l'équipe).
+if user and admin.is_admin(_con(), user["id"]):
+    pages.append(
+        st.Page(
+            PAGES_DIR / "administration.py",
+            title="Administration",
+            icon=":material/admin_panel_settings:",
+            url_path="administration",
+        )
+    )
 st.navigation(pages, position="top").run()
