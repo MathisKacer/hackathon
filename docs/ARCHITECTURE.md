@@ -70,6 +70,7 @@ hackathon/
 ├── app/vues/                   # explorer.py (carte, listes), entreprises.py (recherche), mon_espace.py (compte)
 ├── app/commun.py, carte.py     # données et réglages partagés ; carte folium + popup
 ├── app/fiche_ui.py, compte.py  # fiche entreprise (fenêtre) ; comptes et historique
+├── app/cv_ui.py                # T45, T83 : dépôt du CV + liste des compétences (saisie libre), Explorer et Mon espace (D42)
 ├── app/favoris.py              # T54 : favoris (étoile), temporaires en anonyme, repris à la connexion
 ├── app/style.py                # T70 : CSS commun, bandeau d'en-tête, tuiles de chiffres, pastilles
 ├── scripts/                    # points d'entrée : collect_all.py, build_all.py, make_fake_data.py

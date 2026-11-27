@@ -14,7 +14,7 @@ import pyarrow.parquet as pq
 import streamlit as st
 
 from radar.communes import load_communes, place_of
-from radar.competences import SKILL_LABELS, SkillProfile
+from radar.competences import SkillProfile
 from radar.config import FILES
 from radar.domains import classify, load_domains
 from radar.familles import OFFER_COLS, build_families
@@ -212,7 +212,9 @@ def profile_keys() -> dict[str, list | None]:
         "une_par_entreprise": [True, False],
         "niveaux": NIVEAUX,
         "niveau_inconnu": [True, False],
-        "competences": SKILL_LABELS,  # T45 : compétences du CV (le CV lui-même n'est pas gardé)
+        # T45, T83 : compétences du CV ou tapées à la main (texte libre, nettoyé par cv_ui) ;
+        # le CV lui-même n'est pas gardé
+        "competences": None,
     }
 
 

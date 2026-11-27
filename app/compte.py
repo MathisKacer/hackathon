@@ -277,13 +277,13 @@ def _badges(values: list) -> str:
     return " ".join(f":blue-badge[{v}]" for v in clean)
 
 
-def _profile_section(con, user: dict, saved_keys: dict, labels: dict) -> None:
+def _profile_section(con, user: dict, saved_keys: dict, labels: dict, editor=None) -> None:
     """T81 : le profil = les réglages de `saved_keys` seulement (les compétences du CV).
 
-    Affiche ce qui est enregistré, en étiquettes ; un bouton enregistre les valeurs de la
-    recherche en cours si elles diffèrent."""
+    Affiche ce qui est enregistré, en étiquettes. `editor` (T83, facultatif) : fonction qui
+    affiche de quoi modifier ces réglages (dépôt du CV, liste des compétences). Un bouton
+    enregistre les valeurs en cours quand elles diffèrent de celles du profil."""
     profile = {k: v for k, v in accounts.load_profile(con, user["id"]).items() if k in saved_keys}
-    current = _current_settings(saved_keys)
     for key in saved_keys:
         label = labels.get(key, key)
         st.subheader(f"Mes {label.lower()}" if key == "competences" else label)
@@ -292,26 +292,30 @@ def _profile_section(con, user: dict, saved_keys: dict, labels: dict) -> None:
             st.markdown(_badges(saved) if isinstance(saved, list) else str(saved))
         else:
             st.caption(
-                "Aucune compétence enregistrée. Dépose ton CV dans Explorer › Filtres › Ton CV."
+                "Aucune compétence enregistrée : dépose ton CV ou ajoute-les ci-dessous."
                 if key == "competences"
                 else "Rien d'enregistré."
             )
-        now = current.get(key)
-        if now and now != saved:
-            st.caption(
-                "Trouvées dans ta recherche en cours : "
-                + (", ".join(map(str, now)) if isinstance(now, list) else str(now))
-            )
-    if any(current.get(k) and current.get(k) != profile.get(k) for k in saved_keys):
-        if st.button(
-            "Enregistrer mes compétences" if "competences" in saved_keys else "Enregistrer",
-            icon=":material/save:",
-            type="primary",
-            help="Seules tes compétences sont gardées dans ton profil.",
-        ):
-            accounts.save_profile(con, user["id"], current)
-            st.toast("Compétences enregistrées.")
-            st.rerun()
+    if editor is not None:
+        editor()
+    current = _current_settings(saved_keys)
+    changed = [k for k in saved_keys if (current.get(k) or None) != (profile.get(k) or None)]
+    if editor is None:
+        for k in changed:
+            if now := current.get(k):
+                st.caption(
+                    "Dans ta recherche en cours : "
+                    + (", ".join(map(str, now)) if isinstance(now, list) else str(now))
+                )
+    if changed and st.button(
+        "Enregistrer mes compétences" if "competences" in saved_keys else "Enregistrer",
+        icon=":material/save:",
+        type="primary",
+        help="Seules tes compétences sont gardées dans ton profil.",
+    ):
+        accounts.save_profile(con, user["id"], current)
+        st.toast("Compétences enregistrées.")
+        st.rerun()
 
 
 def account_page(
@@ -320,12 +324,14 @@ def account_page(
     explorer_page=None,
     favorites_section=None,
     saved_keys: dict[str, list | None] | None = None,
+    profile_editor=None,
 ) -> None:
     """Page « Mon espace » : connexion, ou profil + favoris + historique + suppression.
 
     `profile_keys` : réglages d'une recherche (historique « Mes recherches », bouton Relancer).
     `saved_keys` (T81) : réglages gardés dans le **profil** (par défaut : tous) ; Radar n'y met
     que les compétences du CV. Ils sont restaurés à la connexion.
+    `profile_editor` (T83) : fonction qui affiche de quoi modifier le profil (CV, compétences).
     `favorites_section` : fonction qui affiche « Mes favoris » (app/vues/mon_espace.py, T54).
     """
     saved_keys = profile_keys if saved_keys is None else saved_keys
@@ -357,7 +363,7 @@ def account_page(
     if st.button("Se déconnecter", icon=":material/logout:"):
         st.session_state.pop(USER_KEY, None)
         st.rerun()
-    _profile_section(con, user, saved_keys, labels)
+    _profile_section(con, user, saved_keys, labels, profile_editor)
 
     if favorites_section is not None:
         favorites_section()

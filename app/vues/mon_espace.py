@@ -5,6 +5,7 @@ from __future__ import annotations
 import streamlit as st
 from commun import PAGES_DIR, PROFILE_LABELS, get_offers, profile_keys, saved_profile_keys
 from compte import _con, account_page, current_user
+from cv_ui import cv_and_skills
 from favoris import favorites, remove
 from fiche_ui import open_fiche
 
@@ -162,4 +163,6 @@ account_page(
     PAGES_DIR / "explorer.py",
     favorites_section,
     saved_keys=saved_profile_keys(),  # T81 : le profil ne garde que les compétences du CV
+    # T83 : déposer son CV et ajouter / retirer des compétences ici aussi
+    profile_editor=lambda: cv_and_skills("cv_fichier_profil"),
 )

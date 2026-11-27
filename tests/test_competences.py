@@ -8,7 +8,11 @@ from radar.competences import (
     SKILL_LABELS,
     SkillProfile,
     add_match,
+    clean_skill,
+    clean_skills,
+    custom_skills,
     detect_skills,
+    match_skills,
     match_summary,
     match_tier,
     pdf_text,
@@ -139,3 +143,21 @@ def test_match_is_not_in_score():
     # une composante absente ou vide reste ignorée par le score pondéré
     df = pd.DataFrame({c: [0.5] for c in COMPONENTS}).assign(c_intensite=np.nan)
     assert weighted_score(df, DEFAULT_WEIGHTS)["score"].iloc[0] == pytest.approx(0.5)
+
+
+def test_clean_skills_free_text():
+    assert clean_skill("  python ") == "Python"  # compétence de la liste écrite autrement
+    assert clean_skill("power bi") == "Power BI"
+    assert clean_skill("qgis") == "Qgis"
+    assert clean_skill("QGIS") == "QGIS"
+    assert clean_skill("Analyse   spatiale,") == "Analyse spatiale"
+    assert clean_skill("") is None
+    assert clean_skill("x" * 41) is None
+    assert clean_skills(["SQL", "sql", "QGIS", "qgis", " ", None]) == ["SQL", "QGIS"]
+
+
+def test_custom_skills_count_only_when_recognized():
+    skills = ["Python", "QGIS", "SQL Server", "Stata"]
+    assert custom_skills(skills) == ["QGIS", "SQL Server", "Stata"]
+    assert match_skills(skills) == ["Python", "SQL"]  # « SQL Server » → SQL ; QGIS ignoré
+    assert match_skills(["QGIS"]) == []

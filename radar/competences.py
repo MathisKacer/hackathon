@@ -331,3 +331,55 @@ def match_summary(row) -> dict[str, str] | None:
         if isinstance(v, str) and v:
             out[key] = v
     return out
+
+
+# --- T83 : compétences ajoutées à la main (hors de la liste) -----------------------------------
+
+MAX_SKILL_LENGTH = 40
+MAX_SKILLS = 60
+_CANONICAL = {_normalize(s): s for s in SKILL_LABELS}
+
+
+def clean_skill(text: object) -> str | None:
+    """Compétence saisie à la main → libellé propre, ou None si vide / trop long.
+
+    Espaces superflus retirés ; une compétence de la liste écrite autrement (« python »,
+    « power bi ») reprend son libellé (« Python », « Power BI ») ; sinon le texte est gardé tel
+    quel (« QGIS », « Stata »), première lettre en majuscule si tout est en minuscules."""
+    if not isinstance(text, str):
+        return None
+    t = " ".join(text.split()).strip(" ,;")
+    if not t or len(t) > MAX_SKILL_LENGTH:
+        return None
+    if (canon := _CANONICAL.get(_normalize(t))) is not None:
+        return canon
+    return t[0].upper() + t[1:] if t.islower() else t
+
+
+def clean_skills(skills: list | None) -> list[str]:
+    """Liste nettoyée : sans vide ni doublon (casse et accents ignorés), au plus MAX_SKILLS."""
+    out: list[str] = []
+    seen: set[str] = set()
+    for s in skills or []:
+        c = clean_skill(s)
+        if c is not None and _normalize(c) not in seen:
+            seen.add(_normalize(c))
+            out.append(c)
+    return out[:MAX_SKILLS]
+
+
+def custom_skills(skills: list | None) -> list[str]:
+    """Compétences ajoutées à la main, hors de la liste `SKILLS`."""
+    return [s for s in clean_skills(skills) if s not in _CANONICAL.values()]
+
+
+def match_skills(skills: list | None) -> list[str]:
+    """Compétences de la liste utilisées pour la correspondance (T80) : celles choisies, plus
+    celles qu'on reconnaît dans une compétence ajoutée à la main (« SQL Server » → SQL).
+    Une compétence inconnue (« QGIS ») est affichée mais ne compte pas : on ne sait pas la
+    chercher de façon fiable dans les offres."""
+    cleaned = clean_skills(skills)
+    found = {s for s in cleaned if s in _CANONICAL.values()}
+    for s in custom_skills(cleaned):
+        found.update(detect_skills(s))
+    return [s for s in SKILL_LABELS if s in found]

@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-11-27 — T83 : compétences ajoutées à la main + CV depuis Mon espace ✅
+
+**Fait :**
+- `radar/competences.py` : `clean_skill(s)` (espaces, doublons casse/accents, 40 caractères, 60 compétences, libellé de la liste repris : « power bi » → « Power BI »), `custom_skills`, `match_skills` (« SQL Server » → SQL ; « QGIS » gardé mais ne compte pas dans la correspondance).
+- `app/cv_ui.py` (nouveau) : `cv_and_skills(file_key)` = dépôt du CV + liste « Tes compétences » en saisie libre (`accept_new_options`), nettoyée avant chaque affichage. Utilisé par Explorer (Filtres › Ton CV) et par **Mon espace › Mes compétences** (demande d'Emma : y déposer aussi son CV).
+- `app/compte.py` : `account_page(..., profile_editor=)` ; le bouton « Enregistrer mes compétences » apparaît dès que la liste diffère du profil (y compris pour tout retirer). `app/commun.py` : réglage `competences` en texte libre.
+- D42, GUIDE § 4 et § 16, ARCHITECTURE, TACHES.
+
+**Fichiers touchés :**
+- `radar/competences.py`, `app/cv_ui.py` (nouveau), `app/compte.py`, `app/commun.py`, `app/vues/explorer.py`, `app/vues/mon_espace.py`, `tests/test_competences.py`, `tests/test_compte_ui.py`, docs
+
+**Résultats / chiffres clés :**
+- Vrai jeu de données, Rennes : compétences « Python, sql server, Stata » → gardées « Python, Sql server, Stata », correspondance calculée sur Python + SQL. Mon espace : CV, saisie libre et enregistrement testés (AppTest). Toute la suite passe.
+
+**Problèmes / points d'attention pour l'équipe :**
+- `app/compte.py` (@celia) : un paramètre facultatif de plus ; rien ne change sans lui.
+- Une compétence tapée tout en minuscules prend une majuscule (« sql server » → « Sql server ») ; le reste est gardé tel quel.
+
+**Prochaine étape :**
+- T84 (recherches en favori), après ta réponse sur l'historique automatique.
+
+---
+
 ## 2026-11-27 — T81 : profil = compétences du CV seulement ✅
 
 **Fait :**

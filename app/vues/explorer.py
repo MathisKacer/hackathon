@@ -43,13 +43,14 @@ from commun import (
     reset_weights,
 )
 from compte import record_search
+from cv_ui import cv_and_skills
 from favoris import favorite_refs, offer_ref, sync_offers_editor, temp_banner
 from fiche_ui import open_fiche
 from streamlit_folium import st_folium
 from style import GREEN, LINK_STYLE, RED, Tile, fmt_int, hero, kpi_tiles, pill
 
 from radar.collect.sirene import tranche_display
-from radar.competences import MATCH_COLORS, SKILL_LABELS, add_match, detect_skills, pdf_text
+from radar.competences import MATCH_COLORS, add_match, match_skills
 from radar.familles import mark_family_offers
 from radar.filters import SECTIONS, TAILLES, filter_companies
 from radar.niveau import levels_label
@@ -76,26 +77,6 @@ SITUATION_COURTE = {
 def _pl(n: int, word: str) -> str:
     """Accord au pluriel : _pl(2, "offre") → « offres »."""
     return word + ("s" if n > 1 else "")
-
-
-def _read_cv() -> None:
-    """T45 : compétences lues dans le CV déposé, ajoutées à la liste « Tes compétences ».
-
-    Le PDF reste en mémoire le temps de la lecture : rien n'est écrit sur le disque. Seule la
-    liste des compétences est un réglage (enregistré dans le profil si on est connecté)."""
-    fichier = st.session_state.get("cv_fichier")
-    if fichier is None:
-        return
-    found = detect_skills(pdf_text(fichier.getvalue()))
-    before = list(st.session_state.get("competences", []))
-    st.session_state["competences"] = before + [s for s in found if s not in before]
-    st.session_state["_cv_message"] = (
-        f"{len(found)} compétence{'s' if len(found) > 1 else ''} trouvée"
-        f"{'s' if len(found) > 1 else ''} dans ton CV. Tu peux corriger la liste."
-        if found
-        else "Aucune compétence reconnue : le PDF est peut-être une image scannée. "
-        "Choisis tes compétences dans la liste."
-    )
 
 
 def _n_filters_on() -> int:
@@ -197,23 +178,7 @@ with st.container(border=True, key="carte_recherche"):
             "(les autres sites restent visibles dans sa fiche).",
         )
         st.markdown("**Ton CV**")
-        st.file_uploader(
-            "Dépose ton CV (PDF)",
-            type="pdf",
-            key="cv_fichier",
-            on_change=_read_cv,
-            help="On y repère tes compétences (Python, SQL, comptabilité…) pour afficher ta "
-            "correspondance avec chaque entreprise (sans changer le score). "
-            "Ton CV n'est pas conservé.",
-        )
-        if msg := st.session_state.pop("_cv_message", None):
-            st.caption(msg)
-        competences = st.multiselect(
-            "Tes compétences",
-            SKILL_LABELS,
-            key="competences",
-            placeholder="Choisis ou dépose ton CV",
-        )
+        competences = cv_and_skills("cv_fichier")  # T45, T83 : CV + compétences (saisie libre)
         st.markdown("**Classement**")
         tri = st.radio("Classer par", TRIS, key="tri", horizontal=True)
         st.caption("Importance de chaque critère dans le score (0 = ignoré) :")
@@ -249,7 +214,8 @@ if place is not None:
     # T80 : correspondance CV ↔ entreprise, à part du score (rien ne change sans compétences)
     profile = get_skill_profile(domaine) if competences else None
     if profile is not None:
-        spontaneous = add_match(spontaneous, competences, profile)
+        # T83 : les compétences tapées à la main comptent si on les reconnaît (« SQL Server »)
+        spontaneous = add_match(spontaneous, match_skills(competences), profile)
     sort_col = {TRI_P: "p_reponse", TRI_MATCH: "correspondance"}.get(tri)
     if sort_col in spontaneous and spontaneous[sort_col].notna().any():
         spontaneous = spontaneous.sort_values(

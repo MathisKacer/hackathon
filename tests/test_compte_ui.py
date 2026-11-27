@@ -312,3 +312,41 @@ def test_login_restores_only_skills(tmp_path, monkeypatch):
     assert at.session_state["competences"] == ["SQL"]
     assert at.session_state["contrat"] == "Tous"  # l'ancien réglage du profil est ignoré
     st.cache_resource.clear()
+
+
+def _page_app_editor():
+    import sys
+    from pathlib import Path
+
+    import streamlit as st
+
+    sys.path.insert(0, str(Path.cwd() / "app"))
+    from compte import account_page
+    from cv_ui import cv_and_skills
+
+    st.session_state.setdefault("competences", [])
+    account_page({"competences": None}, {"competences": "Compétences"},
+                 saved_keys={"competences": None},
+                 profile_editor=lambda: cv_and_skills("cv_profil"))  # fmt: skip
+
+
+def test_profile_editor_adds_free_skill_and_has_cv_upload(tmp_path, monkeypatch):
+    """T83 : dans Mon espace, dépôt du CV + compétences tapées à la main, puis enregistrées."""
+    monkeypatch.setattr(accounts, "DB_PATH", tmp_path / "radar.db")
+    st.cache_resource.clear()
+    uid = accounts.create_user(accounts.connect(), "emma", "Radar-Demo-2026")
+    at = AppTest.from_function(_page_app_editor, default_timeout=30)
+    at.session_state["compte_user"] = {"id": uid, "username": "emma"}
+    at.run()
+    assert not at.exception
+    assert at.get("file_uploader")  # dépôt du CV dans la partie compétences
+    at.session_state["competences"] = ["python", "QGIS", "qgis"]
+    at.run()
+    ms = at.multiselect(key="competences")
+    assert "QGIS" in ms.options
+    next(b for b in at.button if b.label == "Enregistrer mes compétences").click()
+    at.run()
+    assert not at.exception
+    saved = accounts.load_profile(accounts.connect(), uid)["competences"]
+    assert saved == ["Python", "QGIS"]
+    st.cache_resource.clear()
