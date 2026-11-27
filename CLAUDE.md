@@ -17,6 +17,7 @@ Ce fichier est lu par **toutes** les sessions Claude Code de l'équipe. Plusieur
 |---|---|---|
 | `docs/PROJET.md` | Pitch, objectifs, livrables, critères du jury | Toute l'équipe (rarement modifié) |
 | `docs/LIMITES.md` | Limites connues : impact, réglable ou non, tâche associée, ce qu'il faut en dire au pitch | Quiconque découvre ou lève une limite |
+| `docs/SECURITE.md` | Sécurité des comptes : règles des mots de passe, stockage, blocage, ce qui manque | Quiconque touche aux comptes |
 | `docs/SOURCES.md` | Inventaire des API et données (accès, quotas, statut testé) | Quiconque teste une source |
 | `docs/ARCHITECTURE.md` | Structure technique : modules, données, flux, conventions | Quiconque change la structure |
 | `docs/TACHES.md` | Tableau des tâches (à faire / en cours / fait) avec responsable | Tout le monde, en continu |
@@ -85,7 +86,7 @@ L'app a un **mode démo anonyme** (par défaut, rien n'est enregistré) et une *
 4. prendre sa valeur par défaut avec `st.session_state.setdefault("rayon_km", 20)`, **pas** avec `value=` (sinon Streamlit avertit quand un profil la remplace) ;
 5. être créé **après** `account_sidebar(PROFILE_KEYS)` dans la barre latérale.
 
-Quand la couche orange (T40) existe : passer les SIRET des premières entreprises dans `top=` de `search_history(...)`. Code : `radar/accounts.py` (base SQLite `data/app/radar.db`, hors Git) et `app/compte.py` ; tests : `tests/test_accounts.py`, `tests/test_compte_ui.py`.
+Quand la couche orange (T40) existe : passer les SIRET des premières entreprises dans `top=` de `search_history(...)`. Code : `radar/accounts.py` (base SQLite `data/app/radar.db`, hors Git) et `app/compte.py` ; tests : `tests/test_accounts.py`, `tests/test_compte_ui.py`. **Sécurité des mots de passe** (règles, hachage, blocage) : `docs/SECURITE.md`, à mettre à jour si on y touche.
 
 ## Style de réponse attendu de Claude
 

@@ -81,6 +81,7 @@
 
 ## ✅ Fait
 
+- [x] T48 (suite) — **Sécurité des mots de passe** (D16, `docs/SECURITE.md`) : 12 caractères min. et 3 types de caractères, liste noire, identifiant interdit, blocage du compte 15 min après 5 échecs (en base, résiste au rechargement) — @celia
 - [x] T49 — **Historique des recherches** (connecté seulement, D14) : chaque recherche enregistrée (paramètres, nombre de résultats, 5 premières entreprises) ; « 🕘 Mes recherches » en bas de la barre latérale avec « ↻ Relancer » et « Effacer mon historique » ; ajustements à moins de 2 min fusionnés, 50 max par compte. Quand T40 sera là : passer les SIRET des premières entreprises dans `top=` (`search_history` dans `app/streamlit_app.py`) — @celia
 - [x] T25 — 🔗T21 **Rattrapage du rapprochement** (L6, L9) : pour les noms non rapprochés (~1 200), API Recherche d'entreprises (`/search?q=<nom>` + proximité ; gère sigles et noms commerciaux, ~7 req/s) + table d'alias manuelle pour les 30 plus gros émetteurs (SFR, EY, Pennylane…) ; objectif : SFR & co ne sortent plus en orange — @mathis → local (cascade, alias, enseigne, sigles à points, préférence ETI/GE) : 63,4 % → 65,1 %, SFR/Atos/LCL/GMF/Geodis retrouvés ; API écartée (voir L6)
 - [x] T50 — 🔗T11/T12,T20,T30 **Pipeline `scripts/build_all.py`** : brut → `offres.parquet` → `scores.parquet` ; brancher l'app sur les vraies données (**jalon V1**) — @mathis → `uv run python scripts/build_all.py` (51 s, schémas vérifiés, `--sirene`, `--share`)

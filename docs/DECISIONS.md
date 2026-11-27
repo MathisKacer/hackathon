@@ -14,6 +14,12 @@
 
 ---
 
+### D16 — Sécurité des mots de passe : règles CNIL simplifiées et blocage par compte (2026-11-27, @celia)
+**Contexte :** T48 acceptait tout mot de passe de 8 caractères (`12345678` passait) et ne bloquait qu'à l'échelle d'un onglet (recharger la page suffisait à réessayer).
+**Décision :** à la création, au moins **12 caractères et 3 types** parmi minuscules, majuscules, chiffres, caractères spéciaux (version simplifiée de la recommandation CNIL de 2022, qui laisse passer les phrases de passe) ; **liste noire** de mots de passe très répandus ; identifiant interdit dans le mot de passe ; message qui liste les règles non respectées. À la connexion, **blocage par compte enregistré en base** : 5 échecs d'affilée → 15 min de blocage, même avec le bon mot de passe. Les bases existantes sont mises à jour automatiquement (colonnes `failed_logins`, `locked_until`). Détails et manques : `docs/SECURITE.md`.
+**Alternatives écartées :** règles NIST pures (longueur seule, sans types : moins lisible pour un jury français que la référence CNIL) ; vérification *Have I Been Pwned* (appel réseau externe, envoi d'un préfixe d'empreinte) ; blocage par adresse IP (derrière le proxy Onyxia, tous les utilisateurs ont la même).
+**Conséquences :** les comptes de test créés avant D16 gardent leur ancien mot de passe (seule la création est contrôlée). Le message de blocage révèle qu'un identifiant existe (L19), accepté pour la démo.
+
 ### D15 — Pipeline en une commande et rattrapage local du rapprochement (2026-11-27, @mathis)
 **Contexte :** T50 (enchaîner les étapes sans erreur d'ordre) et T25 (L6 : des entreprises comme SFR apparaissaient « sans offre », donc à tort dans la couche orange).
 **Décision :** `scripts/build_all.py` enchaîne SIRENE (si absent) → `classify_offres` (T13) → `match_offres` (T21) → `build_scores` (T30) et vérifie chaque fichier contre son schéma ; la collecte reste à part (quotas). Rattrapage **local** dans `match_siret.py` : candidats en **cascade** (si un candidat est refusé, on essaie le suivant : « Atos » → PME homonyme lointaine refusée → ATOS FRANCE), noms sans espaces, **morceaux du nom légal** (« … - S.F.R »), **enseignes**, sigles à points recollés avant normalisation, préférence ETI/GE entre homonymes ; `alias`/`enseigne` refusés au-delà de 50 km (≈ 1 sur 2 juste), préfixe lointain refusé pour les noms de 3 lettres.

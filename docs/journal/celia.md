@@ -4,6 +4,25 @@
 
 ---
 
+## 2026-11-27 — Sécurité des mots de passe (suite de T48, D16)
+
+**Fait :**
+- `radar/accounts.py` : `password_problems` (12 caractères min., 3 types, liste noire, identifiant interdit), blocage par compte en base (5 échecs → 15 min, `AccountLocked`), mise à jour automatique des anciennes bases.
+- `app/compte.py` : règles affichées sous le champ mot de passe, heure de déblocage affichée ; le compteur par onglet est remplacé par le blocage en base.
+- `docs/SECURITE.md` : tout ce qu'on fait pour les mots de passe, et ce qui manque (référencé dans `CLAUDE.md`). D16, L19.
+
+**Fichiers touchés :**
+- `radar/accounts.py`, `app/compte.py`, `tests/test_accounts.py`, `tests/test_compte_ui.py`, `docs/SECURITE.md`, `CLAUDE.md`, `docs/*`
+
+**Résultats / chiffres clés :**
+- 46 tests comptes (dont 17 sur la sécurité, et un test qui vérifie que le blocage résiste au rechargement de la page).
+
+**Problèmes / points d'attention pour l'équipe :**
+- Les mots de passe de test doivent maintenant respecter les règles (ex. `Radar-Demo-2026`).
+- Les comptes créés avant D16 gardent leur ancien mot de passe.
+
+---
+
 ## 2026-11-27 — Tâche T49 : historique des recherches
 
 **Fait :**
