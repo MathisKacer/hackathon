@@ -169,7 +169,7 @@ uv run python scripts/build_all.py                 # le pipeline complet l'inclu
 **Ce que voit l'utilisateur.**
 - Par défaut : mode anonyme, rien n'est enregistré ; la page s'appelle « **Se connecter** ».
 - Page **Se connecter** : onglets **Connexion** et **Créer un compte**. À la création, les compétences de la recherche en cours deviennent le profil.
-- Connecté, la page devient « **Mon espace (prénom)** » : « Se déconnecter », **« Mes compétences »** en étiquettes, avec le dépôt du CV et la liste modifiable (on peut taper une compétence absente de la liste), puis « Enregistrer mes compétences » quand elles ont changé (T83), l'historique (section 5) et « Supprimer mon compte » (case à cocher de confirmation ; efface compte, profil et historique).
+- Connecté, la page devient « **Mon espace (prénom)** » : « Se déconnecter », **« Mes compétences »** : une étiquette par compétence, avec ✕ pour la retirer ; « Ajouter une compétence » (dans la liste ou tapée, ex. QGIS) ; dépôt du CV. Chaque changement est **enregistré aussitôt**, sans bouton (T83, T86, D44), l'historique (section 5) et « Supprimer mon compte » (case à cocher de confirmation ; efface compte, profil et historique).
 - À la connexion, seules **les compétences** reviennent (T81, D41). Les autres réglages (ville, rayon, contrat, filtres, poids…) ne sont pas gardés dans le profil ; on les retrouve dans l'historique, avec « Relancer ».
 
 **Comment ça marche.**
@@ -440,7 +440,7 @@ Case vide quand SIRENE n'a pas l'information. **Pas de total calculé** : additi
 
 ## 16. Correspondance avec ton CV (T45, T80, D37, D40)
 
-**Utilisation.** Panneau « Filtres » › « Ton CV » : déposer son CV en PDF. Les compétences reconnues (Python, SQL, Power BI, comptabilité, paie, anglais…) remplissent la liste « Tes compétences » ; on peut la corriger ou la remplir à la main, sans CV, et **taper une compétence qui n'est pas dans la liste** (« QGIS », puis Entrée, T83). Même chose dans Mon espace › Mes compétences. Une compétence tapée ne compte dans la correspondance que si Radar y reconnaît une compétence de sa liste (« SQL Server » → SQL) ; sinon elle est seulement gardée dans le profil (D42). Dès qu'une compétence est choisie :
+**Utilisation.** Panneau « Filtres » › « Ton CV » : déposer son CV en PDF. Les compétences reconnues (Python, SQL, Power BI, comptabilité, paie, anglais…) remplissent la liste « Tes compétences » ; on peut la corriger ou la remplir à la main, sans CV, et **taper une compétence qui n'est pas dans la liste** (« QGIS », puis Entrée, T83). Dans Mon espace › Mes compétences, on les gère une à une : ✕ pour retirer, « Ajouter une compétence », dépôt du CV, tout est enregistré aussitôt dans le profil (T86). La liste d'Explorer, elle, ne change que la recherche en cours. Une compétence tapée ne compte dans la correspondance que si Radar y reconnaît une compétence de sa liste (« SQL Server » → SQL) ; sinon elle est seulement gardée dans le profil (D42). Dès qu'une compétence est choisie :
 - colonne **« Correspondance »** dans la liste des candidatures spontanées : **Forte**, **Bonne**, **Partielle** ou **Faible** ;
 - dans la fenêtre de la carte et dans la fiche : « Correspondance avec ton profil : Forte (35 %, d'après les offres de son secteur) », puis « Tu as : Machine learning, Python · Souvent demandé aussi : Deep learning, Data visualisation » ;
 - « Classer par › Correspondance » trie la liste par correspondance.

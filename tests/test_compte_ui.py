@@ -222,17 +222,13 @@ def page(tmp_path, monkeypatch):
     st.cache_resource.clear()
 
 
-def test_profile_shows_and_saves_only_skills(page):
+def test_profile_shows_only_skills_without_button(page):
     at, uid = page
     assert not at.exception
     assert any(s.value == "Mes compétences" for s in at.subheader)
     texts = [m.value for m in at.markdown] + [c.value for c in at.caption]
-    assert not any("Contrat" in x for x in texts)  # pas d'autre réglage affiché
-    next(b for b in at.button if b.label == "Enregistrer mes compétences").click()
-    at.run()
-    assert accounts.load_profile(accounts.connect(), uid) == {"competences": ["Python", "R"]}
-    assert any(":blue-badge[Python] :blue-badge[R]" in m.value for m in at.markdown)
-    assert not any(b.label == "Enregistrer mes compétences" for b in at.button)  # à jour
+    assert not any("Contrat" in x for x in texts)  # l'ancien réglage du profil n'est pas affiché
+    assert not any("Enregistrer" in b.label for b in at.button)  # T86 : plus de bouton
 
 
 def test_login_restores_only_skills(tmp_path, monkeypatch):
@@ -260,31 +256,43 @@ def _page_app_editor():
 
     sys.path.insert(0, str(Path.cwd() / "app"))
     from compte import account_page
-    from cv_ui import cv_and_skills
+    from cv_ui import profile_skills_editor
 
     st.session_state.setdefault("competences", [])
     account_page({"competences": None}, {"competences": "Compétences"},
                  saved_keys={"competences": None},
-                 profile_editor=lambda: cv_and_skills("cv_profil"))  # fmt: skip
+                 profile_editor=profile_skills_editor)  # fmt: skip
 
 
-def test_profile_editor_adds_free_skill_and_has_cv_upload(tmp_path, monkeypatch):
-    """T83 : dans Mon espace, dépôt du CV + compétences tapées à la main, puis enregistrées."""
+def test_profile_skills_one_by_one(tmp_path, monkeypatch):
+    """T86 : ✕ retire une compétence, l'ajout l'enregistre aussitôt ; dépôt du CV présent."""
     monkeypatch.setattr(accounts, "DB_PATH", tmp_path / "radar.db")
     st.cache_resource.clear()
-    uid = accounts.create_user(accounts.connect(), "emma", "Radar-Demo-2026")
+    con = accounts.connect()
+    uid = accounts.create_user(con, "emma", "Radar-Demo-2026")
+    accounts.save_profile(con, uid, {"competences": ["Python", "R", "SQL"]})
     at = AppTest.from_function(_page_app_editor, default_timeout=30)
     at.session_state["compte_user"] = {"id": uid, "username": "emma"}
+    at.session_state["competences"] = ["Python", "R", "SQL"]
     at.run()
     assert not at.exception
     assert at.get("file_uploader")  # dépôt du CV dans la partie compétences
-    at.session_state["competences"] = ["python", "QGIS", "qgis"]
+    assert not any("Enregistrer" in b.label for b in at.button)
+    labels = [b.label for b in at.button]
+    assert {"Python", "R", "SQL"} <= set(labels)  # une étiquette ✕ par compétence
+
+    next(b for b in at.button if b.label == "R").click()
     at.run()
-    ms = at.multiselect(key="competences")
-    assert "QGIS" in ms.options
-    next(b for b in at.button if b.label == "Enregistrer mes compétences").click()
+    assert accounts.load_profile(accounts.connect(), uid)["competences"] == ["Python", "SQL"]
+    assert at.session_state["competences"] == ["Python", "SQL"]  # recherche en cours aussi
+
+    # (une compétence tapée hors de la liste passe par le même rappel ; l'outil de test ne
+    # sait choisir que des options existantes : nettoyage testé dans test_competences.py)
+    at.selectbox(key="competence_ajout").set_value("Excel")
     at.run()
     assert not at.exception
     saved = accounts.load_profile(accounts.connect(), uid)["competences"]
-    assert saved == ["Python", "QGIS"]
+    assert saved == ["Python", "SQL", "Excel"]
+    assert at.selectbox(key="competence_ajout").value is None  # le champ se vide
+    assert "Excel" in [b.label for b in at.button]
     st.cache_resource.clear()

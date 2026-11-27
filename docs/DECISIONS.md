@@ -14,6 +14,12 @@
 
 ---
 
+### D44 — Compétences du profil modifiées une à une et enregistrées aussitôt (2026-11-27, @emma)
+**Contexte :** T86, demande d'Emma : pouvoir supprimer et enregistrer les compétences une à une, et retirer le bouton « Enregistrer mes compétences » (D41, D42).
+**Décision :** Mon espace › Mon profil › Mes compétences (`app/cv_ui.py › profile_skills_editor`) : **une étiquette par compétence avec ✕** (clic → retirée du profil tout de suite) ; un champ « **Ajouter une compétence** » (liste ou texte libre, `accept_new_options`) qui l'enregistre dès qu'on la choisit puis se vide ; le **dépôt du CV** ajoute ses compétences au profil d'un coup (chacune reste supprimable). **Plus de bouton « Enregistrer ».** Chaque changement est aussi répercuté sur la recherche en cours (liste d'Explorer). `account_page(profile_editor=)` reçoit `(profile, save)` ; `save` écrit aussitôt (`app/compte.py`). La liste d'Explorer (Filtres › Ton CV) ne change que la recherche, pas le profil (choix par défaut, la question restait ouverte).
+**Alternatives écartées :** enregistrer aussi depuis Explorer (le profil changerait à chaque essai de recherche) ; garder le bouton (demande d'Emma).
+**Conséquences :** remplace le bouton de D41/D42. Sans `profile_editor`, `account_page` affiche simplement le profil en étiquettes.
+
 ### D43 — Recherches enregistrées à la demande, à la place de l'historique automatique (2026-11-27, @celia)
 **Contexte :** T84. L'historique automatique (T49) gardait chaque recherche avec ses 5 premières entreprises ; il se remplissait de recherches faites par hasard.
 **Décision :** seules les recherches enregistrées avec le bouton d'Explorer sont gardées (réglages seulement), **20 au maximum** avec un message à la 21ᵉ ; sans compte, gardées le temps de la visite puis enregistrées à la connexion (comme les favoris, T54). L'historique automatique n'est plus alimenté ni affiché. La page Administration compte les recherches enregistrées.

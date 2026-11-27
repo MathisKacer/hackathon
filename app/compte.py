@@ -223,42 +223,29 @@ def _badges(values: list) -> str:
 def _profile_section(con, user: dict, saved_keys: dict, labels: dict, editor=None) -> None:
     """T81 : le profil = les réglages de `saved_keys` seulement (les compétences du CV).
 
-    Affiche ce qui est enregistré, en étiquettes. `editor` (T83, facultatif) : fonction qui
-    affiche de quoi modifier ces réglages (dépôt du CV, liste des compétences). Un bouton
-    enregistre les valeurs en cours quand elles diffèrent de celles du profil."""
+    `editor` (T83, T86, facultatif) : `editor(profile, save)` affiche le profil et de quoi le
+    modifier ; `save(valeurs)` l'enregistre **aussitôt** (plus de bouton « Enregistrer »).
+    Sans `editor` : simple affichage, en étiquettes."""
     profile = {k: v for k, v in accounts.load_profile(con, user["id"]).items() if k in saved_keys}
+    uid = user["id"]
+
+    def save(values: dict) -> None:
+        merged = {**profile, **{k: v for k, v in values.items() if k in saved_keys}}
+        accounts.save_profile(_con(), uid, merged)
+        profile.update(merged)
+
     for key in saved_keys:
         label = labels.get(key, key)
         st.subheader(f"Mes {label.lower()}" if key == "competences" else label)
+        if editor is not None:
+            continue
         saved = profile.get(key)
         if saved:
             st.markdown(_badges(saved) if isinstance(saved, list) else str(saved))
         else:
-            st.caption(
-                "Aucune compétence enregistrée : dépose ton CV ou ajoute-les ci-dessous."
-                if key == "competences"
-                else "Rien d'enregistré."
-            )
+            st.caption("Rien d'enregistré.")
     if editor is not None:
-        editor()
-    current = _current_settings(saved_keys)
-    changed = [k for k in saved_keys if (current.get(k) or None) != (profile.get(k) or None)]
-    if editor is None:
-        for k in changed:
-            if now := current.get(k):
-                st.caption(
-                    "Dans ta recherche en cours : "
-                    + (", ".join(map(str, now)) if isinstance(now, list) else str(now))
-                )
-    if changed and st.button(
-        "Enregistrer mes compétences" if "competences" in saved_keys else "Enregistrer",
-        icon=":material/save:",
-        type="primary",
-        help="Seules tes compétences sont gardées dans ton profil.",
-    ):
-        accounts.save_profile(con, user["id"], current)
-        st.toast("Compétences enregistrées.")
-        st.rerun()
+        editor(profile, save)
 
 
 def _delete_account_box(con, user: dict) -> None:
@@ -314,7 +301,8 @@ def account_page(
     `profile_keys` : réglages d'une recherche (historique « Mes recherches », bouton Relancer).
     `saved_keys` (T81) : réglages gardés dans le **profil** (par défaut : tous) ; Radar n'y met
     que les compétences du CV. Ils sont restaurés à la connexion.
-    `profile_editor` (T83) : fonction qui affiche de quoi modifier le profil (CV, compétences).
+    `profile_editor` (T83, T86) : `editor(profile, save)`, affiche et modifie le profil ; chaque
+    changement est enregistré aussitôt (`save`), sans bouton.
     `favorites_section`, `candidatures_section` : fonctions d'app/vues/mon_espace.py.
     """
     saved_keys = profile_keys if saved_keys is None else saved_keys

@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-11-27 — T86 : compétences une à une, sans bouton ✅
+
+**Fait :**
+- `app/cv_ui.py › profile_skills_editor(profile, save)` : boutons-étiquettes ✕ (un par compétence, dans un conteneur horizontal), champ « Ajouter une compétence » (`st.selectbox(..., accept_new_options=True)`, vidé après l'ajout), dépôt du CV ; chaque action enregistre aussitôt et met à jour la recherche en cours.
+- `app/compte.py › _profile_section` : plus de bouton « Enregistrer » ; l'éditeur reçoit le profil et une fonction `save`. `app/vues/mon_espace.py` branche l'éditeur.
+- Choix d'Emma : bouton retiré. Choix par défaut (non tranché) : la liste d'Explorer ne modifie pas le profil.
+- D44, GUIDE § 4 et § 16, TACHES.
+
+**Fichiers touchés :**
+- `app/cv_ui.py`, `app/compte.py`, `app/vues/mon_espace.py`, `tests/test_compte_ui.py`, docs
+
+**Résultats / chiffres clés :**
+- Tests : ✕ retire du profil et de la recherche, l'ajout enregistre et vide le champ, pas de bouton « Enregistrer ». Vraie app (base temporaire) : Mon espace affiche Python, SQL, QGIS en étiquettes, sans erreur. Toute la suite passe.
+
+**Problèmes / points d'attention pour l'équipe :**
+- `app/compte.py` (@celia) : la signature de `profile_editor` change (`editor(profile, save)`), utilisée seulement par Mon espace.
+- L'outil de test de Streamlit ne sait pas choisir une option tapée à la main : l'ajout libre passe par le même code, testé avec une option de la liste ; nettoyage testé à part.
+
+**Prochaine étape :**
+- Si tu veux : que la liste d'Explorer enregistre aussi dans le profil quand on est connecté.
+
+---
+
 ## 2026-11-27 — T83 : compétences ajoutées à la main + CV depuis Mon espace ✅
 
 **Fait :**
