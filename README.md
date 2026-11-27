@@ -37,10 +37,24 @@ curl --create-dirs -o data/raw/offres_raw/adzuna.parquet "https://minio.lab.sspc
 - Lien expiré (erreur 403 ou fichier de quelques octets) → demander un nouveau lien à Mathis.
 - Ne jamais partager publiquement ces liens ni ces fichiers.
 
+### Quels fichiers récupérer ?
+
+| Fichier | Sert à | Qui en a besoin |
+|---|---|---|
+| `data/processed/entreprises.parquet` | référentiel SIRENE (+ BODACC) | tout le monde (app) |
+| `data/processed/offres.parquet` | offres Adzuna + La bonne alternance, classées et rapprochées | tout le monde (app) |
+| `data/processed/scores.parquet` | score v1 (D33) | tout le monde (app) |
+| `data/processed/p_reponse.parquet` + `modele_reponse.json` | chance de réponse (simulée, D6) | tout le monde (app) |
+| `data/raw/lba_recruteurs.parquet` | recruteurs d'alternants (T51) | tout le monde (app) |
+| `data/raw/lbb.parquet`, `data/raw/offres_raw/adzuna_couverture.json` | La Bonne Boîte, couverture de la collecte | seulement pour relancer `build_all` |
+
+Les autres fichiers bruts (BODACC, champs SIRENE du score v1) sont **téléchargés automatiquement** par `build_all` au premier lancement (sources ouvertes, sans clé).
+
 ## Reconstruire les données (si tu as les offres brutes)
 
 ```bash
-uv run python scripts/build_all.py   # entreprises → offres classées et rapprochées → scores (~1 min)
+uv run python scripts/build_all.py   # entreprises → offres → scores (v1) → modèle de réponse (~2 min 30)
+uv run python scripts/eval_score.py  # évaluation du score → docs/EVAL_SCORE.md
 ```
 
 ## Lancer l'application
