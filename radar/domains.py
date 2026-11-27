@@ -70,17 +70,29 @@ def _codes(code_rome: str | None) -> list[str]:
     return [c.strip().upper() for c in code_rome.split(",") if c.strip()]
 
 
-def classify(title: str | None, code_rome: str | None = None) -> str:
-    """Domain key of an offer (or "autre"), from its title and optional ROME code(s)."""
+# Which rule decided (stored by T13 in offres.parquet, column `domaine_regle`).
+RULE_PARTIAL_CODE = "rome_partiel+titre"
+RULE_CODE = "rome"
+RULE_TITLE = "titre"
+RULE_NONE = "aucune"
+
+
+def classify_with_rule(title: str | None, code_rome: str | None = None) -> tuple[str, str]:
+    """(domain key or "autre", rule that decided) from the title and optional ROME code(s)."""
     domains = load_domains().values()
     codes = _codes(code_rome)
     for d in domains:  # 1. ambiguous code confirmed by the title
         if any(c in d.rome_partial for c in codes) and d.title_matches(title):
-            return d.key
+            return d.key, RULE_PARTIAL_CODE
     for d in domains:  # 2. unambiguous code
         if any(c in d.rome for c in codes):
-            return d.key
+            return d.key, RULE_CODE
     for d in domains:  # 3. title only
         if d.title_matches(title):
-            return d.key
-    return OTHER
+            return d.key, RULE_TITLE
+    return OTHER, RULE_NONE
+
+
+def classify(title: str | None, code_rome: str | None = None) -> str:
+    """Domain key of an offer (or "autre"), from its title and optional ROME code(s)."""
+    return classify_with_rule(title, code_rome)[0]

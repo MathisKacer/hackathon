@@ -1,8 +1,6 @@
 # Données (jamais dans Git)
 data/
 *.csv
-# Exception : nomenclature NAF de référence (INSEE, 40 Ko), pas une donnée
-!radar/naf_rev2.csv
 *.parquet
 *.xlsx
 *.zip

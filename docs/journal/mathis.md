@@ -2,6 +2,41 @@
 
 ---
 
+## 2026-11-27 — T21 : rapprochement offres → SIRET + offres.parquet
+
+**Fait :**
+- `radar/process/match_siret.py` : intermédiaires écartés (liste + motifs + NAF 78.*), puis exact / sigle (GE seulement) / préfixe / flou ; établissement le plus proche ; règles « loin » (> 50 km) selon la taille et la longueur du nom ; `match_confiance`.
+- `radar/process/offres.py` + `scripts/build_offres.py` → `data/processed/offres.parquet` (domaine via `classify` d'Emma, contrat, SIRET). Ajout du **sigle** dans l'extraction SIRENE (EDF, CEA).
+- 8 tests sur un mini-référentiel (`tests/test_match_siret.py`) : Air France ≠ France Air, Capgemini → établissement le plus proche, EDF par sigle, homonyme lointain rejeté, intérim = intermédiaire.
+
+**Résultats / chiffres clés :**
+- 63,4 % des offres d'employeurs rapprochées (50,5 % haute confiance) ; 16,7 % d'intermédiaires.
+- Offres data : 503 entreprises / 622 établissements ; 130 entreprises avec stage ou alternance data.
+- Le classement d'Emma est meilleur que mon filtre v0 (écarte « Data Center Technician »).
+
+**Points d'attention pour l'équipe :**
+- **Maxence (app)** : utiliser `offres.parquet` (colonne `domaine` d'Emma, `intermediaire`, `siren_match`) plutôt que `quick_filter` ; la couche orange exclut les `siren_match` qui ont une offre du domaine × contrat visé.
+- `entreprises.parquet` a été régénéré (colonne `sigle` en plus) → reprendre le nouveau lien.
+
+---
+
+## 2026-11-27 — T20 : référentiel SIRENE + partage S3
+
+**Fait :**
+- `radar/collect/sirene.py` + `scripts/extract_sirene.py` : DuckDB lit à distance StockEtablissement + Géolocalisation + StockUniteLegale + NAF rév. 2 → `data/processed/entreprises.parquet` (contrat d'Emma vérifié par `check_columns`). Tests sans réseau : `tests/test_sirene.py`.
+- `scripts/share_s3.py` : partage via liens S3 temporaires (24 h) pour les équipiers hors Onyxia ; README de démarrage.
+
+**Résultats / chiffres clés :**
+- **406 266 établissements** actifs ≥ 10 salariés, 99,7 % géolocalisés, 99,8 % nommés, 100 % avec libellé NAF ; PME 245 k, ETI 96 k, GE 61 k. Effectifs millésime 2024. Extraction en ~2 min.
+- 245 établissements à diffusion partielle → position masquée (RGPD).
+- Ajout de `effectif_estime` (moyenne géométrique de la tranche) pour l'exposition du modèle gamma-Poisson.
+
+**Points d'attention pour l'équipe :**
+- `ca_n`, `ca_n_1`, `lbb_proba`, `procedure_collective` sont **NA** (pas encore alimentés) : ne pas les traiter comme 0/False dans le score.
+- Fichier partagé en lien privé (demander la commande `curl` à Mathis).
+
+---
+
 ## 2026-11-27 — T39 : carte couche 1 « Offres réelles »
 
 **Fait :**

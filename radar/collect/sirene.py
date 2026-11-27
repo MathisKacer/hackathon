@@ -1,171 +1,196 @@
-"""T20 — Référentiel SIRENE France → data/processed/entreprises.parquet.
+"""Référentiel entreprises (T20) : établissements SIRENE actifs, ≥ 10 salariés, géolocalisés.
 
-Lit les trois stocks parquet SIRENE (data.gouv) *à distance* avec DuckDB (httpfs),
-sans télécharger les 3,7 Go : seules les colonnes utiles sont lues.
+Sources (INSEE, Licence Ouverte, lues à distance par DuckDB sans tout télécharger) :
+- StockEtablissement : SIRET, NAF, tranche d'effectif, commune, état, statut de diffusion ;
+- Géolocalisation des établissements : latitude / longitude (WGS84) ;
+- StockUniteLegale : nom de l'entreprise, catégorie (PME / ETI / GE) ;
+- Nomenclature NAF rév. 2 (parquet data.gouv) : libellés, section, division.
 
-Filtre : établissements actifs, >= 10 salariés (tranches INSEE '11' à '53').
-Résultat : ~400 k établissements, une ligne par SIRET, au schéma de
-docs/ARCHITECTURE.md (colonnes `entreprises.parquet`).
+Les URLs pointent vers la version mensuelle de novembre 2026 ; les mettre à jour ici
+si une nouvelle version est publiée (data.gouv, jeux « Base Sirene » et « Géolocalisation »).
 
-Lancer :
-    uv run python -m radar.collect.sirene            # France entière
-    uv run python -m radar.collect.sirene --dep 35   # un département (test rapide)
+Sortie : data/processed/entreprises.parquet (contrat « entreprises » de radar/schemas.py + extras).
+Lancer : uv run python scripts/extract_sirene.py [--dep 35]
+
+Fusion des versions de Mathis et de Celia (D11) : base Mathis ; ajouts Celia = nom des
+entrepreneurs individuels, `tranche_libelle`, `adresse`, filtre par département.
 """
 
 from __future__ import annotations
 
-import argparse
+import logging
 import time
-from pathlib import Path
 
 import duckdb
+import pandas as pd
 
-from radar.config import FILES
+from radar.config import FILES, MIN_TRANCHE_EFFECTIF
+from radar.schemas import check_columns
 
-# Stocks SIRENE de novembre 2026 (mettre à jour les URL au prochain millésime).
+log = logging.getLogger(__name__)
+
 URL_ETABLISSEMENTS = (
-    "https://static.data.gouv.fr/resources/"
-    "base-sirene-des-entreprises-et-de-leurs-etablissements-siren-siret/"
-    "20261103-101714/stock-stocketablissement-parquet.parquet"
-)
-URL_UNITES_LEGALES = (
-    "https://static.data.gouv.fr/resources/"
-    "base-sirene-des-entreprises-et-de-leurs-etablissements-siren-siret/"
-    "20261103-095402/stock-stockunitelegale-parquet.parquet"
+    "https://static.data.gouv.fr/resources/base-sirene-des-entreprises-et-de-leurs-etablissements-"
+    "siren-siret/20261103-101714/stock-stocketablissement-parquet.parquet"
 )
 URL_GEOLOC = (
-    "https://static.data.gouv.fr/resources/"
-    "geolocalisation-des-etablissements-du-repertoire-sirene-pour-les-etudes-statistiques/"
-    "20261123-064215/"
+    "https://static.data.gouv.fr/resources/geolocalisation-des-etablissements-du-repertoire-sirene"
+    "-pour-les-etudes-statistiques/20261123-064215/"
     "geoloc-geolocalisationetablissement-sirene-pour-etudes-statistiques-parquet.parquet"
 )
+URL_UNITES_LEGALES = (
+    "https://static.data.gouv.fr/resources/base-sirene-des-entreprises-et-de-leurs-etablissements-"
+    "siren-siret/20261103-095402/stock-stockunitelegale-parquet.parquet"
+)
+URL_NAF = "https://static.data.gouv.fr/resources/naf-1/20231123-121750/nafr2.parquet"
 
-# Libellés NAF rév. 2 (INSEE, naf2008_liste_n5.xls converti en CSV, 732 sous-classes)
-NAF_CSV = Path(__file__).resolve().parent.parent / "naf_rev2.csv"
-
-# Tranches d'effectif INSEE -> (libellé, min, max). 'NN', '00'..'03' sont exclues.
-TRANCHES = {
-    "11": ("10 à 19 salariés", 10, 19),
-    "12": ("20 à 49 salariés", 20, 49),
-    "21": ("50 à 99 salariés", 50, 99),
-    "22": ("100 à 199 salariés", 100, 199),
-    "31": ("200 à 249 salariés", 200, 249),
-    "32": ("250 à 499 salariés", 250, 499),
-    "41": ("500 à 999 salariés", 500, 999),
-    "42": ("1 000 à 1 999 salariés", 1000, 1999),
-    "51": ("2 000 à 4 999 salariés", 2000, 4999),
-    "52": ("5 000 à 9 999 salariés", 5000, 9999),
-    "53": ("10 000 salariés et plus", 10000, 20000),
+# Libellés des tranches, pour l'affichage (fiche entreprise).
+TRANCHE_LIBELLES = {
+    "11": "10 à 19 salariés",
+    "12": "20 à 49 salariés",
+    "21": "50 à 99 salariés",
+    "22": "100 à 199 salariés",
+    "31": "200 à 249 salariés",
+    "32": "250 à 499 salariés",
+    "41": "500 à 999 salariés",
+    "42": "1 000 à 1 999 salariés",
+    "51": "2 000 à 4 999 salariés",
+    "52": "5 000 à 9 999 salariés",
+    "53": "10 000 salariés et plus",
 }
 
+# Tranches d'effectif INSEE (≥ 10 salariés) : bornes et valeur centrale (pour l'exposition du
+# modèle gamma-Poisson). La borne haute de la dernière tranche est arbitraire.
+TRANCHES = {
+    "11": (10, 19),
+    "12": (20, 49),
+    "21": (50, 99),
+    "22": (100, 199),
+    "31": (200, 249),
+    "32": (250, 499),
+    "41": (500, 999),
+    "42": (1000, 1999),
+    "51": (2000, 4999),
+    "52": (5000, 9999),
+    "53": (10000, 20000),
+}
 
-def _tranches_sql() -> str:
-    rows = ", ".join(f"('{code}', '{lib}', {lo}, {hi})" for code, (lib, lo, hi) in TRANCHES.items())
-    return f"SELECT * FROM (VALUES {rows}) t(code, libelle, effectif_min, effectif_max)"
-
-
-def build_query(dep: str | None = None) -> str:
-    """Requête DuckDB qui produit entreprises.parquet (une ligne par SIRET)."""
-    dep_filter = f"AND e.codeCommuneEtablissement LIKE '{dep}%'" if dep else ""
-    return f"""
-    WITH tranches AS ({_tranches_sql()}),
-    naf AS (SELECT * FROM read_csv('{NAF_CSV}', header = true, all_varchar = true)),
-    etab AS (
-        SELECT
-            e.siret, e.siren,
-            e.activitePrincipaleEtablissement            AS naf,
-            e.trancheEffectifsEtablissement              AS tranche_effectif,
-            e.anneeEffectifsEtablissement                AS annee_effectifs,
-            e.statutDiffusionEtablissement = 'O'         AS diffusible,
-            e.etablissementSiege                         AS siege,
-            e.codePostalEtablissement                    AS code_postal,
-            e.codeCommuneEtablissement                   AS code_commune,
-            e.libelleCommuneEtablissement                AS commune,
-            NULLIF(trim(concat_ws(' ', e.numeroVoieEtablissement, e.indiceRepetitionEtablissement,
-                e.typeVoieEtablissement, e.libelleVoieEtablissement)), '') AS adresse,
-            COALESCE(e.denominationUsuelleEtablissement, e.enseigne1Etablissement) AS nom_etab
-        FROM read_parquet('{URL_ETABLISSEMENTS}') e
-        WHERE e.etatAdministratifEtablissement = 'A'
-          AND e.trancheEffectifsEtablissement IN (SELECT code FROM tranches)
-          AND e.nomenclatureActivitePrincipaleEtablissement = 'NAFRev2'
-          {dep_filter}
-    ),
-    ul AS (
-        SELECT
-            siren,
-            COALESCE(
-                denominationUniteLegale,
-                NULLIF(trim(concat_ws(' ', COALESCE(prenomUsuelUniteLegale, prenom1UniteLegale),
-                    COALESCE(nomUsageUniteLegale, nomUniteLegale))), '')
-            ) AS nom_ul,
-            sigleUniteLegale     AS sigle,
-            categorieEntreprise  AS categorie
-        FROM read_parquet('{URL_UNITES_LEGALES}')
-        WHERE siren IN (SELECT siren FROM etab)
-    ),
-    geo AS (
-        SELECT siret, y_latitude AS lat, x_longitude AS lon, qualite_xy
-        FROM read_parquet('{URL_GEOLOC}')
-        WHERE siret IN (SELECT siret FROM etab)
-    )
+QUERY = """
+WITH etab AS (
     SELECT
-        etab.siret, etab.siren,
-        COALESCE(etab.nom_etab, ul.nom_ul, ul.sigle)  AS nom,
-        ul.nom_ul                                     AS nom_entreprise,
-        ul.sigle,
-        etab.naf,
-        naf.naf_libelle,
-        etab.tranche_effectif,
-        t.libelle                                     AS tranche_libelle,
-        t.effectif_min, t.effectif_max,
-        etab.annee_effectifs,
-        ul.categorie,
-        etab.siege,
-        geo.lat, geo.lon, geo.qualite_xy,
-        etab.commune, etab.code_postal, etab.code_commune,
-        CASE WHEN etab.code_commune LIKE '97%' THEN left(etab.code_commune, 3)
-             ELSE left(etab.code_commune, 2) END      AS departement,
-        CASE WHEN etab.diffusible THEN etab.adresse END AS adresse,
-        etab.diffusible,
-        -- Colonnes du contrat remplies par d'autres tâches (T22, T23, T24)
-        CAST(NULL AS DOUBLE)                          AS ca_n,
-        CAST(NULL AS DOUBLE)                          AS ca_n_1,
-        FALSE                                         AS procedure_collective,
-        CAST(NULL AS DOUBLE)                          AS lbb_proba
-    FROM etab
-    JOIN tranches t ON t.code = etab.tranche_effectif
-    LEFT JOIN ul  USING (siren)
-    LEFT JOIN geo USING (siret)
-    LEFT JOIN naf ON naf.naf = etab.naf
-    ORDER BY etab.siret
-    """
+        siret, siren,
+        activitePrincipaleEtablissement AS naf,
+        trancheEffectifsEtablissement   AS tranche_effectif,
+        TRY_CAST(anneeEffectifsEtablissement AS INTEGER) AS annee_effectif,
+        codeCommuneEtablissement        AS code_commune,
+        codePostalEtablissement         AS code_postal,
+        libelleCommuneEtablissement     AS commune,
+        etablissementSiege              AS siege,
+        statutDiffusionEtablissement = 'P' AS diffusion_partielle,
+        coalesce(enseigne1Etablissement, denominationUsuelleEtablissement) AS nom_etablissement,
+        NULLIF(trim(concat_ws(' ', numeroVoieEtablissement, indiceRepetitionEtablissement,
+            typeVoieEtablissement, libelleVoieEtablissement)), '') AS adresse
+    FROM read_parquet('{etab}')
+    WHERE etatAdministratifEtablissement = 'A'
+      AND trancheEffectifsEtablissement >= '{min_tranche}'
+      AND trancheEffectifsEtablissement <> 'NN'
+      AND nomenclatureActivitePrincipaleEtablissement = 'NAFRev2'
+      {dep_filter}
+),
+geo AS (
+    SELECT siret, y_latitude AS lat, x_longitude AS lon, qualite_xy
+    FROM read_parquet('{geo}')
+    WHERE siret IN (SELECT siret FROM etab)
+),
+ul AS (
+    SELECT siren,
+           coalesce(
+               denominationUniteLegale, denominationUsuelle1UniteLegale,
+               -- entrepreneurs individuels : prénom + nom
+               NULLIF(trim(concat_ws(' ', coalesce(prenomUsuelUniteLegale, prenom1UniteLegale),
+                   coalesce(nomUsageUniteLegale, nomUniteLegale))), '')
+           ) AS nom_ul,
+           categorieEntreprise AS categorie,
+           sigleUniteLegale AS sigle
+    FROM read_parquet('{ul}')
+    WHERE siren IN (SELECT siren FROM etab)
+),
+naf AS (
+    SELECT NIV5 AS naf, LIB_NIV5 AS naf_libelle,
+           NIV1 AS naf_section, LIB_NIV1 AS naf_section_libelle, NIV2 AS naf_division
+    FROM read_parquet('{naf}')
+)
+SELECT
+    e.siret, e.siren,
+    coalesce(ul.nom_ul, e.nom_etablissement) AS nom,
+    e.naf, naf.naf_libelle,
+    e.tranche_effectif, ul.categorie, ul.sigle,
+    -- RGPD : pas de position pour les établissements à diffusion partielle
+    CASE WHEN e.diffusion_partielle THEN NULL ELSE geo.lat END AS lat,
+    CASE WHEN e.diffusion_partielle THEN NULL ELSE geo.lon END AS lon,
+    CASE WHEN e.diffusion_partielle THEN NULL ELSE e.adresse END AS adresse,
+    e.commune,
+    e.nom_etablissement, e.annee_effectif, e.code_commune, e.code_postal,
+    e.siege, e.diffusion_partielle, geo.qualite_xy,
+    naf.naf_section, naf.naf_section_libelle, naf.naf_division
+FROM etab e
+LEFT JOIN geo USING (siret)
+LEFT JOIN ul  USING (siren)
+LEFT JOIN naf USING (naf)
+"""
 
 
-def extract(dep: str | None = None, out: Path | str | None = None) -> Path:
-    """Écrit le référentiel en parquet et renvoie son chemin."""
-    out = Path(out or FILES["entreprises"])
-    with duckdb.connect() as con:
-        con.sql("INSTALL httpfs; LOAD httpfs; SET enable_progress_bar = false;")
-        t0 = time.time()
-        con.sql(f"COPY ({build_query(dep)}) TO '{out}' (FORMAT parquet, COMPRESSION zstd)")
-        n, n_geo, n_siren, pct_sans_nom = con.sql(
-            f"""SELECT count(*), count(lat), count(DISTINCT siren),
-                       round(100 * avg(CASE WHEN nom IS NULL THEN 1 ELSE 0 END), 2)
-                FROM read_parquet('{out}')"""
-        ).fetchall()[0]
-    print(
-        f"{out} : {n:,} établissements, {n_geo:,} géolocalisés, "
-        f"{n_siren:,} entreprises, {pct_sans_nom} % sans nom ({time.time() - t0:.0f} s)"
+def build_query(min_tranche: str = MIN_TRANCHE_EFFECTIF, dep: str | None = None) -> str:
+    """Requête DuckDB ; `dep` (ex. "35", "974") restreint à un département pour tester vite."""
+    if dep is not None and not dep.isalnum():
+        raise ValueError(f"code département invalide : {dep!r}")
+    return QUERY.format(
+        etab=URL_ETABLISSEMENTS,
+        geo=URL_GEOLOC,
+        ul=URL_UNITES_LEGALES,
+        naf=URL_NAF,
+        min_tranche=min_tranche,
+        dep_filter=f"AND codeCommuneEtablissement LIKE '{dep}%'" if dep else "",
     )
-    return out
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--dep", help="code département (ex. 35) pour un test rapide")
-    args = parser.parse_args()
-    extract(args.dep)
+def connect() -> duckdb.DuckDBPyConnection:
+    con = duckdb.connect()
+    con.sql("INSTALL httpfs; LOAD httpfs;")
+    con.sql("SET http_timeout = 600000; SET http_retries = 5;")
+    return con
 
 
-if __name__ == "__main__":
-    main()
+def extract(min_tranche: str = MIN_TRANCHE_EFFECTIF, dep: str | None = None) -> pd.DataFrame:
+    con = connect()
+    q = build_query(min_tranche, dep)
+    t0 = time.monotonic()
+    df = con.sql(q).df()
+    log.info("%s établissements extraits en %.0f s", len(df), time.monotonic() - t0)
+    return enrich(df)
+
+
+def enrich(df: pd.DataFrame) -> pd.DataFrame:
+    """Colonnes dérivées + colonnes du contrat pas encore alimentées (T22–T24)."""
+    df = df.copy()
+    bornes = df["tranche_effectif"].map(TRANCHES)
+    df["effectif_min"] = bornes.map(lambda b: b[0] if isinstance(b, tuple) else pd.NA)
+    df["effectif_max"] = bornes.map(lambda b: b[1] if isinstance(b, tuple) else pd.NA)
+    df["tranche_libelle"] = df["tranche_effectif"].map(TRANCHE_LIBELLES)
+    # Valeur centrale géométrique : mieux adaptée qu'une moyenne aux tranches très larges.
+    df["effectif_estime"] = (
+        (df["effectif_min"].astype("Float64") * df["effectif_max"].astype("Float64")) ** 0.5
+    ).round()
+    cc = df["code_commune"].fillna("")
+    df["departement"] = cc.str[:3].where(cc.str.startswith("97"), cc.str[:2])
+    # Alimentées plus tard : finances (T22), BODACC (T23), La Bonne Boîte (T24).
+    for col in ("ca_n", "ca_n_1", "lbb_proba"):
+        df[col] = pd.Series(pd.NA, index=df.index, dtype="Float64")
+    df["procedure_collective"] = pd.Series(pd.NA, index=df.index, dtype="boolean")
+    check_columns(df, "entreprises")
+    return df
+
+
+def save(df: pd.DataFrame) -> None:
+    FILES["entreprises"].parent.mkdir(parents=True, exist_ok=True)
+    df.to_parquet(FILES["entreprises"], index=False)

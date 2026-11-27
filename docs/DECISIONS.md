@@ -14,11 +14,17 @@
 
 ---
 
-### D10 — Référentiel entreprises : SIRENE lu à distance, ≥ 10 salariés (2026-11-27, @celia)
-**Contexte :** T20 doit fournir `entreprises.parquet` France entière sans saturer le pod.
-**Décision :** DuckDB lit les trois stocks parquet SIRENE de data.gouv à distance (httpfs) et les joint (établissement + unité légale + géolocalisation). Filtre : établissement actif, tranche d'effectif dans la liste explicite '11'…'53' (≥ 10 salariés ; `'NN'` exclu, car `'NN' > '11'` en texte), NAF rév. 2. Nom affiché = nom usuel de l'établissement, sinon enseigne, sinon dénomination de l'unité légale. Les libellés NAF viennent d'un petit CSV INSEE versionné (`radar/naf_rev2.csv`, exception ajoutée au `.gitignore`). L'adresse est vidée quand la diffusion est partielle (`diffusible = False`).
-**Alternatives écartées :** l'API Recherche d'entreprises (trop d'appels pour la France entière) ; garder les établissements < 10 salariés (17 M de lignes, dont 15 M sans effectif connu).
-**Conséquences :** ~406 k lignes, 19 Mo, régénérable en ~40 s par chacun (`uv run python -m radar.collect.sirene`). Les TPE ne sont pas recommandées. Au prochain millésime SIRENE, mettre à jour les 3 URL en tête de `sirene.py`.
+### D11 — Référentiel SIRENE : fusion des deux versions de T20 (2026-11-27, @celia)
+**Contexte :** T20 a été réalisée deux fois en parallèle (@celia, puis @mathis, car le push de Celia était bloqué). Les deux versions lisaient les mêmes stocks SIRENE à distance avec DuckDB, avec le même filtre (actif, ≥ 10 salariés, `'NN'` exclu, NAF rév. 2) et donnaient 406 266 établissements.
+**Décision :** la base est la version de Mathis : T21 utilise déjà `effectif_estime` et le `nom` de l'unité légale, et `scripts/extract_sirene.py` appelle `extract()` / `save()`. Ajouts repris de la version de Celia : prénom + nom pour les entrepreneurs individuels sans dénomination, colonnes `tranche_libelle` et `adresse` (vide si diffusion partielle, comme lat/lon), option `--dep` pour tester sur un département, tests sur les tranches et la requête.
+**Alternatives écartées :** garder les deux modules (doublon) ; la table NAF en CSV versionné de Celia (le parquet NAF de data.gouv donne aussi section et division) ; `procedure_collective = False` par défaut (NA est plus juste tant que T23 n'est pas faite).
+**Conséquences :** un seul point d'entrée, `uv run python scripts/extract_sirene.py [--dep 35]`. `radar/naf_rev2.csv` et son exception dans `.gitignore` sont supprimés.
+
+### D10 — offres.parquet : T13 classe, T21 rapproche (2026-11-27, @emma)
+**Contexte :** `offres.parquet` reçoit des colonnes de deux tâches menées en parallèle : `domaine`/`contrat` (T13, @emma) et `siret_match`/`match_score`/`match_methode` (T21, @mathis). Il ne faut pas que l'une écrase le travail de l'autre.
+**Décision :** T13 (`radar/process/classify.py`) écrit `offres.parquet` à partir de toutes les offres brutes. Il remplit le SIRET seulement quand la source le donne (`siret_source`), retire celui des offres déléguées à une école (`siret_ecole_exclu`) et marque les autres `a_rapprocher`. T21 relit `offres.parquet` et ne complète que les lignes `a_rapprocher`, avec sa propre valeur de `match_methode`. Chaque classement garde la règle qui l'a décidé (`domaine_regle`, `contrat_regle`) pour pouvoir l'expliquer. Pour le contrat, le titre l'emporte sur le `contract_type` d'Adzuna (rarement rempli, et seulement permanent/contract).
+**Alternatives écartées :** que T21 écrive son propre fichier (deux versions des offres à réconcilier dans T50) ; que T13 attende T21 (on perdrait du temps sur le chemin de la V1).
+**Conséquences :** ordre du pipeline (T50) : collecteurs → `classify_offres.py` → rapprochement T21 → score. `quick_filter.py` (T39) peut être remplacé par `offres.parquet` dans l'app (à voir avec Maxence).
 
 ### D9 — Dictionnaire des domaines : codes ROME sûrs, codes ambigus et mots-clés (2026-11-27, @emma)
 **Contexte :** classer chaque offre par domaine (T6 → T13). La bonne alternance fournit des codes ROME, mais pas Adzuna (titre seulement). Certains codes ROME sont ambigus (« Chargé d'études commerciales » peut être un poste data ou marketing).

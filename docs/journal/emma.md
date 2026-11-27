@@ -4,6 +4,43 @@
 
 ---
 
+## 2026-11-27 — T13 : classifieur d'offres ✅
+
+**Fait :**
+- `radar/process/classify.py` : `classify_offers(df)` ajoute aux offres brutes `domaine` (via `radar.domains.classify`), `contrat` (stage / alternance / emploi), la règle qui a décidé chacun (`domaine_regle`, `contrat_regle`) et le SIRET quand la source le donne. Les doublons (`source`, `offre_id`) sont supprimés. `summary()` fait un rapport texte.
+- `scripts/classify_offres.py` : lit `data/raw/offres_raw/*.parquet`, écrit `data/processed/offres.parquet` et affiche le résumé, dont les titres classés « autre » les plus fréquents, qui serviront pour T8.
+- `radar/domains.py` : nouvelle fonction `classify_with_rule` (domaine + règle) ; `classify` reste inchangée.
+- `tests/test_classify.py` : 15 tests (règles de contrat, pièges comme « Médecin interne », doublons, SIRET d'école exclu, passage sur les offres factices).
+- Docs : D10 dans `DECISIONS.md` (partage de `offres.parquet` entre T13 et T21), colonnes et valeurs de `match_methode` dans `ARCHITECTURE.md`, commande dans `CLAUDE.md`, T13 en « Fait ».
+
+**Fichiers touchés :**
+- `radar/process/classify.py`, `scripts/classify_offres.py`, `tests/test_classify.py`, `radar/domains.py`
+- `CLAUDE.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/TACHES.md`, `docs/journal/emma.md`
+
+**Règles de contrat (la première qui s'applique) :**
+1. Le contrat brut dit « Apprentissage » ou « Professionnalisation » (La bonne alternance) → alternance.
+2. Le titre contient altern…, apprenti…, contrat pro, work-study → alternance.
+3. Le titre contient stage, stagiaire, intern(ship), PFE, trainee → stage.
+4. Sinon → emploi.
+
+Le titre l'emporte sur le `contract_type` d'Adzuna (14 offres sur 50 seulement le renseignent, avec « permanent » ou « contract »). « Stage ou alternance » → alternance.
+
+**Résultats / chiffres clés :**
+- Sur les offres factices de mon pod (1 701) : tout passe, 100 % d'accord avec le domaine et le contrat factices. Ce n'est **pas** une mesure de qualité, puisque les titres factices sortent de mes propres listes ; ça montre seulement que la chaîne fonctionne. Je n'ai rien écrit dans `data/` (essai en mémoire).
+- `pytest` : 94/94 sur tout le dépôt ; ruff OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- **Pour @mathis (T21) :** `offres.parquet` sort de T13 avec `match_methode = "a_rapprocher"` pour les offres Adzuna. T21 peut relire ce fichier et ne compléter que ces lignes (voir D10). Les offres La bonne alternance ont déjà leur SIRET (`siret_source`), sauf celles déléguées à une école (`siret_ecole_exclu`, SIRET retiré, 768 offres selon Maxence).
+- **Pour @maxence (app) :** l'app pourra lire `domaine` et `contrat` dans `offres.parquet` au lieu d'utiliser `quick_filter.py`. Je n'ai pas touché à `quick_filter.py` ni à l'app.
+- Sur mon pod, `data/raw/offres_raw/` contient encore les offres **factices** : il faut relancer `scripts/classify_offres.py` une fois les vraies offres récupérées (liens S3 de Mathis).
+- Pour le domaine, seul le titre est utilisé, pas la description (tronquée à ~500 caractères chez Adzuna, risque de faux positifs). Piste possible plus tard, avec T8.
+
+**Prochaine étape :**
+- T7 (recruteurs LBA factices) : débloquée par la fusion de la branche de Maxence.
+- T8 (titres anglais) dès que les vraies offres Adzuna sont partagées : `classify_offres.py` affiche déjà les titres « autre » les plus fréquents.
+
+---
+
 ## 2026-11-27 — T6 : dictionnaire des domaines ✅
 
 **Fait :**

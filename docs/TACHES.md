@@ -25,10 +25,8 @@
 **Offres**
 - [x] T10 — 🔗T1 **Test Adzuna** : volume d'offres data en France et dans le 35, champs réellement renvoyés, nombre d'entreprises que renvoie `top_companies` → noter les résultats dans `SOURCES.md`
 - [ ] T16 — 🔗T12 **Compléter la collecte Adzuna** : relancer `uv run python scripts/collect_adzuna.py` chaque jour (reprend grâce au cache) ; découper l'Île-de-France par département (5 000/14 385 récupérées, plafond de 100 pages) ; ⚠️ le quota (~240/jour) est **partagé par tous ceux qui utilisent la même clé**
-- [ ] T13 — 🔗T6 **Classifieur d'offres** : `domaine` (data ou autre), `contrat` (stage / alternance / emploi), à partir du ROME, des mots-clés et du type de contrat
 
 **Entreprises**
-- [ ] T21 — 🔗T11,T12 **Rapprochement nom + commune → SIRET** pour les offres Adzuna (rapidfuzz sur le référentiel T20) ; mesurer le taux de rapprochement et le noter dans `SOURCES.md`
 
 **Score**
 - [ ] T30 — 🔗T5 **Score v0** sur données factices : composantes simples (part brute des offres du domaine, opportunité cachée, distance, taille) → `scores.parquet`
@@ -74,11 +72,15 @@
 
 ## 🔵 En cours
 
-- [ ] T11 — 🔗T2 **Collecteur La bonne alternance**, France entière : offres + recruteurs potentiels, avec SIRET → `offres_raw/lba/` — @maxence
+- [ ] T17 — 🔗T11 **Partager les données LBA sur S3** (`offres_raw/lba.parquet`, `lba_recruteurs.parquet`) : relancer `scripts/collect_lba.py` sur Onyxia puis `scripts/share_s3.py` — @maxence
+- [ ] T7 — 🔗T11 Ajouter des **recruteurs LBA factices** (`data/raw/lba_recruteurs.parquet`) au générateur T5 — @emma
 
 ## ✅ Fait
 
-- [x] T20 — **Référentiel SIRENE France** : `uv run python -m radar.collect.sirene` (≈ 40 s, lecture à distance) → `data/processed/entreprises.parquet`, 406 k établissements actifs ≥ 10 salariés, géolocalisés, avec libellé NAF — @celia
+- [x] T21 — 🔗T11,T12 **Rapprochement nom + commune → SIRET** pour les offres Adzuna (rapidfuzz sur le référentiel T20) ; mesurer le taux de rapprochement et le noter dans `SOURCES.md` — @mathis → **63 % des offres d'employeurs rapprochées** (50 % confiance haute), intermédiaires écartés (17 %) ; `scripts/build_offres.py` produit `offres.parquet`
+- [x] T13 — **Classifieur d'offres** : `uv run python scripts/classify_offres.py` → `offres.parquet` avec `domaine`, `contrat`, la règle qui a décidé et le SIRET donné par la source ; les offres Adzuna restent `a_rapprocher` pour T21 — @emma
+- [x] T11 — **Collecteur La bonne alternance** (export complet France) : `uv run python scripts/collect_lba.py` → `data/raw/offres_raw/lba.parquet` (12 748 offres) + `data/raw/lba_recruteurs.parquet` (382 180 recruteurs potentiels, dont 28 845 avec un ROME data) — @maxence
+- [x] T20 — **Référentiel SIRENE France** : stock parquet géolocalisé (data.gouv) → établissements actifs et employeurs, avec NAF, tranche d'effectif et lat/lon → `entreprises.parquet` (DuckDB) — @mathis et @celia (deux versions fusionnées, D11) : `uv run python scripts/extract_sirene.py [--dep 35]` → 406 266 établissements
 - [x] T6 — **Dictionnaire « domaines »** : `radar/domains.yaml` (data, informatique, finance, marketing, rh ; codes ROME 4.0 vérifiés + mots-clés) et `radar/domains.py` (`load_domains`, `classify`) — @emma
 - [x] T39 — 🔗T4 **Carte couche 1 « Offres réelles » (bleu)** : afficher les offres de `data/raw/offres_raw/*.parquet` (Adzuna maintenant, La bonne alternance ensuite), avec popup titre / entreprise / lien vers l'annonce ; filtre v0 par mots-clés dans le titre en attendant T13 — @mathis
 - [x] T12 — 🔗T10 **Collecteur Adzuna** France entière dans la limite du quota (offres « data » région par région, Bretagne et Île-de-France d'abord, offres de moins de 60 jours) + cache disque + compteur de quota → `data/raw/offres_raw/adzuna.parquet` — @mathis
@@ -90,5 +92,4 @@
 ## 🧊 Bloqué / en attente
 
 - T8 — 🔗T6, données Adzuna de Mathis **Titres anglais mal classés** : sur les vraies offres, compter les titres classés `autre` par `radar.domains.classify` et lister les plus fréquents (dont les titres en anglais), puis ajouter les mots-clés anglais utiles dans `radar/domains.yaml` (expressions complètes avec `\b`, ex. `financial analyst`, `talent acquisition`, `software engineer` ; éviter `controller` ou `analyst` seuls) + un test par cas — @emma, **dès que Mathis partage `adzuna.parquet` (lien S3 via `scripts/share_s3.py`)**
-- T7 — 🔗T11 Ajouter des **recruteurs LBA factices** (`lba_recruteurs.parquet`) au générateur T5 — @emma, **après la fusion de la branche de Maxence**
 - API Offres d'emploi France Travail : suspendue côté France Travail (voir `SOURCES.md`)
