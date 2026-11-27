@@ -10,7 +10,7 @@ normalisé, ou les deux premiers quand le premier est générique (« crédit mu
 gobain »). Une famille = au moins deux SIREN partageant la clé.
 
 Décision D36 : les sociétés sœurs restent dans la couche orange, **signalées** (« le groupe
-publie déjà N offres ») ; une case permet de les masquer.
+publie déjà N offres ») ; elles ne sont jamais masquées.
 """
 
 from __future__ import annotations

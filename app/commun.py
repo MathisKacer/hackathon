@@ -62,7 +62,6 @@ WIDGET_KEYS = [
     "secteurs",
     "show_liquidation",
     "une_par_entreprise",
-    "masquer_groupe",
     "niveaux",
     "niveau_inconnu",
     "tri",
@@ -179,7 +178,6 @@ def profile_keys() -> dict[str, list | None]:
         "tri": TRIS,
         "show_liquidation": [True, False],
         "une_par_entreprise": [True, False],
-        "masquer_groupe": [True, False],
         "niveaux": NIVEAUX,
         "niveau_inconnu": [True, False],
     }
@@ -200,7 +198,6 @@ PROFILE_LABELS = {
     "tri": "Classement",
     "show_liquidation": "Avec liquidations",
     "une_par_entreprise": "Une ligne par entreprise",
-    "masquer_groupe": "Sans les groupes qui publient déjà",
     "niveaux": "Niveau d'études",
     "niveau_inconnu": "Avec niveau non précisé",
 }
@@ -217,7 +214,6 @@ def init_defaults() -> None:
     st.session_state.setdefault("tri", TRI_SCORE)
     st.session_state.setdefault("show_liquidation", False)
     st.session_state.setdefault("une_par_entreprise", False)
-    st.session_state.setdefault("masquer_groupe", False)  # T26 (D36) : décochée par défaut
     st.session_state.setdefault("niveaux", [])
     st.session_state.setdefault("niveau_inconnu", True)
     for c, key in WEIGHT_KEYS.items():

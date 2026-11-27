@@ -87,7 +87,6 @@ def _n_filters_on() -> int:
             bool(ss.get("show_liquidation")),
             ss.get("tri") == TRI_P,
             bool(ss.get("une_par_entreprise")),
-            bool(ss.get("masquer_groupe")),
             bool(ss.get("niveaux")),
         ]
     )
@@ -166,14 +165,6 @@ with st.container(border=True, key="carte_recherche"):
             help="Leur activité est en principe arrêtée. Les autres entreprises en difficulté "
             "restent affichées, avec une alerte.",
         )
-        # T26 (D36) : sociétés dont le groupe (même marque) publie déjà des offres du domaine.
-        masquer_groupe = st.checkbox(
-            "Masquer les sociétés dont le groupe publie déjà des offres",
-            key="masquer_groupe",
-            help="Groupes reconnus par le début du nom (ETI et grandes entreprises : Thales, "
-            "Safran, BNP…), faute de données publiques sur les groupes. Décoché : ces sociétés "
-            "restent affichées, avec la mention « Groupe … : N offres ».",
-        )
         une_par_entreprise = st.checkbox(
             "Une ligne par entreprise",
             key="une_par_entreprise",
@@ -209,10 +200,9 @@ if place is not None:
         nearby, place.lat, place.lon, rayon, contrat, weights, show_liquidation
     )
     spontaneous = add_p_reponse(spontaneous, domaine, contrat, get_coefficients())
-    # T26 (D36) : offres publiées par les autres sociétés du même groupe (familles de marque).
+    # T26 (D36) : offres publiées par les autres sociétés du même groupe (familles de marque) ;
+    # signalées seulement (« Groupe … : N offres »), jamais masquées : tout reste sur la carte.
     spontaneous = mark_family_offers(spontaneous, get_families(domaine), contrat)
-    if masquer_groupe:
-        spontaneous = spontaneous[spontaneous["famille_offres"] == 0].reset_index(drop=True)
     if tri == TRI_P and spontaneous["p_reponse"].notna().any():
         spontaneous = spontaneous.sort_values(
             ["p_reponse", "score"], ascending=False, na_position="last"
