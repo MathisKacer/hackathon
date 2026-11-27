@@ -2,6 +2,19 @@
 
 ---
 
+## 2026-11-27 — Fiabilité : T53, vérification de l'app (3 pages), T27
+
+**Fait :**
+- **T53** : `radar/response/model.py` écarte les variables constantes avant l'ajustement (avertissement, coefficient 0, `variables_ecartees` dans `modele_reponse.json`). Bug voisin trouvé par un test : `match_offers` plantait sur un tableau vide (toutes les offres avec SIRET source, scénario « LBA seule ») → corrigé.
+- **App après la refonte en 3 pages (D30)**, vraies données Adzuna + LBA : Explorer (Rennes : 4 281 entreprises orange + 64 offres ; en alternance : 4 389 entreprises et 0 offre data publiée), Entreprises (« capgemini rennes » → 2 résultats), Mon espace : aucune exception. Le popup garde l'explication T32 (`app/carte.py`).
+- **T27** : AGEPAC, KOANN, Chambre régionale de métiers (organismes de formation) → intermédiaires ; SIRET source d'une agence de placement / d'intérim (78.1, 78.2) → intermédiaire. 443 offres LBA concernées. 78.30Z (groupements d'employeurs) gardé comme employeur.
+
+**Résultats / chiffres clés :**
+- Offres d'employeurs avec SIRET : 77,5 % ; modèle de réponse 7/7 ; 291 tests.
+- Pour le pitch : autour de Rennes, **aucune offre d'alternance data publiée, mais 4 389 entreprises susceptibles d'en accueillir une**.
+
+---
+
 ## 2026-11-27 — Données La bonne alternance de production + ajustement T32
 
 **Fait :**

@@ -64,3 +64,17 @@ def test_score_all_distance_free_and_contract():
     assert set(SCHEMAS["p_reponse_modele"]) <= set(p.columns)
     assert set(p["contrat_vise"]) == {"stage", "alternance"}
     assert p["p_reponse"].between(0, 1).all() and p["donnees_simulees"].all()
+
+
+def test_constant_features_do_not_crash_t53():
+    """T53 : scores sans Adzuna → variables constantes → pas de matrice singulière."""
+    pool = _pool().assign(c_intensite=0.5, c_embauche=0.5)
+    params = _params(n_etudiants=600)
+    cand = simulate(pool, params)
+    res = model.fit(cand)
+    assert "c_intensite" not in res.params.index and "c_embauche" not in res.params.index
+    p = model.score_all(res, pool)
+    assert p["p_reponse"].between(0, 1).all()
+    assert (p["contrib_c_intensite"] == 0).all()
+    rep = model.evaluate(res, cand, params)  # les variables écartées ont une estimation vide
+    assert rep["auc_test"] > 0.5

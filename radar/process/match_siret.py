@@ -57,6 +57,9 @@ INTERMEDIARIES = {
     "l industrie recrute", "industrie recrute", "mon consultant independant", "adsearch",
     "confidentiel", "entreprise confidentielle", "confidential", "anonyme", "client final",
     "nous recrutons", "recrutement",
+    # T27 (revue après l'arrivée de La bonne alternance) : organismes de formation qui publient
+    # des offres « BTS / CAP en alternance au sein d'une entreprise » (pas des employeurs)
+    "agepac", "koann", "chambre regionale metiers artisanat", "chambre metiers artisanat",
 }  # fmt: skip
 INTERMEDIARY_PATTERNS = re.compile(
     r"\b(recrutement|recruitment|recruiting|staffing|interim|intérim|executive search|"
@@ -65,6 +68,10 @@ INTERMEDIARY_PATTERNS = re.compile(
 )
 # NAF des activités de placement / mise à disposition de personnel
 INTERMEDIARY_NAF_PREFIX = ("78.",)
+# Pour un SIRET donné par la source (LBA) : placement (78.1) et intérim (78.2) seulement ;
+# les groupements d'employeurs (78.30Z) embauchent eux-mêmes les alternants qu'ils mettent à
+# disposition (T27).
+SOURCE_INTERMEDIARY_NAF_PREFIX = ("78.1", "78.2")
 
 
 _DOTTED_ACRONYM = re.compile(r"\b(?:[A-Za-z]\.){1,}[A-Za-z]\b\.?")
@@ -228,8 +235,15 @@ def _accept(methode: str, far: bool, big: bool, norm: str) -> bool:
 def match_offers(offers: pd.DataFrame, ent: pd.DataFrame) -> pd.DataFrame:
     """Ajoute siret_match, siren_match, match_score, match_methode, match_confiance,
     match_distance_km, intermediaire. Une offre non rapprochée garde siret_match manquant."""
-    index = SireneIndex(ent)
     out = offers.copy()
+    if out.empty:  # rien à rapprocher (ex. toutes les offres ont un SIRET fourni par la source)
+        for col in ("siret_match", "siren_match", "match_confiance", "match_distance_km"):
+            out[col] = pd.Series(dtype=object)
+        out["match_methode"] = pd.Series(dtype=object)
+        out["match_score"] = pd.Series(dtype=float)
+        out["intermediaire"] = pd.Series(dtype=bool)
+        return out
+    index = SireneIndex(ent)
     out["_norm"] = out["entreprise_nom"].map(normalize)
     keys = out[["_norm", "entreprise_nom", "lat", "lon"]].drop_duplicates()
 

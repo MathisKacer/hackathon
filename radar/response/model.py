@@ -20,6 +20,7 @@ Sorties :
 from __future__ import annotations
 
 import json
+import logging
 import math
 
 import numpy as np
@@ -30,6 +31,8 @@ from sklearn.metrics import brier_score_loss, roc_auc_score
 from radar.config import FILES, PATHS
 from radar.response.simulate import FEATURES, candidate_pool, load_params
 from radar.schemas import check_columns
+
+log = logging.getLogger(__name__)
 
 MODEL_FILE = PATHS.processed / "modele_reponse.json"
 TEST_SHARE = 0.25
@@ -43,13 +46,33 @@ def split_by_student(cand: pd.DataFrame, seed: int = 0) -> tuple[pd.DataFrame, p
     return cand[~is_test], cand[is_test]
 
 
+def usable_features(df: pd.DataFrame) -> list[str]:
+    """Variables non constantes. Une variable constante rend la matrice singulière (T53 :
+    scores construits sans Adzuna → `c_intensite`, `c_embauche` constantes)."""
+    return [f for f in FEATURES if df[f].astype(float).nunique(dropna=True) > 1]
+
+
 def fit(train: pd.DataFrame):
-    x = sm.add_constant(train[FEATURES].astype(float), has_constant="add")
+    feats = usable_features(train)
+    dropped = sorted(set(FEATURES) - set(feats))
+    if dropped:
+        log.warning(
+            "Variables constantes écartées du modèle de réponse : %s (coefficient 0). "
+            "Données incomplètes ? (ex. scores construits sans les offres Adzuna)",
+            ", ".join(dropped),
+        )
+    x = sm.add_constant(train[feats].astype(float), has_constant="add")
     return sm.Logit(train["repondu"].astype(float), x).fit(disp=False)
 
 
+def _coef(res, name: str) -> float:
+    """Coefficient estimé, 0 pour une variable écartée (constante)."""
+    return float(res.params.get(name, 0.0))
+
+
 def predict(res, df: pd.DataFrame) -> np.ndarray:
-    x = sm.add_constant(df[FEATURES].astype(float), has_constant="add")
+    feats = [n for n in res.params.index if n != "const"]
+    x = sm.add_constant(df[feats].astype(float), has_constant="add")
     return np.asarray(res.predict(x))
 
 
@@ -104,7 +127,7 @@ def score_all(res, pool: pd.DataFrame) -> pd.DataFrame:
         out["contrat_vise"] = contrat
         lin = np.full(len(d), coef["const"])
         for f in FEATURES:
-            contrib = coef[f] * d[f].to_numpy(float)
+            contrib = _coef(res, f) * d[f].to_numpy(float)
             lin += contrib
             if f not in ("distance_10km",):
                 out[f"contrib_{f}"] = contrib.astype(np.float32)
@@ -132,7 +155,8 @@ def run() -> dict:
         "description": "Logistique entraînée sur des réponses SIMULÉES (D6). Ne pas présenter "
         "comme une probabilité réelle.",
         "variables": FEATURES,
-        "coefficients": res.params.round(5).to_dict(),
+        "coefficients": {f: round(_coef(res, f), 5) for f in ["const", *FEATURES]},
+        "variables_ecartees": sorted(set(FEATURES) - set(res.params.index)),
         "usage_distance": "logit(p) = logit(p_reponse) + coefficients['distance_10km'] × km / 10",
         "metriques": report,
     }

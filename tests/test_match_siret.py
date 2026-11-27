@@ -139,3 +139,36 @@ def test_dotted_acronyms_survive_normalization():
     assert normalize("S.F.R") == "sfr"
     assert normalize("E.T.A.I.") == "etai"
     assert normalize("Ingénieur H/F") == "ingenieur h f".replace(" h f", "")
+
+
+def test_t27_training_bodies_are_intermediaries():
+    for name in ("AGEPAC", "KOANN", "Chambre Régionale de Métiers et de l'Artisanat"):
+        assert is_intermediary(name, normalize(name)), name
+
+
+def test_t27_source_siret_of_temp_agency_is_intermediary():
+    from radar.schemas import SCHEMAS
+
+    offres = pd.DataFrame(
+        {
+            "offre_id": ["a", "b"],
+            "entreprise_nom": ["X", "Y"],
+            "lat": [RENNES[0]] * 2,
+            "lon": [RENNES[1]] * 2,
+            "siret_match": ["60000000000001", "10000000000001"],  # intérim (78.20Z) / ESN
+            "match_score": [100.0, 100.0],
+            "match_methode": ["siret_source", "siret_source"],
+        }
+    )
+    for c in SCHEMAS["offres"]:
+        if c not in offres:
+            offres[c] = None
+    out = complete_matches(offres, ENT).set_index("offre_id")
+    assert out.loc["a", "intermediaire"] and not out.loc["b", "intermediaire"]
+
+
+def test_match_offers_with_nothing_to_match():
+    """Toutes les offres ont un SIRET source (LBA seule) : pas de plantage sur un tableau vide."""
+    empty = pd.DataFrame(columns=["offre_id", "entreprise_nom", "lat", "lon"])
+    out = match_offers(empty, ENT)
+    assert out.empty and {"siret_match", "intermediaire", "match_methode"} <= set(out.columns)

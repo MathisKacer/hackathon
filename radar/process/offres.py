@@ -16,7 +16,11 @@ import pandas as pd
 
 from radar.config import FILES
 from radar.process.classify import MATCH_FROM_SOURCE, MATCH_TODO
-from radar.process.match_siret import match_offers, match_report
+from radar.process.match_siret import (
+    SOURCE_INTERMEDIARY_NAF_PREFIX,
+    match_offers,
+    match_report,
+)
 from radar.schemas import check_columns
 
 log = logging.getLogger(__name__)
@@ -33,7 +37,14 @@ def complete_matches(offres: pd.DataFrame, entreprises: pd.DataFrame) -> pd.Data
     rest["siren_match"] = rest["siret_match"].astype("string").str[:9].where(from_source)
     rest["match_confiance"] = pd.Series("haute", index=rest.index).where(from_source)
     rest["match_distance_km"] = None
-    rest["intermediaire"] = False
+    # T27 : SIRET fourni par la source mais agence de placement / d'intérim → intermédiaire,
+    # comme pour les offres rapprochées par le nom (cohérence entre sources).
+    naf = rest["siret_match"].map(entreprises.set_index("siret")["naf"]) if len(rest) else None
+    rest["intermediaire"] = (
+        pd.Series(naf, index=rest.index).fillna("").str.startswith(SOURCE_INTERMEDIARY_NAF_PREFIX)
+        if len(rest)
+        else False
+    )
 
     out = pd.concat([matched, rest], ignore_index=True)
     check_columns(out, "offres_rapprochees")

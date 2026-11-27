@@ -68,12 +68,12 @@
 
 ## 🔵 En cours
 
-- [ ] T27 — 🔗T21 **Revue des intermédiaires** (L8) : passer en revue les plus gros émetteurs + `volume_suspect`, compléter `INTERMEDIARIES` ; à refaire à chaque nouvelle source (LBA) — @mathis
-- [ ] T53 — 🔗T36 `scripts/build_response.py` plante (« Singular matrix ») si les scores sont construits **sans les offres Adzuna** (LBA seules : `c_intensite` et `c_embauche` constantes) → message clair, ou retirer les variables constantes avant l'ajustement (vu par @maxence en T37) — @mathis
 - _…_
 
 ## ✅ Fait
 
+- [x] T27 — 🔗T21 **Revue des intermédiaires** (L8) : passer en revue les plus gros émetteurs + `volume_suspect`, compléter `INTERMEDIARIES` ; à refaire à chaque nouvelle source (LBA) — @mathis → après l'arrivée de LBA : organismes de formation (AGEPAC, KOANN, Chambre régionale de métiers) ajoutés aux intermédiaires ; SIRET source d'une agence de placement / d'intérim (NAF 78.1, 78.2) → intermédiaire (443 offres LBA au total)
+- [x] T53 — 🔗T36 `scripts/build_response.py` plante (« Singular matrix ») si les scores sont construits **sans les offres Adzuna** (LBA seules : `c_intensite` et `c_embauche` constantes) → message clair, ou retirer les variables constantes avant l'ajustement (vu par @maxence en T37) — @mathis → variables constantes écartées avant l'ajustement (avertissement, coefficient 0) ; + bug voisin corrigé : `match_offers` plantait quand toutes les offres ont un SIRET source
 - [x] T54 — **Favoris** : étoile dans la fiche (entreprises) et case ★ dans la liste des offres ; colonne ★ dans les candidatures spontanées ; « Mes favoris » dans Mon espace (voir la fiche, lien vers l'annonce, « n'est plus en ligne », case « Candidaté », note libre, retirer). Sans compte : favoris temporaires (rien sur le disque), enregistrés automatiquement à la connexion — @celia
 - [x] T56 — **Interface en 3 pages** (D30) : navigation en haut (Explorer, Entreprises, Mon espace), recherche en haut + panneau « Filtres », phrase de résultat, fiche en fenêtre au clic, **recherche d'entreprises** tolérante aux fautes (`radar/recherche.py`), Mon espace (profil, historique, « Relancer »), thème sobre ; carte déplacée sans modification dans `app/carte.py` ; T55, T29 et T32 intégrés — @celia
 - [x] T38 — **Fiche entreprise : La Bonne Boîte** (D27) : « ✔ Signalée par La Bonne Boîte (France Travail) comme susceptible d'embaucher en … » avec le potentiel (médiane 2,8), sinon « potentiel estimé » (`radar.fiche.hiring_signal`) — @celia
