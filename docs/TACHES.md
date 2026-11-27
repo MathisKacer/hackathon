@@ -72,6 +72,7 @@
 
 ## 🔵 En cours
 
+- [ ] T17 — 🔗T11 **Partager les données LBA sur S3** (`offres_raw/lba.parquet`, `lba_recruteurs.parquet`) : relancer `scripts/collect_lba.py` sur Onyxia puis `scripts/share_s3.py` — @maxence
 - [ ] T7 — 🔗T11 Ajouter des **recruteurs LBA factices** (`data/raw/lba_recruteurs.parquet`) au générateur T5 — @emma
 
 ## ✅ Fait
