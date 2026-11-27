@@ -14,6 +14,17 @@
 
 ---
 
+### D9 — Dictionnaire des domaines : codes ROME sûrs, codes ambigus et mots-clés (2026-11-27, @emma)
+**Contexte :** classer chaque offre par domaine (T6 → T13). La bonne alternance fournit des codes ROME, mais pas Adzuna (titre seulement). Certains codes ROME sont ambigus (« Chargé d'études commerciales » peut être un poste data ou marketing).
+**Décision :** `radar/domains.yaml` décrit 5 domaines, dans l'ordre data, informatique, finance, marketing, rh (l'ordre départage les cas ambigus : data gagne). Pour chacun :
+- `rome` : les codes sûrs, chacun dans un seul domaine ;
+- `rome_partiel` : les codes ambigus, qui ne comptent que si le titre contient un mot-clé du domaine ;
+- `mots_cles` et `exclusions` : des expressions régulières sur le titre.
+
+Règle (`radar/domains.py › classify`) : code ambigu confirmé par le titre, sinon code sûr, sinon titre seul, sinon `autre`. Les codes ont été vérifiés avec l'API ROME 4.0 (1 923 métiers) et leurs libellés recopiés. Les mots-clés data reprennent ceux de `quick_filter.py` (T39) : les verdicts sont identiques sur ses titres de test.
+**Alternatives écartées :** des mots-clés seuls (on perdrait le ROME, fiable quand il existe) ; des codes seuls (inutilisables pour Adzuna).
+**Conséquences :** T13 s'appuie sur `classify` et peut y ajouter la description. Ajouter un domaine = ajouter un bloc dans le YAML, sans toucher au code (mais `fake_data.DOMAINS` doit suivre : un test le vérifie). Les titres en anglais hors data sont mal couverts (« Accounting Generalist » → `autre`).
+
 ### D8 — Carte à deux couches : offres réelles / candidature spontanée (2026-11-27, @mathis)
 **Contexte :** l'équipe veut que la démo repose sur une carte montrant à la fois les vraies offres et les entreprises susceptibles d'accepter une candidature spontanée.
 **Décision :** une carte folium, deux couches activables. 🔵 Offres réelles (filtrées domaine × contrat visé, lien vers l'annonce). 🟠 Candidature spontanée : entreprises **sans offre correspondante**, classées par score ou P(réponse). Les deux couches sont exclusives (une entreprise avec une offre correspondante est en bleu).

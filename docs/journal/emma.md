@@ -4,6 +4,45 @@
 
 ---
 
+## 2026-11-27 — T6 : dictionnaire des domaines ✅
+
+**Fait :**
+- `radar/domains.yaml` : 5 domaines (data, informatique, finance, marketing, rh), chacun avec ses codes ROME 4.0 sûrs, ses codes ambigus, ses mots-clés et ses exclusions. La règle de classement est expliquée en tête du fichier.
+- `radar/domains.py` : `load_domains()` (domaines dans l'ordre du fichier) et `classify(titre, code_rome)` → domaine ou `autre`. Gère plusieurs codes séparés par des virgules (format de La bonne alternance).
+- `tests/test_domains.py` : 35 tests (fichier bien formé, un code ROME dans un seul domaine, mêmes domaines que le générateur factice, titres typiques et pièges).
+- Docs : D9 dans `DECISIONS.md`, arborescence dans `ARCHITECTURE.md`, T6 en « Fait », T2 cochée (faite), nouvelle tâche T7 en attente.
+
+**Fichiers touchés :**
+- `radar/domains.yaml`, `radar/domains.py`, `tests/test_domains.py`
+- `docs/DECISIONS.md`, `docs/ARCHITECTURE.md`, `docs/TACHES.md`, `docs/journal/emma.md`
+
+**Comment j'ai obtenu les codes ROME :**
+- Le fichier open data du ROME (francetravail.org) est **inaccessible depuis Onyxia** : la connexion est coupée.
+- J'ai donc utilisé l'API France Travail « ROME 4.0 – Métiers », avec les clés du `.env` : `GET /partenaire/rome-metiers/v1/metiers/metier?champs=code,libelle,domaineProfessionnel(code,libelle,grandDomaine(code,libelle)),appellations(libelle)`, soit 1 923 métiers.
+- J'ai choisi les codes à la main, à partir des domaines professionnels (M14 études, M18 SI, M12 comptabilité-gestion, C12/C13 banque-finance, M17/E11/E14 marketing-communication, M15 RH) et d'une recherche de mots-clés dans les appellations. Les libellés du YAML sont recopiés depuis l'API.
+- Le script d'extraction n'est pas versionné : c'était un usage ponctuel, et c'est le YAML qui fait foi.
+
+**Résultats / chiffres clés :**
+- Nombre de codes sûrs (+ ambigus) : data 18 (+ 8 ambigus), informatique 82, finance 49, marketing 34, rh 11.
+- Codes data ajoutés à la liste de `SOURCES.md` : M1422 (directeur d'études socio-éco), M1873 (IA embarquée), K2134 (démographe), H1215 (bio-informaticien). M1824 (BI) est confirmé.
+- Codes ambigus data : M1430 (études commerciales), M1435 (tracking), M1201 (analyste financier, quant), M1853 (chef de projet informatique, « projet Data »), M1894 (gestionnaire de bases de données), M1895 (géomaticien), M1888 (modélisation climatique), G1211 (analyste de la performance sportive).
+- Les mots-clés data reprennent ceux de `quick_filter.py` (Mathis, T39), avec le même verdict sur ses 18 titres de test. J'ai ajouté des exclusions : datacenter, DPO / protection des données, saisie de données.
+- `pytest` : 69/69 sur tout le dépôt ; ruff OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- **Pas encore validé sur de vraies offres** : les données Adzuna de Mathis sont sur son pod, et je n'ai pas relancé de collecte pour ne pas consommer le quota partagé. Pour comparer sur les vraies offres :
+  `uv run python -c "import pandas as pd; from radar.domains import classify; df=pd.read_parquet('data/raw/offres_raw/adzuna.parquet'); print(df['titre'].map(classify).value_counts())"`
+- Les titres anglais hors data sont mal couverts (« Accounting Generalist » → `autre`) : à compléter dans T13 si besoin.
+- Un code sûr l'emporte sur le titre : « Data engineer » avec un code M1805 (développeur) → informatique. C'est voulu, le ROME étant plus fiable que le titre.
+- `quick_filter.py` (T39) reste en place : je n'y ai pas touché. T13 pourra le remplacer par `classify`.
+- `fake_data.DOMAINS` doit rester identique aux clés du YAML : un test le vérifie.
+
+**Prochaine étape :**
+- T7 (recruteurs LBA factices), **seulement après la fusion de la branche de Maxence** (T11), pour ne pas toucher `schemas.py` en même temps que lui.
+- Formats à harmoniser avec Maxence (vus dans sa branche) : NAF `6201Z` (La bonne alternance) contre `62.01Z` (SIRENE et données factices), et taille en fourchette (`50-99`) contre codes INSEE de tranche d'effectif.
+
+---
+
 ## 2026-11-27 — T5 : générateur de données factices ✅
 
 **Fait :**

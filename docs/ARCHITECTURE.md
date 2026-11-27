@@ -34,7 +34,8 @@ hackathon/
 │   ├── config.py               # chemins, lecture du .env
 │   ├── schemas.py              # colonnes du contrat de données (copie en code du tableau ci-dessous) + check_columns()
 │   ├── fake_data.py            # T5 : générateur de données FACTICES respectant le contrat
-│   ├── domains.yaml            # domaines (data, finance…) → codes ROME + mots-clés
+│   ├── domains.yaml            # T6 : domaines (data, informatique, finance, marketing, rh) → codes ROME 4.0 + mots-clés
+│   ├── domains.py              # chargement de domains.yaml + classify(titre, code_rome) → domaine (base de T13)
 │   ├── collect/                # un module par source : adzuna.py, lba.py, ats.py, sirene.py, bodacc.py…
 │   ├── process/
 │   │   ├── classify.py         # domaine de l'offre + type de contrat (stage / alternance / emploi)
