@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-11-27 — T75 : plantage avec les données factices (mon code de T26)
+
+**Fait :**
+- Bug trouvé par Celia : `get_families` lisait les colonnes `n_*_domaine_siren`, absentes des scores factices → Explorer plantait.
+- Correction : lecture des seules colonnes présentes (`app/commun.py`) ; `radar/familles.py` accepte les deux formats (vrais scores au niveau SIREN, ou comptes par site additionnés, SIREN retrouvé par le SIRET).
+- Test ajouté (`tests/test_familles.py`) ; AppTest avec des données factices générées à part : Rennes → 214 candidatures spontanées, sans erreur.
+- Au passage : l'utilisateur ne voyait plus de candidatures spontanées ; sur les vraies données, l'app en affiche bien 4 346 à Rennes → probablement la ville oubliée après le redémarrage de l'app.
+
+---
+
 ## 2026-11-27 — T26 (suite) : case « Masquer » retirée
 
 **Fait :**
