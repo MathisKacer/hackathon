@@ -28,7 +28,6 @@
 - [ ] T13 — 🔗T6 **Classifieur d'offres** : `domaine` (data ou autre), `contrat` (stage / alternance / emploi), à partir du ROME, des mots-clés et du type de contrat
 
 **Entreprises**
-- [ ] T20 — **Référentiel SIRENE France** : stock parquet géolocalisé (data.gouv) → établissements actifs et employeurs, avec NAF, tranche d'effectif et lat/lon → `entreprises.parquet` (DuckDB)
 - [ ] T21 — 🔗T11,T12 **Rapprochement nom + commune → SIRET** pour les offres Adzuna (rapidfuzz sur le référentiel T20) ; mesurer le taux de rapprochement et le noter dans `SOURCES.md`
 
 **Score**
@@ -75,6 +74,7 @@
 
 ## 🔵 En cours
 
+- [ ] T20 — **Référentiel SIRENE France** : stock parquet géolocalisé (data.gouv) → établissements actifs et employeurs, avec NAF, tranche d'effectif et lat/lon → `entreprises.parquet` (DuckDB) — @mathis
 - [ ] T11 — 🔗T2 **Collecteur La bonne alternance**, France entière : offres + recruteurs potentiels, avec SIRET → `offres_raw/lba/` — @maxence
 
 ## ✅ Fait
