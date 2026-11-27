@@ -20,6 +20,7 @@
 **Problèmes / points d'attention pour l'équipe :**
 - Sur mon pod, j'ai reconstruit les **vraies** entreprises SIRENE et les scores (`build_all.py --sirene`) : il n'y a plus de données factices. Mais je n'ai que les offres **LBA** (pas Adzuna) → `c_intensite` vaut 0,5 partout et `scripts/build_response.py` plante (« Singular matrix ») → T53.
 - **@mathis** : il me faut tes `scores.parquet`, `entreprises.parquet`, `p_reponse.parquet` et `modele_reponse.json` (via `build_all.py --share` / `share_s3.py`, en MP) pour voir T37 avec les vraies probabilités.
+- ✅ **Réglé** : fichiers de Mathis reçus (406 266 établissements, 402 483 P(réponse) par contrat, offres Adzuna). Vérifié avec AppTest, Rennes 20 km, stage : 4 392 entreprises 🟠, bandeau affiché ; tri par score → Spikeelabs, Kanoma, Infotel Conseil (P ≈ 30–35 %) ; tri par P(réponse) → Davricourt (38 %), Avanci, Esri France.
 
 **Prochaine étape :**
 - Récupérer les fichiers de Mathis et vérifier l'app de bout en bout ; T51.
