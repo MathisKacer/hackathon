@@ -116,3 +116,105 @@ def test_links():
     assert set(links(pd.Series({"siret": "1", "lat": None, "lon": None}))) == {
         "Annuaire des entreprises"
     }
+
+
+# --- Affichage (app/fiche_ui.py), avec AppTest ---------------------------------------------
+
+
+def _mini_app():
+    import sys
+    from pathlib import Path
+
+    import pandas as pd
+
+    sys.path.insert(0, str(Path.cwd() / "app"))
+    from fiche_ui import render_fiche
+
+    render_fiche(
+        pd.DataFrame(
+            {
+                "siret": ["11111111100011", "22222222200022"],
+                "siren": ["111111111", "222222222"],
+                "nom": ["ACME", "BETA"],
+                "commune": ["RENNES", "BRUZ"],
+                "score": [0.8, 0.3],
+                "distance_km": [1.2, 8.5],
+                "c_intensite": [0.9, 0.4],
+                "apport_c_intensite": [0.8, 0.3],
+                "n_offres_domaine_siren": [3, 0],
+                "intensite_post": [1.5, 0.2],
+                "intensite_ic_bas": [0.5, 0.0],
+                "intensite_ic_haut": [3.0, 0.9],
+                "prior_moyenne": [0.6, 0.6],
+                "alerte": ["", "🟠 En redressement judiciaire (depuis 03/2026)"],
+                "coef_procedure": [1.0, 0.4],
+                "explication": ["Recommandée car elle publie 3 offres data.", None],
+                "lat": [48.11, 48.02],
+                "lon": [-1.68, -1.75],
+            }
+        )
+    )
+
+
+def test_render_fiche(monkeypatch):
+    import streamlit as st
+    from streamlit.testing.v1 import AppTest
+
+    from radar import fiche
+
+    monkeypatch.setattr(
+        fiche,
+        "load_company",
+        lambda siret: pd.Series(
+            {
+                "siret": siret,
+                "siren": siret[:9],
+                "nom": "ACME",
+                "naf_libelle": "Programmation",
+                "tranche_libelle": "20 à 49 salariés",
+                "categorie": "PME",
+                "siege": True,
+                "adresse": "1 RUE DU TEST",
+                "code_postal": "35000",
+                "commune": "RENNES",
+                "diffusion_partielle": False,
+            }
+        ),
+    )
+    monkeypatch.setattr(
+        fiche,
+        "company_offers",
+        lambda siren, siret: pd.DataFrame(
+            {
+                "date_publication": ["2026-11-20"],
+                "titre": ["Stage data"],
+                "contrat": ["stage"],
+                "domaine": ["data"],
+                "commune": ["Rennes"],
+                "source": ["adzuna"],
+                "url": ["https://ex.org/1"],
+            }
+        ),
+    )
+    monkeypatch.setattr(
+        fiche,
+        "bodacc_history",
+        lambda siren: pd.DataFrame(columns=["date", "situation", "nature", "url"]),
+    )
+    st.cache_data.clear()
+    at = AppTest.from_function(_mini_app, default_timeout=30)
+    at.run()
+    assert not at.exception
+    md = [m.value for m in at.markdown]
+    assert "### ACME" in md
+    assert any("Recommandée car" in i.value for i in at.info)  # colonne T32
+    assert any(m.startswith("Niveau de preuve") and "moyen" in m for m in md)
+    assert any("intervalle crédible à 90 %" in m for m in md)
+    assert any("1 RUE DU TEST" in m for m in md)
+    assert any("Stage data" in d.value.to_string() for d in at.dataframe)
+
+    at.session_state["fiche_siret"] = "22222222200022"  # entreprise avec alerte
+    at.run()
+    assert not at.exception
+    assert any("redressement" in w.value for w in at.warning)
+    st.cache_data.clear()

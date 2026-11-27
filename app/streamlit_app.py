@@ -17,6 +17,7 @@ import folium
 import pandas as pd
 import streamlit as st
 from compte import account_sidebar, search_history  # app/compte.py (T48, T49)
+from fiche_ui import render_fiche  # app/fiche_ui.py (T43)
 from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
 
@@ -605,6 +606,8 @@ with tab_spont:
             "Les colonnes « + … » donnent l'apport de chaque composante (leur somme = le score). "
             "Intensité et besoin attendu : rangs centiles du modèle bayésien empirique (D13)."
         )
+    # Fiche détaillée d'une entreprise de la liste (T43, @celia) — panneau sous la liste.
+    render_fiche(spontaneous)
 
 SOURCE_LABELS = {"adzuna": "Adzuna", "lba": "La bonne alternance"}
 sources = ", ".join(SOURCE_LABELS.get(s, s) for s in sorted(offers["source"].dropna().unique()))
