@@ -27,7 +27,7 @@
 **Problèmes / points d'attention pour l'équipe :**
 - **@mathis :** sur ton pod (qui a la couverture Adzuna et les vraies données), lancer `uv run python scripts/collect_lbb.py` puis `uv run python scripts/build_all.py`, et repartager `scores.parquet`. Je n'ai pas pu recalculer les vrais scores sur mon pod : il me manque `adzuna_couverture.json`, `entreprises.parquet` réel et les vraies données LBA.
 - Le modèle de réponse simulé (T36) utilise `c_embauche` : ses coefficients vont changer au prochain `build_all`.
-- **@celia (fiche entreprise) / @maxence (app) :** `lbb_potentiel` et `c_embauche_source == "la_bonne_boite"` permettent d'afficher « signalée par La Bonne Boîte (France Travail) ».
+- **@celia (fiche entreprise) / @maxence (app) :** `lbb_potentiel` et `c_embauche_source == "la_bonne_boite"` permettent d'afficher « signalée par La Bonne Boîte (France Travail) ». Tâches créées : **T29** (@maxence, libellé du curseur + badge) et **T38** (@celia, fiche).
 - Limite restante (L11) : 99,7 % des établissements restent notés par le proxy. La Bonne Boîte couvre mal les métiers data pointus, c'est elle qui le dit, pas nous.
 
 **Prochaine étape :**

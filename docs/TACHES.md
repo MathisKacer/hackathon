@@ -37,6 +37,8 @@
 
 ## 🟡 P2 — Valeur ajoutée (H+8 → H+16)
 
+- [ ] T29 — 🔗T28, scores régénérés par @mathis (`collect_lbb.py` puis `build_all.py`) **App : `c_embauche` avec La Bonne Boîte** (D27). Dans `radar/spontaneous.py › COMPONENTS`, renommer le curseur « Besoin attendu » (ex. « Potentiel d'embauche ») et corriger l'explication : « établissements signalés par La Bonne Boîte (France Travail) en tête, classés par potentiel d'embauche ; sinon estimation à partir des offres et de l'effectif ». Dans la liste orange, petit badge « La Bonne Boîte » quand `c_embauche_source == "la_bonne_boite"` — @maxence
+- [ ] T38 — 🔗T28, T43, scores régénérés par @mathis **Fiche entreprise : La Bonne Boîte** (D27). Dans `radar/fiche.py` / `app/fiche_ui.py`, si `c_embauche_source == "la_bonne_boite"` : afficher « Signalée par La Bonne Boîte (France Travail) comme susceptible d'embaucher en data », avec `lbb_potentiel` (potentiel d'embauche, médiane 2,8, max 86) ; sinon indiquer que `c_embauche` est une estimation (proxy) — @celia
 **Lever les limites connues (voir `docs/LIMITES.md`)**
 - [ ] T26 — 🔗T21 **Familles de marque** (L7) : une entreprise ETI/GE dont une entité a des offres du domaine → ses autres entités (même début de nom) sont exclues de la couche orange (`a_offre_groupe`)
 - [ ] T27 — 🔗T21 **Revue des intermédiaires** (L8) : passer en revue les plus gros émetteurs + `volume_suspect`, compléter `INTERMEDIARIES` ; à refaire à chaque nouvelle source (LBA)
