@@ -51,7 +51,6 @@
 **Favoris**
 
 **Lisibilité des résultats et filtres** _(ajoutées par @emma ; elles touchent toutes `app/vues/explorer.py`, en cours de modification par Celia pour T57 : se coordonner avec elle)_
-- [ ] T64 — **Afficher la probabilité de réponse en pourcentage** sur le site (liste des candidatures spontanées, popup de la carte, fiche), pas seulement quand on classe par « Chance de réponse » (aujourd'hui la colonne « Chance de réponse (démo) » n'apparaît qu'avec ce tri). ⚠️ P(réponse) vient d'un modèle entraîné sur des réponses **simulées** (D6, D23) : garder la mention « démo / simulé » à côté du pourcentage
 - [ ] T65 — **Score en mots et en couleurs** au lieu du nombre : des paliers (ex. « Possible », « Probable », « Fortement probable ») avec une couleur de plus en plus intense, dans la liste, sur la carte et dans la fiche. Fixer les seuils (quantiles du score ?) et les documenter dans `DECISIONS.md` ; garder le nombre en info-bulle pour l'explicabilité
 - [ ] T66 — **Masquer le filtre « Régions »** quand une ville est choisie dans « Où ? » (le rayon autour de la ville le rend redondant, voire contradictoire). Penser à `WIDGET_KEYS` / `profile_keys()` (`app/commun.py`) : ne pas perdre la valeur enregistrée dans un profil
 - [ ] T67 — **Niveau d'études attendu** : l'afficher (offres, fiche) et/ou en faire un filtre. Données : La bonne alternance fournit `niveau_diplome` (champ `target_diploma`) ; **Adzuna ne le donne pas** → à déduire du texte (« Bac+5 », « Master », « M2 »…) ou à laisser « non précisé ». Pour les candidatures spontanées (pas d'offre), pas de niveau observé. Nouveau champ → `radar/schemas.py` et `ARCHITECTURE.md`
@@ -73,6 +72,8 @@
 
 ## 🔵 En cours
 
+- [ ] T64 — **Afficher la probabilité de réponse en pourcentage** sur le site (liste des candidatures spontanées, popup de la carte, fiche), pas seulement quand on classe par « Chance de réponse » (aujourd'hui la colonne « Chance de réponse (démo) » n'apparaît qu'avec ce tri). ⚠️ P(réponse) vient d'un modèle entraîné sur des réponses **simulées** (D6, D23) : garder la mention « démo / simulé » à côté du pourcentage — @celia
+  Choix (avec Celia) : libellé « Chance de réponse » partout ; mention « simulé » seulement en info-bulle (plus de bandeau ni de « (démo) » à l'écran), dite au pitch.
 - _…_
 
 ## ✅ Fait
