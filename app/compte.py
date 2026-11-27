@@ -1,4 +1,4 @@
-"""Bloc « compte » de la barre latérale (T48, D14).
+"""Bloc « compte » de la barre latérale (T48) et historique des recherches (T49), D14.
 
 Par défaut : mode démo anonyme, rien n'est enregistré. Connexion facultative pour retrouver
 son profil (les réglages de recherche) d'une visite à l'autre.
@@ -12,9 +12,18 @@ Usage dans streamlit_app.py, AVANT de créer les widgets de recherche :
 
 Chaque clé du dictionnaire est la `key` d'un widget ; la valeur liste les options permises
 (None = texte ou nombre libre). Les valeurs d'un profil qui ne sont plus permises sont ignorées.
+
+Historique (T49), APRÈS le calcul des résultats :
+
+    search_history(PROFILE_KEYS, n_results=len(view), top=[...], labels={"contrat": "Contrat"})
+
+Ne fait rien en mode anonyme. Connecté : enregistre la recherche et affiche « Mes recherches »
+en bas de la barre latérale, avec un bouton « Relancer » par recherche.
 """
 
 from __future__ import annotations
+
+from zoneinfo import ZoneInfo
 
 import streamlit as st
 
@@ -23,6 +32,8 @@ from radar import accounts
 USER_KEY = "compte_user"  # {"id": int, "username": str} quand on est connecté
 FAILS_KEY = "compte_echecs"
 MAX_FAILS = 5  # tentatives de connexion par session
+HISTORY_SHOWN = 10
+TZ = ZoneInfo("Europe/Paris")
 
 
 @st.cache_resource
@@ -132,3 +143,75 @@ def account_sidebar(profile_keys: dict[str, list | None]) -> dict | None:
     else:
         _connected_box(user, profile_keys)
     return current_user()
+
+
+# --- Historique des recherches (T49) -----------------------------------------------------
+
+
+def _format_value(value) -> str:
+    if isinstance(value, bool):
+        return "oui" if value else "non"
+    if isinstance(value, list):
+        return ", ".join(map(str, value))
+    return str(value)
+
+
+def summarize(params: dict, labels: dict[str, str] | None = None) -> str:
+    """Résumé lisible d'une recherche : « Contrat : Stage · Régions : Bretagne »."""
+    labels = labels or {}
+    parts = [
+        f"{labels.get(k, k)} : {_format_value(v)}"
+        for k, v in params.items()
+        if v not in ("", [], None)
+    ]
+    return " · ".join(parts) or "réglages par défaut"
+
+
+def _relaunch(params: dict, profile_keys: dict) -> None:
+    # Rappel de bouton : exécuté avant que la page soit redessinée, donc avant la création des
+    # widgets → on peut modifier leurs valeurs ici.
+    _apply_profile(params, profile_keys)
+
+
+def _clear_history(user_id: int) -> None:
+    accounts.clear_searches(_con(), user_id)
+
+
+def search_history(
+    profile_keys: dict[str, list | None],
+    n_results: int,
+    top: list[str] | None = None,
+    labels: dict[str, str] | None = None,
+) -> None:
+    """Connecté : enregistre la recherche en cours et affiche « Mes recherches »."""
+    user = current_user()
+    if user is None:
+        return  # mode anonyme : rien n'est écrit
+    con = _con()
+    current_id = accounts.log_search(
+        con, user["id"], _current_settings(profile_keys), n_results, top
+    )
+    searches = accounts.list_searches(con, user["id"], limit=HISTORY_SHOWN)
+    with st.sidebar, st.expander(f"🕘 Mes recherches ({len(searches)})"):
+        for s in searches:
+            date = s["created_at"].astimezone(TZ).strftime("%d/%m à %H:%M")
+            st.markdown(
+                f"**{date}**{' · *en cours*' if s['id'] == current_id else ''}  \n"
+                f"{summarize(s['params'], labels)}  \n"
+                f"{s['n_resultats']} résultat(s)"
+                + (f" · {', '.join(s['top_resultats'][:3])}" if s["top_resultats"] else "")
+            )
+            if s["id"] != current_id:
+                st.button(
+                    "↻ Relancer",
+                    key=f"compte_relancer_{s['id']}",
+                    on_click=_relaunch,
+                    args=(s["params"], profile_keys),
+                )
+        st.button(
+            "Effacer mon historique",
+            key="compte_effacer_historique",
+            on_click=_clear_history,
+            args=(user["id"],),
+            disabled=not searches,
+        )

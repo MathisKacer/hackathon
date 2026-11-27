@@ -15,7 +15,7 @@ import math
 import folium
 import pandas as pd
 import streamlit as st
-from compte import account_sidebar  # app/compte.py (T48)
+from compte import account_sidebar, search_history  # app/compte.py (T48, T49)
 from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
 
@@ -144,6 +144,15 @@ PROFILE_KEYS = {
     "max_age": list(range(7, 61, 7)) + [60],
     "only_data": [True, False],
 }
+# Libellés affichés dans « Mes recherches » (T49).
+PROFILE_LABELS = {
+    "domaine": "Domaine",
+    "contrat": "Contrat",
+    "regions": "Régions",
+    "query": "Mot-clé",
+    "max_age": "Moins de (jours)",
+    "only_data": "Seulement data",
+}
 # Valeurs par défaut posées dans session_state (et non via value=) pour qu'un profil chargé
 # puisse les remplacer sans avertissement de Streamlit.
 st.session_state.setdefault("max_age", 60)
@@ -177,6 +186,13 @@ with st.sidebar:
     )
 
 view = filter_offers(offers, regions, contrat, only_data, max_age, query.strip())
+# Connecté : enregistre la recherche et affiche « Mes recherches » ; anonyme : ne fait rien (T49).
+search_history(
+    PROFILE_KEYS,
+    n_results=len(view),
+    top=view["entreprise_nom"].value_counts().head(5).index.tolist(),
+    labels=PROFILE_LABELS,
+)
 
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Offres", f"{len(view):,}".replace(",", " "))
