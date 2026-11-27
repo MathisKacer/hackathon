@@ -14,6 +14,14 @@
 
 ---
 
+### D19 — Couche orange : « sans offre correspondante » = domaine × contrat visé, au niveau SIREN (2026-11-27, @maxence)
+**Contexte :** T40 doit afficher les entreprises proches sans offre correspondante (D8), classées par score (D13), sur toute la France.
+**Décision :** `radar/spontaneous.py`. Lecture DuckDB de `scores.parquet` ⋈ `entreprises.parquet` sur le **rectangle** du rayon (pas de chargement de la France entière), puis distance haversine ≤ rayon. Exclusion : offres du domaine **du contrat visé** (stage → `n_stage_domaine`, alternance → `n_alternance_domaine`, emploi → le reste, Tous → toutes), comptées au niveau **SIREN** quand le score réel les fournit (`*_siren`), sinon au niveau SIRET (données factices) ; `volume_suspect` écarté. Une entreprise qui recrute en emploi data mais sans stage reste donc orange pour un étudiant en stage : c'est l'opportunité cachée. Score v0 = √(`c_intensite` × `c_embauche`) (D13), en attendant les poids de T42. Géocodage : API Géoplateforme (BAN, sans clé) avec cache disque ; adresse introuvable ou réseau coupé → message, l'app continue. Carte : 300 meilleures entreprises au plus (la liste garde tout). La couche bleue est filtrée par le même rayon.
+**Alternatives écartées :** charger tout `scores.parquet` en mémoire dans l'app (trop lourd France entière) ; exclusion par SIRET seulement (un établissement secondaire apparaîtrait orange alors que le siège publie l'offre).
+**Conséquences :** l'app a besoin de `data/processed/{entreprises,scores}.parquet` (`scripts/build_all.py`) ; sans eux, la couche orange affiche un message. T42 remplacera `spontaneous_score` par une somme pondérée.
+
+---
+
 ### D18 — Modèle de réponse : simulation sur entreprises réelles et logistique (2026-11-27, @mathis)
 **Contexte :** mise en œuvre de D6. Aucune donnée ouverte ne dit qui répond aux candidatures spontanées ; il faut montrer que la chaîne fonctionne et l'expliquer à un jury de statisticiens.
 **Décision :** T35 `radar/response/simulate.py` : 3 000 étudiants simulés dans 14 villes étudiantes, 15 candidatures chacun dans un rayon de 40 km, ciblant plutôt les entreprises bien notées (comme avec Radar). Réponse positive tirée selon une règle logistique documentée dans **`radar/response/params.yaml`** (c_intensite, c_embauche, log effectif, distance, alternance, offre visible) + **effet entreprise non observé** (σ = 0,5). T36 `radar/response/model.py` : logistique (statsmodels), test sur des étudiants jamais vus ; P(réponse) par (siret, contrat) **à distance nulle** + contributions ; l'app ajoute le terme de distance avec le coefficient de `modele_reponse.json`. Rapport régénéré automatiquement : `docs/MODELE_REPONSE.md`.
@@ -35,6 +43,8 @@
 **Décision :** à la création, au moins **12 caractères et 3 types** parmi minuscules, majuscules, chiffres, caractères spéciaux (version simplifiée de la recommandation CNIL de 2022, qui laisse passer les phrases de passe) ; **liste noire** de mots de passe très répandus ; identifiant interdit dans le mot de passe ; message qui liste les règles non respectées. À la connexion, **blocage par compte enregistré en base** : 5 échecs d'affilée → 15 min de blocage, même avec le bon mot de passe. Les bases existantes sont mises à jour automatiquement (colonnes `failed_logins`, `locked_until`). Détails et manques : `docs/SECURITE.md`.
 **Alternatives écartées :** règles NIST pures (longueur seule, sans types : moins lisible pour un jury français que la référence CNIL) ; vérification *Have I Been Pwned* (appel réseau externe, envoi d'un préfixe d'empreinte) ; blocage par adresse IP (derrière le proxy Onyxia, tous les utilisateurs ont la même).
 **Conséquences :** les comptes de test créés avant D16 gardent leur ancien mot de passe (seule la création est contrôlée). Le message de blocage révèle qu'un identifiant existe (L19), accepté pour la démo.
+
+---
 
 ### D15 — Pipeline en une commande et rattrapage local du rapprochement (2026-11-27, @mathis)
 **Contexte :** T50 (enchaîner les étapes sans erreur d'ordre) et T25 (L6 : des entreprises comme SFR apparaissaient « sans offre », donc à tort dans la couche orange).

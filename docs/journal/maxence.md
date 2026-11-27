@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-11-27 — T40 : couche orange « Candidature spontanée »
+
+**Fait :**
+- `radar/geocode.py` : adresse → lat/lon via la Géoplateforme (IGN, sans clé), cache disque dans `PATHS.cache` ; renvoie None si introuvable / hors ligne.
+- `radar/spontaneous.py` : `load_nearby` (DuckDB sur le rectangle du rayon), `rank_spontaneous` (rayon, exclusion des entreprises avec une offre du domaine pour le **contrat visé**, au niveau SIREN si dispo, `volume_suspect` écarté, score √(c_intensite × c_embauche) — D13). Décision **D19**.
+- App : adresse + rayon dans la barre latérale (clés `adresse`, `rayon` dans `PROFILE_KEYS`/`PROFILE_LABELS`, consigne CLAUDE.md respectée), marqueur + cercle du rayon, couche 🟠 (300 premières), popup (secteur, effectif, score, signal, lien Annuaire des entreprises), onglets « Offres » / « Candidatures spontanées » triées, métrique, légende ; la couche bleue suit le rayon ; `search_history(top=…)` reçoit les SIRET des premières entreprises orange.
+- Correctif : l'app plantait sans offres Adzuna (`region_requete` absente pour LBA) → région déduite du code postal ; pied de page avec les sources réellement chargées.
+- `tests/test_spontaneous.py` (10 tests, sans réseau) ; 157 tests OK ; parcours vérifié avec AppTest.
+- Synchronisation avec `main` : mes 3 commits T40 n'étaient pas poussés → rebase sur le travail d'Emma, Mathis et Celia ; conflits `TACHES.md` / `DECISIONS.md` résolus en gardant les deux versions. Ma décision **renumérotée D16 → D19** (D16, D17 et D18 pris entre-temps par Celia, Emma et Mathis). Après rebase : **174 tests OK**, ruff OK.
+
+**Résultats / chiffres clés :**
+- Rennes, données factices : 236 entreprises orange à 20 km (Tous), 250 en stage. Offres LBA réelles (sans filtre data) : 46 à 10 km, 108 à 50 km.
+
+**Problèmes / points d'attention pour l'équipe :**
+- Sur mon pod, `entreprises.parquet` / `scores.parquet` sont **factices** (générés pour développer) : il faut les vrais de Mathis (`build_all.py --share`) pour la démo.
+- `uv run ruff format .` reformate aussi les blocs Python des `.md` (journal d'Emma touché puis remis en état) : formater ses propres fichiers.
+
+**Prochaine étape :**
+- T51 (recruteurs LBA dans la couche orange), T41 / T42 (filtres, poids).
+
+---
+
 ## 2026-11-27 — T17 : données LBA partagées sur S3 (Onyxia)
 
 **Fait :**

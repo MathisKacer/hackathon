@@ -31,6 +31,7 @@
 **Score**
 
 **App**
+- [ ] T51 — 🔗T40,T17 **Recruteurs LBA dans la couche orange** : quand le contrat visé est l'alternance, marquer (ou bonifier) les entreprises présentes dans `lba_recruteurs.parquet` avec un ROME du domaine (signal « recrute des alternants sans offre publiée »)
 - [ ] T41 — 🔗T40 **Filtres** : domaine, type de contrat visé (stage / alternance / emploi), taille, secteur
 - [ ] T42 — 🔗T40 **Curseurs de poids** → recalcul du score en direct
 
@@ -74,10 +75,10 @@
 
 ## 🔵 En cours
 
-- [ ] T40 — 🔗T4,T5 **Page de recherche + couche 2 « Candidature spontanée » (orange)** : adresse → géocodage (Géoplateforme) → rayon → même carte folium, entreprises **sans offre correspondante** classées par score ; légende des deux couches + deux listes triées — @maxence
 
 ## ✅ Fait
 
+- [x] T40 — 🔗T4,T5 **Page de recherche + couche 2 « Candidature spontanée » (orange)** : adresse → géocodage (Géoplateforme) → rayon → même carte folium, entreprises **sans offre correspondante** classées par score ; légende des deux couches + deux listes triées — @maxence → `radar/spontaneous.py` (DuckDB, exclusion par contrat visé au niveau SIREN, score D13) + `radar/geocode.py` (Géoplateforme, cache disque) ; D19
 - [x] T36 — 🔗T35 **Modèle de réponse** : logistique (puis arbres boostés si on a le temps) → `p_reponse.parquet` ; slides : calibration, AUC, paramètres retrouvés vs vrais — @mathis → AUC 0,646, 7/7 paramètres retrouvés, rapport `docs/MODELE_REPONSE.md`
 - [x] T35 — 🔗T20 **Simulateur** : règle paramétrique P(réponse | besoin, taille, secteur, distance, historique d'embauche…) dans `radar/response/params.yaml`, tirage des réponses sur les entreprises réelles → `candidatures_simulees.parquet` — @mathis → `radar/response/simulate.py` + `params.yaml`
 - [x] T8 — **Titres anglais** : mots-clés anglais ajoutés dans `domains.yaml` après mesure sur les 10 776 vraies offres Adzuna ; offres « autre » 41,6 % → 36,6 % (D17) — @emma
