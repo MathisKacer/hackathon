@@ -301,8 +301,13 @@ if place is None:
         (
             ":material/map:",
             "Repère sur la carte",
-            "Bleu : les offres en ligne. Orange : les entreprises de ton domaine qui n'ont pas "
-            "d'offre pour ton contrat, à contacter directement.",
+            "Bleu : les offres en ligne. Orange : les entreprises qui recrutent dans ton domaine "
+            + {
+                "Stage": "mais n'ont publié aucune offre de stage",
+                "Alternance": "mais n'ont publié aucune offre d'alternance",
+                "Emploi": "mais n'ont publié aucune offre d'emploi",
+            }.get(contrat, "sans offre en ligne")
+            + " : à contacter directement.",
         ),
         (
             ":material/apartment:",
