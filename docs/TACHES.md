@@ -75,6 +75,7 @@
 
 ## 🔵 En cours
 
+- [ ] T8 — 🔗T6 **Titres anglais mal classés** : mesurer les titres `autre` sur les vraies offres Adzuna, ajouter les mots-clés anglais utiles dans `radar/domains.yaml` + tests — @emma
 - [ ] T36 — 🔗T35 **Modèle de réponse** : logistique (puis arbres boostés si on a le temps) → `p_reponse.parquet` ; slides : calibration, AUC, paramètres retrouvés vs vrais — @mathis
 - [ ] T35 — 🔗T20 **Simulateur** : règle paramétrique P(réponse | besoin, taille, secteur, distance, historique d'embauche…) dans `radar/response/params.yaml`, tirage des réponses sur les entreprises réelles → `candidatures_simulees.parquet` — @mathis
 - [ ] T17 — 🔗T11 **Partager les données LBA sur S3** (`offres_raw/lba.parquet`, `lba_recruteurs.parquet`) : relancer `scripts/collect_lba.py` sur Onyxia puis `scripts/share_s3.py` — @maxence
@@ -105,5 +106,4 @@
 
 ## 🧊 Bloqué / en attente
 
-- T8 — 🔗T6, données Adzuna de Mathis **Titres anglais mal classés** : sur les vraies offres, compter les titres classés `autre` par `radar.domains.classify` et lister les plus fréquents (dont les titres en anglais), puis ajouter les mots-clés anglais utiles dans `radar/domains.yaml` (expressions complètes avec `\b`, ex. `financial analyst`, `talent acquisition`, `software engineer` ; éviter `controller` ou `analyst` seuls) + un test par cas — @emma, **dès que Mathis partage `adzuna.parquet` (lien S3 via `scripts/share_s3.py`)**
 - API Offres d'emploi France Travail : suspendue côté France Travail (voir `SOURCES.md`)
