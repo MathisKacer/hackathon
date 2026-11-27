@@ -47,7 +47,7 @@
 - [ ] T44 — Affichage du **niveau de preuve** (nombre d'offres observées) et du taux de rapprochement global
 
 **Comptes (optionnels, D14) : le mode démo anonyme reste le parcours par défaut**
-- [ ] T19 — **Données factices vs vraies offres** : dans `fake_data`, `date_collecte` est une date alors que les offres Adzuna l'ont en texte → l'app plante sur les données factices (`offers['date_collecte'].max()[:10]`, dernière ligne de `streamlit_app.py`) et elles n'ont pas `region_requete`. Aligner l'un ou l'autre
+- [ ] T19 — **Données factices vs vraies offres** : dans `fake_data`, `date_collecte` est une date alors que les offres Adzuna l'ont en texte → l'app plante sur les données factices (`offers['date_collecte'].max()[:10]`, dernière ligne de `streamlit_app.py`) et elles n'ont pas `region_requete`. Aligner l'un ou l'autre — 🟡 **dates : corrigé** par @emma (`d3dbff2`, le générateur écrit du texte ISO comme les collecteurs) ; **reste : `region_requete`** absente des offres factices
 
 **Favoris**
 
