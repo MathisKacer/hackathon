@@ -1,8 +1,9 @@
-"""Offres brutes → data/processed/offres.parquet (domaine, contrat, SIRET).
+"""T21 — Rapprochement des offres sans SIRET (Adzuna) → complète data/processed/offres.parquet.
 
-    uv run python scripts/build_offres.py
+    uv run python scripts/classify_offres.py   # T13 (Emma), d'abord
+    uv run python scripts/match_offres.py      # T21
 
-Prérequis : data/raw/offres_raw/*.parquet et data/processed/entreprises.parquet.
+Prérequis : data/processed/offres.parquet (T13) et data/processed/entreprises.parquet (T20).
 """
 
 import logging
