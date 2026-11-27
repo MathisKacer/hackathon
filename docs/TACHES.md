@@ -16,7 +16,7 @@
 
 ## 🔴 P0 — Tout de suite (H+0 → H+2)
 
-- [ ] T1 — Créer la **clé Adzuna** (developer.adzuna.com) → l'ajouter au `.env`
+- [x] T1 — Créer la **clé Adzuna** (developer.adzuna.com) → l'ajouter au `.env`
 - [ ] T2 — Créer le **jeton La bonne alternance** (espace développeurs) → `.env`
 - [ ] T3 — Compte **francetravail.io** : souscrire à La Bonne Boîte, Marché du travail et ROME 4.0, et envoyer la demande d'accès à Offres d'emploi via le formulaire de contact
 - [ ] T4 — **Squelette du dépôt** : `pyproject.toml` (uv), package `radar/`, `radar/config.py`, `.env.example`, ruff, `app/streamlit_app.py` vide
@@ -26,7 +26,7 @@
 ## 🟠 P1 — Chemin critique vers la V1 (H+2 → H+8)
 
 **Offres**
-- [ ] T10 — 🔗T1 **Test Adzuna** : volume d'offres data en France et dans le 35, champs réellement renvoyés, nombre d'entreprises que renvoie `top_companies` → noter les résultats dans `SOURCES.md`
+- [x] T10 — 🔗T1 **Test Adzuna** : volume d'offres data en France et dans le 35, champs réellement renvoyés, nombre d'entreprises que renvoie `top_companies` → noter les résultats dans `SOURCES.md`
 - [ ] T11 — 🔗T2 **Collecteur La bonne alternance**, France entière : offres + recruteurs potentiels, avec SIRET → `offres_raw/lba/`
 - [ ] T12 — 🔗T10 **Collecteur Adzuna** France entière dans la limite du quota (stratégie : `top_companies` par département, requête domaine vs toutes offres) + cache disque → `offres_raw/adzuna/`
 - [ ] T13 — 🔗T6 **Classifieur d'offres** : `domaine` (data ou autre), `contrat` (stage / alternance / emploi), à partir du ROME, des mots-clés et du type de contrat

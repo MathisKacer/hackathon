@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-11-27 — Test Adzuna (T10)
+
+**Résultats / chiffres clés :**
+- Clés OK. France : 1 040 858 offres, dont 35 921 « data » ; « stage data » 812 ; « alternance data » 175 ; Ille-et-Vilaine « data » 508.
+- `top_companies` = top 5 seulement → abandonné. `contract_type` rare (14/50) ; description tronquée ; offres anciennes présentes ; cabinets de recrutement fréquents.
+
+**Points d'attention pour l'équipe :**
+- Quota ~250 appels/jour : **ne pas lancer de tests Adzuna à la légère**, passer par un cache disque.
+- On ne peut pas récupérer toutes les offres d'une entreprise → intensité = nombre d'offres data rapporté à l'effectif (gamma-Poisson), plutôt qu'une part des offres.
+
+---
+
 ## 2026-11-27 — Accès France Travail
 
 **Fait :**
