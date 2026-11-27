@@ -378,7 +378,7 @@ Temps de réponse : 0,05 à 0,4 s.
 | Où | Ce qui change |
 |---|---|
 | **Fiche d'un site** | sous le nom : « Fait partie de ORANGE · 524 sites en France » + bouton **« Voir toute l'entreprise »** |
-| **Fiche entreprise** (même fenêtre) | identité (catégorie, activité, nombre de sites, effectif total estimé, ville du siège), alerte BODACC, ☆ favori pour **toute l'entreprise**, **offres de tous ses sites**, **liste des sites** (les plus proches de ta ville d'abord ; clic → fiche du site), situation BODACC, lien Annuaire des entreprises (page entreprise) |
+| **Fiche entreprise** (même fenêtre) | identité (catégorie, activité, nombre de sites, effectif total estimé, ville du siège), alerte BODACC, ☆ favori pour **toute l'entreprise**, **offres de tous ses sites**, **liste des sites** (les plus proches de ta ville d'abord ; clic sur le nom du site → sa fiche), situation BODACC, lien Annuaire des entreprises (page entreprise) |
 | **Navigation** | « ← Retour au site » depuis l'entreprise ; « ← Toute l'entreprise » depuis un autre site ouvert dans la liste |
 | **Recherche (page Entreprises)** | d'abord une ligne **« ORANGE — toute l'entreprise · 524 sites en France »** par entreprise qui a plusieurs sites, puis les sites un par un ; clic → fiche entreprise ou fiche site |
 | **Candidatures spontanées** | colonne **« Autres sites »** (« +4 » = 4 autres sites de la même entreprise dans le rayon) ; option **« Une ligne par entreprise »** dans « Filtres » (garde le site le mieux classé) ; la phrase de résultat donne les deux chiffres : « 3755 entreprises (4438 sites) » |

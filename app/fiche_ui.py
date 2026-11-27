@@ -13,10 +13,13 @@ Coordination : le popup de la carte appartient à T32 (@mathis) ; ce panneau à 
 
 from __future__ import annotations
 
+from functools import partial
+
 import pandas as pd
 import streamlit as st
 from commun import CHANCE_HELP, get_place
 from favoris import star_button
+from style import LINK_STYLE
 
 from radar import fiche
 from radar.domains import load_domains
@@ -325,6 +328,15 @@ def _parent_company(siren: str) -> None:
     )
 
 
+def _on_site_click(siren: str, key: str) -> None:
+    """Clic dans la liste des sites (T72) : sur le nom d'un site → fiche de ce site."""
+    sel = st.session_state.get(key, {})
+    cells = (sel.get("selection") or {}).get("cells") or []
+    sirets = st.session_state.get(f"_sirets_{siren}", [])
+    if cells and cells[0][1] == "Site" and 0 <= cells[0][0] < len(sirets):
+        _go(("site", sirets[cells[0][0]]))
+
+
 def company_content(siren: str, domaine: str | None = None) -> None:
     """Fiche d'une entreprise entière : identité, offres de tous les sites, sites, BODACC."""
     place = get_place(st.session_state.get("ville"))
@@ -394,11 +406,13 @@ def company_content(siren: str, domaine: str | None = None) -> None:
         )
 
     st.markdown(f"#### Ses sites ({len(sites)})")
+    # T72 : le nom du site est un lien (clic → fiche du site) ; sans nom propre, « Site de <ville> »
+    own = sites["nom_etablissement"].fillna("")
+    own = own.where(own != sites["nom"].fillna(""), "")
+    site_name = own.where(own != "", "Site de " + sites["commune"].fillna("").str.title())
     table = pd.DataFrame(
         {
-            "Site": sites["nom_etablissement"]
-            .fillna("")
-            .where(sites["nom_etablissement"].fillna("") != sites["nom"].fillna(""), ""),
+            "Site": site_name,
             "Lieu": sites["commune"].fillna("") + " " + sites["code_postal"].fillna("").astype(str),
             "Taille": sites["tranche_libelle"],
             "Siège": sites["siege"].fillna(False).astype(bool).map({True: "Siège", False: ""}),
@@ -406,23 +420,29 @@ def company_content(siren: str, domaine: str | None = None) -> None:
     )
     if place is not None:
         table["Distance"] = sites["distance_km"]
-    event = st.dataframe(
-        table,
+    # Le clic est traité par un rappel (exécuté avant que la fenêtre soit redessinée) : pas de
+    # st.rerun à la main, qui plantait si toute la page se relançait au même moment.
+    key = f"sites_{siren}"
+    st.session_state[f"_sirets_{siren}"] = sites["siret"].astype(str).tolist()
+    st.dataframe(
+        table.style.map(lambda _: LINK_STYLE, subset=["Site"]),
         hide_index=True,
         width="stretch",
-        on_select="rerun",
-        selection_mode="single-row",
-        key=f"sites_{siren}",
-        column_config={"Distance": st.column_config.NumberColumn(format="%.1f km")},
+        on_select=partial(_on_site_click, siren, key),
+        selection_mode="single-cell",
+        key=key,
+        column_config={
+            "Site": st.column_config.TextColumn(
+                help="Clique sur le nom pour ouvrir la fiche du site."
+            ),
+            "Distance": st.column_config.NumberColumn(format="%.1f km"),
+        },
     )
     st.caption(
         ("Les plus proches de ta ville d'abord. " if place is not None else "")
-        + "Sites d'au moins 10 salariés. Clique sur un site pour ouvrir sa fiche."
+        + "Sites d'au moins 10 salariés. Clique sur le nom d'un site pour ouvrir sa fiche."
     )
-    rows = event.selection.rows if event is not None else []
-    if rows:
-        _go(("site", str(sites.iloc[rows[0]]["siret"])))
-        st.rerun(scope="fragment")
+
     _situation(siren)
     st.markdown(f"[Annuaire des entreprises]({s['url_annuaire']})")
 

@@ -7,7 +7,8 @@
 ## 2026-11-27 — Tâche T72 : nom cliquable ; T73 ajoutée
 
 **Fait :**
-- Liste des candidatures spontanées et résultats de recherche : le nom de l'entreprise est en bleu souligné ; un clic sur le nom ouvre la fiche (sélection d'une cellule), plus de case à cocher. Tableau, colonnes, tri et recherche inchangés (demande de Celia).
+- Liste des candidatures spontanées, résultats de recherche et liste des sites de la fiche entreprise : le nom est en bleu souligné ; un clic sur le nom ouvre la fiche (sélection d'une cellule), plus de case à cocher. Tableau, colonnes, tri et recherche inchangés (demande de Celia).
+- Bug corrigé (présent depuis T57) : le clic sur un site faisait `st.rerun(scope="fragment")`, qui plante si toute la page se relance ; remplacé par un rappel `on_select`.
 - T73 ajoutée (effectifs : tranche par site plus claire, tranche officielle de l'entreprise + total estimé à partir des sites), à faire plus tard.
 
 **Fichiers touchés :**
