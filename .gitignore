@@ -1,0 +1,28 @@
+# Données (jamais dans Git)
+data/
+*.csv
+*.parquet
+*.xlsx
+*.zip
+
+# Secrets
+.env
+*.env
+credentials*.json
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+
+# Divers
+.DS_Store
+*.log
