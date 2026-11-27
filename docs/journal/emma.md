@@ -14,8 +14,8 @@
 - `docs/DECISIONS.md`, `docs/TACHES.md`, `docs/journal/emma.md`
 
 **Points d'attention pour l'équipe :**
-- L'app propose encore tous les domaines de `domains.yaml` (D20), mais seul data a un score : couche 🟠 vide pour les autres. **@maxence** : limiter le choix à data, ou afficher « bientôt disponible » pour les autres domaines ?
-- T51 (recruteurs LBA dans la couche 🟠) et T28 (`c_embauche` réel) servent directement data, et ne dépendent pas de D21.
+- L'app propose encore tous les domaines de `domains.yaml` (D20), mais seul data a un score : couche 🟠 vide pour les autres. **Décision : on laisse l'app telle quelle pour l'instant**, sans changer la liste des domaines.
+- Répartition : **T51** (recruteurs LBA dans la couche 🟠) → @maxence ; **T28** (`c_embauche` réel) → @emma, après T51 (réservée dans `TACHES.md`). Les deux servent directement data et ne dépendent pas de D21.
 
 ---
 

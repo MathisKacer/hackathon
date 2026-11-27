@@ -40,7 +40,7 @@
 **Lever les limites connues (voir `docs/LIMITES.md`)**
 - [ ] T26 — 🔗T21 **Familles de marque** (L7) : une entreprise ETI/GE dont une entité a des offres du domaine → ses autres entités (même début de nom) sont exclues de la couche orange (`a_offre_groupe`)
 - [ ] T27 — 🔗T21 **Revue des intermédiaires** (L8) : passer en revue les plus gros émetteurs + `volume_suspect`, compléter `INTERMEDIARIES` ; à refaire à chaque nouvelle source (LBA)
-- [ ] T28 — 🔗T30 **`c_embauche` réel** (L11) : La Bonne Boîte v2 (codes ROME data × départements, ≤ 1 req/s, SIRET fourni) + recruteurs potentiels LBA (T17) ; remplace le proxy
+- [ ] T28 — 🔗T30 **`c_embauche` réel** (L11) : La Bonne Boîte v2 (codes ROME data × départements, ≤ 1 req/s, SIRET fourni) + recruteurs potentiels LBA (T17) ; remplace le proxy — réservée @emma, **démarre après T51 (@maxence)**
 - [ ] T18 — 🔗T16 **Autres domaines** (L1) : collecter Adzuna sur d'autres requêtes (finance, marketing…) avec le quota des jours suivants, Bretagne + grandes villes d'abord ; puis noter ces domaines (`SCORED_DOMAINS`)
 
 **Modèle de réponse (démonstrateur, réponses simulées)**
