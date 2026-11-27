@@ -15,6 +15,7 @@ import streamlit as st
 from commun import BLUE, ORANGE, WEIGHT_KEYS
 from folium.plugins import MarkerCluster
 
+from radar.familles import family_signal
 from radar.geocode import Place
 from radar.niveau import levels_label
 from radar.paliers import score_color, tier_color, tier_text
@@ -91,6 +92,7 @@ def _company_popup(r: pd.Series) -> str:
         f"{_explication_html(r)}"
         f"{_procedure_html(r)}"
         f"{_lbb_html(r)}"
+        f"{_family_html(r)}"
         f"{_p_reponse_html(r)}"
         f"{_score_breakdown_html(r)}"
         f'<a href="{url}" target="_blank" rel="noopener">Annuaire des entreprises</a></div>'
@@ -103,6 +105,12 @@ def _explication_html(r: pd.Series) -> str:
     if not isinstance(txt, str) or not txt:
         return ""
     return f"<i style='color:#333'>{html.escape(txt)}</i><br>"
+
+
+def _family_html(r: pd.Series) -> str:
+    """T26 (D36) : le groupe (même marque) publie déjà des offres du domaine."""
+    text = family_signal(r)
+    return f"🏢 {html.escape(text)}<br>" if text else ""
 
 
 def _lbb_html(r: pd.Series) -> str:

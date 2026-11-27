@@ -23,6 +23,7 @@ from style import LINK_STYLE
 
 from radar import fiche
 from radar.domains import load_domains
+from radar.familles import family_signal
 from radar.paliers import rule_text, tier_text
 from radar.spontaneous import COMPONENTS
 
@@ -125,6 +126,9 @@ def _why(r: pd.Series) -> None:
     explication = _value(r.get("explication"))  # T32 (@mathis), si disponible
     if explication:
         st.info(explication)
+    groupe = family_signal(r)  # T26 (D36)
+    if groupe:
+        st.caption(f"🏢 {groupe} : regarde aussi ses offres (groupe reconnu par le nom).")
     c1, c2, c3 = st.columns(3)
     # T65 (D32) : palier en mots ; le score reste visible juste en dessous.
     prio = tier_text(r.get("palier")) if pd.notna(r.get("palier", None)) else ""

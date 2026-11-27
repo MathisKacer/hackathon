@@ -14,6 +14,7 @@ import streamlit as st
 from radar.communes import load_communes, place_of
 from radar.config import FILES
 from radar.domains import classify, load_domains
+from radar.familles import build_families
 from radar.filters import SECTIONS, TAILLES
 from radar.geo import region_of
 from radar.geocode import Place
@@ -61,6 +62,7 @@ WIDGET_KEYS = [
     "secteurs",
     "show_liquidation",
     "une_par_entreprise",
+    "masquer_groupe",
     "niveaux",
     "niveau_inconnu",
     "tri",
@@ -97,6 +99,17 @@ def get_communes() -> pd.DataFrame:
 def get_place(ville: str | None) -> Place | None:
     """Position de la commune choisie dans le suggesteur (T55) ; None si rien n'est choisi."""
     return place_of(ville, get_communes())
+
+
+@st.cache_data(show_spinner="Regroupement des sociétés par marque…")
+def get_families(domaine: str) -> pd.DataFrame:
+    """Familles de marque (T26, D36) : sociétés d'ETI/GE reliées par le début de leur nom."""
+    if not (FILES["entreprises"].exists() and FILES["scores"].exists()):
+        return pd.DataFrame()
+    ent = pd.read_parquet(FILES["entreprises"], columns=["siren", "nom", "categorie"])
+    offer_cols = ["n_offres_domaine_siren", "n_stage_domaine_siren", "n_alternance_domaine_siren"]
+    sc = pd.read_parquet(FILES["scores"], columns=["siren", "domaine", *offer_cols])
+    return build_families(ent, sc, domaine)
 
 
 @st.cache_data
@@ -166,6 +179,7 @@ def profile_keys() -> dict[str, list | None]:
         "tri": TRIS,
         "show_liquidation": [True, False],
         "une_par_entreprise": [True, False],
+        "masquer_groupe": [True, False],
         "niveaux": NIVEAUX,
         "niveau_inconnu": [True, False],
     }
@@ -186,6 +200,7 @@ PROFILE_LABELS = {
     "tri": "Classement",
     "show_liquidation": "Avec liquidations",
     "une_par_entreprise": "Une ligne par entreprise",
+    "masquer_groupe": "Sans les groupes qui publient déjà",
     "niveaux": "Niveau d'études",
     "niveau_inconnu": "Avec niveau non précisé",
 }
@@ -202,6 +217,7 @@ def init_defaults() -> None:
     st.session_state.setdefault("tri", TRI_SCORE)
     st.session_state.setdefault("show_liquidation", False)
     st.session_state.setdefault("une_par_entreprise", False)
+    st.session_state.setdefault("masquer_groupe", False)  # T26 (D36) : décochée par défaut
     st.session_state.setdefault("niveaux", [])
     st.session_state.setdefault("niveau_inconnu", True)
     for c, key in WEIGHT_KEYS.items():

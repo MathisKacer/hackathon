@@ -32,6 +32,7 @@ from commun import (
     filter_offers,
     get_coefficients,
     get_communes,
+    get_families,
     get_nearby,
     get_offers,
     get_place,
@@ -45,6 +46,7 @@ from streamlit_folium import st_folium
 from style import GREEN, LINK_STYLE, RED, Tile, fmt_int, hero, kpi_tiles, pill
 
 from radar.collect.sirene import TRANCHE_LIBELLES
+from radar.familles import mark_family_offers
 from radar.filters import SECTIONS, TAILLES, filter_companies
 from radar.niveau import levels_label
 from radar.paliers import (
@@ -85,6 +87,7 @@ def _n_filters_on() -> int:
             bool(ss.get("show_liquidation")),
             ss.get("tri") == TRI_P,
             bool(ss.get("une_par_entreprise")),
+            bool(ss.get("masquer_groupe")),
             bool(ss.get("niveaux")),
         ]
     )
@@ -163,6 +166,14 @@ with st.container(border=True, key="carte_recherche"):
             help="Leur activité est en principe arrêtée. Les autres entreprises en difficulté "
             "restent affichées, avec une alerte.",
         )
+        # T26 (D36) : sociétés dont le groupe (même marque) publie déjà des offres du domaine.
+        masquer_groupe = st.checkbox(
+            "Masquer les sociétés dont le groupe publie déjà des offres",
+            key="masquer_groupe",
+            help="Groupes reconnus par le début du nom (ETI et grandes entreprises : Thales, "
+            "Safran, BNP…), faute de données publiques sur les groupes. Décoché : ces sociétés "
+            "restent affichées, avec la mention « Groupe … : N offres ».",
+        )
         une_par_entreprise = st.checkbox(
             "Une ligne par entreprise",
             key="une_par_entreprise",
@@ -198,6 +209,10 @@ if place is not None:
         nearby, place.lat, place.lon, rayon, contrat, weights, show_liquidation
     )
     spontaneous = add_p_reponse(spontaneous, domaine, contrat, get_coefficients())
+    # T26 (D36) : offres publiées par les autres sociétés du même groupe (familles de marque).
+    spontaneous = mark_family_offers(spontaneous, get_families(domaine), contrat)
+    if masquer_groupe:
+        spontaneous = spontaneous[spontaneous["famille_offres"] == 0].reset_index(drop=True)
     if tri == TRI_P and spontaneous["p_reponse"].notna().any():
         spontaneous = spontaneous.sort_values(
             ["p_reponse", "score"], ascending=False, na_position="last"
@@ -371,6 +386,15 @@ with tab_spont:
                 ),
                 # T29 (D27) : ✔ si La Bonne Boîte signale l'établissement comme recruteur
                 "La Bonne Boîte": signaled_by_lbb(shown).map({True: "✔", False: ""}),
+                # T26 (D36) : le groupe (même marque) publie déjà des offres du domaine
+                "Groupe": [
+                    f"{f} · {n} offre{'s' if n > 1 else ''}" if n > 0 else ""
+                    for f, n in zip(
+                        shown.get("famille_nom", pd.Series(index=shown.index)),
+                        shown.get("famille_offres", pd.Series(0, index=shown.index)).fillna(0),
+                        strict=True,
+                    )
+                ],
                 "Priorité": shown["palier_libelle"],
                 "Score": shown["score"],
             }
@@ -386,6 +410,8 @@ with tab_spont:
             table = table.drop(columns="Situation")
         if not table["La Bonne Boîte"].astype(bool).any():
             table = table.drop(columns="La Bonne Boîte")
+        if not table["Groupe"].astype(bool).any():
+            table = table.drop(columns="Groupe")
         version = st.session_state.get("_liste_version", 0)
         # T65 : couleur du palier sur la colonne « Priorité » (du plus foncé au gris).
         tier_colors = dict(zip(shown["palier_libelle"], shown["palier"], strict=True))
@@ -418,6 +444,10 @@ with tab_spont:
                     help="Clique sur le nom pour ouvrir la fiche."
                 ),
                 "Distance": st.column_config.NumberColumn(format="%.1f km"),
+                "Groupe": st.column_config.TextColumn(
+                    help="Le groupe (même marque) publie déjà des offres pour ton contrat : "
+                    "regarde-les aussi. Groupes reconnus par le nom (D36)."
+                ),
                 "Autres sites": st.column_config.TextColumn(
                     help="Autres sites de la même entreprise dans le rayon (voir sa fiche)."
                 ),
