@@ -73,11 +73,11 @@
 
 ## 🔵 En cours
 
-- [ ] T57 — **Entreprise et sites (SIREN / SIRET)** : fiche **entreprise** (tous les sites d'un même SIREN : identité, offres de tous les sites, BODACC, liste des sites) reliée à la fiche **site** (« Fait partie de … · N sites · Voir toute l'entreprise ») ; recherche d'entreprises : l'entreprise entière d'abord, puis ses sites ; candidatures spontanées : « + N autres sites » et option « Une ligne par entreprise » ; favori possible sur toute l'entreprise. Groupes et filiales (plusieurs SIREN) : hors périmètre, voir T26 — @celia
 - _…_
 
 ## ✅ Fait
 
+- [x] T57 — **Entreprise et sites (SIREN / SIRET)** : fiche entreprise (identité, offres de tous les sites, liste des sites cliquable, BODACC) reliée à la fiche site dans la même fenêtre (« Fait partie de … · Voir toute l'entreprise », retours) ; recherche : l'entreprise entière d'abord, puis ses sites ; candidatures spontanées : « Autres sites » (+N) et option « Une ligne par entreprise » ; favori sur toute l'entreprise. Filiales non reliées (L24, T26) — @celia
 - [x] T34 — **Validation sans vérité terrain** (`docs/VALIDATION.md`, graphiques `docs/figures/validation_*.svg`) : top 20 conservé à ~80 % au bootstrap ; AUC 0,88 (La Bonne Boîte) et 0,81 (La bonne alternance) contre 0,67 / 0,54 pour la taille seule, sur les établissements sans offre data. Tension du marché non faite — @emma
 - [x] T27 — 🔗T21 **Revue des intermédiaires** (L8) : passer en revue les plus gros émetteurs + `volume_suspect`, compléter `INTERMEDIARIES` ; à refaire à chaque nouvelle source (LBA) — @mathis → après l'arrivée de LBA : organismes de formation (AGEPAC, KOANN, Chambre régionale de métiers) ajoutés aux intermédiaires ; SIRET source d'une agence de placement / d'intérim (NAF 78.1, 78.2) → intermédiaire (443 offres LBA au total)
 - [x] T53 — 🔗T36 `scripts/build_response.py` plante (« Singular matrix ») si les scores sont construits **sans les offres Adzuna** (LBA seules : `c_intensite` et `c_embauche` constantes) → message clair, ou retirer les variables constantes avant l'ajustement (vu par @maxence en T37) — @mathis → variables constantes écartées avant l'ajustement (avertissement, coefficient 0) ; + bug voisin corrigé : `match_offers` plantait quand toutes les offres ont un SIRET source

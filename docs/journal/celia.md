@@ -4,6 +4,25 @@
 
 ---
 
+## 2026-11-27 — Tâche T57 : entreprise (SIREN) et sites (SIRET)
+
+**Fait :**
+- `radar/fiche.py` : `company_sites`, `company_summary` ; `radar/recherche.py` : `_n_sites`, `with_companies`.
+- Fiche entreprise dans la même fenêtre que la fiche site (`_fiche_nav`), avec sites cliquables et boutons retour ; favori « toute l'entreprise ».
+- Page Entreprises : l'entreprise entière d'abord, puis les sites (choix de Celia).
+- Candidatures spontanées : colonne « Autres sites », option « Une ligne par entreprise », phrase « N entreprises (M sites) ».
+
+**Fichiers touchés :**
+- `radar/fiche.py`, `radar/recherche.py`, `app/fiche_ui.py`, `app/commun.py`, `app/vues/explorer.py`, `app/vues/entreprises.py`, `app/vues/mon_espace.py`, tests, `docs/*`
+
+**Résultats / chiffres clés :**
+- Orange (SIREN 380 129 866) : 524 sites, ≈ 62 690 salariés. Recherche « orange » : 5 entreprises puis les sites. Autour de Rennes (scores factices) : 3 755 entreprises pour 4 438 sites. 305 tests OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- Filiales d'un groupe non reliées (L24) : à traiter avec T26.
+
+---
+
 ## 2026-11-27 — Tâche T54 : favoris
 
 **Fait :**

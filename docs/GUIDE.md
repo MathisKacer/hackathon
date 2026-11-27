@@ -22,6 +22,7 @@
 11. [La Bonne Boîte dans la couche orange (T28, T29, D27)](#11-la-bonne-boîte-dans-la-couche-orange-t28-t29-d27)
 12. [Recherche d'entreprises (page Entreprises)](#12-recherche-dentreprises-page-entreprises)
 13. [Favoris (T54)](#13-favoris-t54)
+14. [Entreprise et sites (T57)](#14-entreprise-et-sites-t57)
 
 ---
 
@@ -355,4 +356,33 @@ Temps de réponse : 0,05 à 0,4 s.
 **Tests.** `uv run pytest -q tests/test_favoris.py` (étoile en anonyme sans écriture sur le disque, reprise à la connexion, étoile connectée, cases des offres) et `tests/test_accounts.py` (table `favoris`).
 
 **Suites possibles.** Un vrai suivi de candidatures (statuts : à contacter, envoyée, relancée, réponse reçue) ; avec de vraies réponses, on pourrait un jour remplacer les réponses simulées du modèle (D6).
+
+---
+
+## 14. Entreprise et sites (T57)
+
+**À quoi ça sert.** Une même entreprise apparaît sur plusieurs sites (Orange : 524 sites d'au moins 10 salariés). On veut voir **toute l'entreprise** et aussi **chaque site**, en sachant que c'est la même entreprise.
+
+**Le principe.** Le **SIRET** (14 chiffres) identifie un **site** (établissement) ; le **SIREN** (9 chiffres, le début du SIRET) identifie l'**entreprise**. Tous les sites d'une entreprise ont le même SIREN. Limite : les filiales d'un groupe ont des SIREN différents et ne sont pas reliées (L24, T26).
+
+**Ce que voit l'utilisateur.**
+
+| Où | Ce qui change |
+|---|---|
+| **Fiche d'un site** | sous le nom : « Fait partie de ORANGE · 524 sites en France » + bouton **« Voir toute l'entreprise »** |
+| **Fiche entreprise** (même fenêtre) | identité (catégorie, activité, nombre de sites, effectif total estimé, ville du siège), alerte BODACC, ☆ favori pour **toute l'entreprise**, **offres de tous ses sites**, **liste des sites** (les plus proches de ta ville d'abord ; clic → fiche du site), situation BODACC, lien Annuaire des entreprises (page entreprise) |
+| **Navigation** | « ← Retour au site » depuis l'entreprise ; « ← Toute l'entreprise » depuis un autre site ouvert dans la liste |
+| **Recherche (page Entreprises)** | d'abord une ligne **« ORANGE — toute l'entreprise · 524 sites en France »** par entreprise qui a plusieurs sites, puis les sites un par un ; clic → fiche entreprise ou fiche site |
+| **Candidatures spontanées** | colonne **« Autres sites »** (« +4 » = 4 autres sites de la même entreprise dans le rayon) ; option **« Une ligne par entreprise »** dans « Filtres » (garde le site le mieux classé) ; la phrase de résultat donne les deux chiffres : « 3755 entreprises (4438 sites) » |
+| **Favoris** | un site (comme avant) ou toute l'entreprise (référence « siren:… ») ; « Voir la fiche » rouvre la bonne fiche |
+
+**Comment ça marche.**
+- `radar/fiche.py` : `company_sites(siren, lat, lon)` (sites, triés par distance si une ville est choisie, sinon siège puis taille) et `company_summary(sites, siren)`.
+- `radar/recherche.py` : `_n_sites` (nombre de sites par SIREN, calculé au chargement de l'index) et `with_companies(hits)` (lignes « entreprise » d'abord, colonne `_type`).
+- `app/fiche_ui.py` : `open_fiche(siret, ligne, domaine, siren=None)` ; la fenêtre garde son état dans `st.session_state["_fiche_nav"]` (`origin`, `view`) pour passer du site à l'entreprise sans ouvrir de deuxième fenêtre ; `company_content(siren)`.
+- `app/vues/explorer.py` : colonnes `_siren`, `_autres_sites` ; réglage `une_par_entreprise` (déclaré selon la consigne de `CLAUDE.md`).
+
+**Tests.** `tests/test_fiche.py` (sites, résumé, navigation site ↔ entreprise dans la fenêtre) et `tests/test_recherche.py` (`with_companies`).
+
+**Suites possibles.** Regrouper aussi les filiales d'un groupe (T26, par le nom) ; afficher les sites de l'entreprise sur une petite carte dans sa fiche.
 

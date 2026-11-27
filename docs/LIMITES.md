@@ -44,6 +44,12 @@
 | L22 | Annonces sans SIREN (entrepreneurs inscrits au seul répertoire des métiers) ignorées ; rattachement par SIREN, donc **tous les établissements** d'une entreprise sont signalés | Peu d'impact (≥ 10 salariés : surtout des sociétés au RCS) ; un établissement sain d'un groupe en procédure est pénalisé | ✅ en partie (rattacher par n° RM) | — | — |
 | L23 | Coefficients de pénalité **fixés à dire d'expert** (pas estimés) | Classement sensible à ces choix | ✅ réglables dans `radar/procedures.py` ; à terme, estimés sur de vraies réponses | — | « Pénalité explicite et réglable, selon le contrat visé » |
 
+## Entreprises et sites (T57)
+
+| # | Limite | Impact | Réglable ? | Tâche | À dire au pitch |
+|---|---|---|---|---|---|
+| L24 | « Entreprise » = un **SIREN** (une société). Les **filiales d'un groupe** (Orange SA, Orange Business Services, Orange Cyberdéfense…) sont des entreprises distinctes, non reliées : le lien groupe → filiales n'existe pas en données ouvertes. Seuls les sites d'au moins 10 salariés sont listés | Une recherche « orange » montre plusieurs entreprises ; la fiche d'Orange SA ne liste pas les sites des filiales | ✅ en partie : rapprocher par le nom (familles de marque) | T26 | « Une entreprise = un SIREN ; les groupes viendront avec les familles de marque » |
+
 ## Données personnelles
 
 | # | Limite | Impact | Réglable ? | Tâche |

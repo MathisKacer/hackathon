@@ -49,7 +49,7 @@ def load_index(path: Path = FILES["entreprises"]) -> pd.DataFrame:
     """Colonnes utiles à la recherche + `_cle` (noms normalisés) et `_commune` (normalisée)."""
     path = Path(path)
     if not path.exists():
-        return pd.DataFrame(columns=[*INDEX_COLS, "_cle", "_commune"])
+        return pd.DataFrame(columns=[*INDEX_COLS, "_cle", "_commune", "_n_sites"])
     con = duckdb.connect()
     cols = {r[0] for r in con.execute(f"DESCRIBE SELECT * FROM '{path}'").fetchall()}
     keep = [c for c in INDEX_COLS if c in cols]
@@ -60,6 +60,7 @@ def load_index(path: Path = FILES["entreprises"]) -> pd.DataFrame:
         names = names.where(other.eq("") | other.eq(names), names + " " + other)
     df["_cle"] = names
     df["_commune"] = df["commune"].map(normalize)
+    df["_n_sites"] = df.groupby("siren")["siret"].transform("size")  # sites de l'entreprise (T57)
     return df
 
 
@@ -122,3 +123,16 @@ def search_companies(
     out = out.assign(_eff=out["effectif_estime"].fillna(0))
     out = out.sort_values(["_score", "_eff"], ascending=[False, False])
     return out.drop(columns=["_eff"]).head(limit).reset_index(drop=True)
+
+
+def with_companies(hits: pd.DataFrame, max_companies: int = 10) -> pd.DataFrame:
+    """Résultats regroupés (T57) : d'abord une ligne « entreprise » par SIREN qui a plusieurs
+    sites (toute l'entreprise), dans l'ordre des meilleurs résultats, puis les sites un par un.
+
+    Colonne `_type` : "entreprise" ou "site". Une entreprise à un seul site n'a que sa ligne site.
+    """
+    if hits.empty:
+        return hits.assign(_type=pd.Series(dtype=str))
+    multi = hits[hits["_n_sites"].fillna(1) > 1]
+    companies = multi.drop_duplicates("siren").head(max_companies).assign(_type="entreprise")
+    return pd.concat([companies, hits.assign(_type="site")], ignore_index=True)

@@ -56,6 +56,7 @@ WIDGET_KEYS = [
     "tailles",
     "secteurs",
     "show_liquidation",
+    "une_par_entreprise",
     "tri",
     *WEIGHT_KEYS.values(),
 ]
@@ -146,6 +147,7 @@ def profile_keys(all_regions: list[str]) -> dict[str, list | None]:
         **{key: list(range(WEIGHT_MAX + 1)) for key in WEIGHT_KEYS.values()},
         "tri": TRIS,
         "show_liquidation": [True, False],
+        "une_par_entreprise": [True, False],
     }
 
 
@@ -164,6 +166,7 @@ PROFILE_LABELS = {
     **{key: f"Poids {COMPONENTS[c][0].lower()}" for c, key in WEIGHT_KEYS.items()},
     "tri": "Classement",
     "show_liquidation": "Avec liquidations",
+    "une_par_entreprise": "Une ligne par entreprise",
 }
 
 
@@ -181,6 +184,7 @@ def init_defaults() -> None:
     st.session_state.setdefault("only_data", True)
     st.session_state.setdefault("tri", TRI_SCORE)
     st.session_state.setdefault("show_liquidation", False)
+    st.session_state.setdefault("une_par_entreprise", False)
     for c, key in WEIGHT_KEYS.items():
         st.session_state.setdefault(key, DEFAULT_WEIGHTS[c])
 

@@ -257,3 +257,94 @@ fiche_content("1", pd.Series({"siret": "1", "score": 0.7, "c_embauche_source": s
     at.run()
     assert not at.success and any("estimé" in c.value for c in at.caption)
     st.cache_data.clear()
+
+
+# --- Entreprise (SIREN) et sites (T57) -----------------------------------------------------
+
+
+def _sites_file(tmp_path):
+    p = tmp_path / "entreprises.parquet"
+    pd.DataFrame(
+        {
+            "siret": ["11111111100011", "11111111100029", "11111111100037", "22222222200022"],
+            "siren": ["111111111", "111111111", "111111111", "222222222"],
+            "nom": ["ACME", "ACME", "ACME", "BETA"],
+            "nom_etablissement": [None, "AGENCE RENNES", "AGENCE BREST", None],
+            "commune": ["PARIS", "RENNES", "BREST", "LYON"],
+            "code_postal": ["75001", "35000", "29200", "69001"],
+            "tranche_libelle": ["500 à 999 salariés", "20 à 49 salariés", "10 à 19 salariés", None],
+            "effectif_estime": [707.0, 31.0, 14.0, 20.0],
+            "siege": [True, False, False, True],
+            "lat": [48.86, 48.11, 48.39, 45.76],
+            "lon": [2.35, -1.68, -4.49, 4.83],
+            "categorie": ["ETI", "ETI", "ETI", "PME"],
+            "naf_libelle": ["Conseil"] * 4,
+        }
+    ).to_parquet(p)
+    return p
+
+
+def test_company_sites_and_summary(tmp_path):
+    from radar.fiche import company_sites, company_summary
+
+    p = _sites_file(tmp_path)
+    by_size = company_sites("111111111", path=p)
+    assert by_size["siret"].tolist()[0] == "11111111100011"  # siège d'abord
+    near_rennes = company_sites("111111111", 48.11, -1.68, path=p)
+    assert near_rennes["commune"].tolist() == ["RENNES", "BREST", "PARIS"]
+    assert near_rennes["distance_km"].iloc[0] < 1
+    s = company_summary(by_size, "111111111")
+    assert (s["nom"], s["n_sites"], s["effectif_total"], s["siege_commune"]) == (
+        "ACME",
+        3,
+        752,
+        "PARIS",
+    )
+    assert s["url_annuaire"].endswith("/entreprise/111111111")
+    assert company_sites("999999999", path=p).empty
+    assert company_summary(company_sites("999999999", path=p), "999999999")["n_sites"] == 0
+
+
+def test_dialog_navigation_site_company(tmp_path, monkeypatch):
+    import streamlit as st
+    from streamlit.testing.v1 import AppTest
+
+    from radar import fiche
+
+    p = _sites_file(tmp_path)
+    real_sites = fiche.company_sites
+    monkeypatch.setattr(
+        fiche,
+        "company_sites",
+        lambda siren, lat=None, lon=None: real_sites(siren, lat, lon, path=p),
+    )
+    monkeypatch.setattr(
+        fiche,
+        "load_company",
+        lambda siret: pd.Series({"siret": siret, "siren": siret[:9], "nom": "ACME"}),
+    )
+    monkeypatch.setattr(fiche, "company_offers", lambda siren, siret: pd.DataFrame())
+    monkeypatch.setattr(fiche, "bodacc_history", lambda siren: pd.DataFrame())
+    st.cache_data.clear()
+    at = AppTest.from_string(
+        """
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path.cwd() / "app"))
+from fiche_ui import open_fiche
+open_fiche("11111111100029", None, "data")
+""",
+        default_timeout=30,
+    )
+    at.run()
+    assert not at.exception
+    assert any(m.value.startswith("Fait partie de **ACME** · 3 sites") for m in at.markdown)
+    next(b for b in at.button if b.label == "Voir toute l'entreprise").click()
+    at.run()
+    assert "### ACME" in [m.value for m in at.markdown]
+    assert any("3 sites en France" in c.value for c in at.caption)
+    assert any(b.label == "← Retour au site" for b in at.button)
+    next(b for b in at.button if b.label == "← Retour au site").click()
+    at.run()
+    assert any(m.value.startswith("Fait partie de") for m in at.markdown)
+    st.cache_data.clear()

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import pandas as pd
 import streamlit as st
+from commun import get_place
 from favoris import star_button
 
 from radar import fiche
@@ -40,6 +41,11 @@ def _company(siret: str) -> pd.Series | None:
 @st.cache_data(show_spinner=False)
 def _offers(siren: str | None, siret: str | None) -> pd.DataFrame:
     return fiche.company_offers(siren, siret)
+
+
+@st.cache_data(show_spinner=False)
+def _sites(siren: str, lat: float | None, lon: float | None) -> pd.DataFrame:
+    return fiche.company_sites(siren, lat, lon)
 
 
 @st.cache_data(show_spinner=False)
@@ -269,6 +275,8 @@ def fiche_content(siret: str, row: pd.Series | None = None, domaine: str | None 
             row["alerte"] = alert_text(row.get("procedure_type"), row.get("procedure_date"))
     siren = _value(c.get("siren"), row.get("siren"))
     _identity(row, c)
+    if NAV_KEY in st.session_state and siren:
+        _parent_company(siren)
     _star(siret, row, c)
     _why(row)
     _need(row, domaine)
@@ -277,14 +285,171 @@ def fiche_content(siret: str, row: pd.Series | None = None, domaine: str | None 
     _contact(row, c)
 
 
+# --- Entreprise (SIREN) et site (SIRET) dans la même fenêtre (T57) -----------------------
+
+NAV_KEY = "_fiche_nav"  # {"origin": (type, id), "view": (type, id)} ; type = "site" | "entreprise"
+
+
+def _go(view: tuple[str, str]) -> None:
+    st.session_state[NAV_KEY]["view"] = view
+
+
+def _parent_company(siren: str) -> None:
+    """Dans la fiche d'un site : « Fait partie de X · N sites » + « Voir toute l'entreprise »."""
+    sites = _sites(siren, None, None)
+    if len(sites) <= 1:
+        return
+    summary = fiche.company_summary(sites, siren)
+    left, right = st.columns([3, 1], vertical_alignment="center")
+    left.markdown(f"Fait partie de **{summary['nom']}** · {summary['n_sites']} sites en France")
+    right.button(
+        "Voir toute l'entreprise",
+        key=f"vers_entreprise_{siren}",
+        on_click=_go,
+        args=(("entreprise", siren),),
+        width="stretch",
+    )
+
+
+def company_content(siren: str, domaine: str | None = None) -> None:
+    """Fiche d'une entreprise entière : identité, offres de tous les sites, sites, BODACC."""
+    place = get_place(st.session_state.get("ville"))
+    sites = _sites(siren, place.lat if place else None, place.lon if place else None)
+    if sites.empty:
+        st.write("Entreprise introuvable dans le référentiel (sites d'au moins 10 salariés).")
+        return
+    s = fiche.company_summary(sites, siren)
+    st.markdown(f"### {s['nom']}")
+    eff = (
+        f"environ {s['effectif_total']:,} salariés".replace(",", " ")
+        if s["effectif_total"]
+        else None
+    )
+    cat = {
+        "PME": "PME",
+        "ETI": "ETI (entreprise de taille intermédiaire)",
+        "GE": "Grande entreprise",
+    }
+    bits = [
+        cat.get(s["categorie"]),
+        s["activite"],
+        f"{s['n_sites']} site{'s' if s['n_sites'] > 1 else ''} en France",
+        eff,
+        f"siège à {s['siege_commune'].title()}" if s["siege_commune"] else None,
+    ]
+    st.caption(" · ".join(b for b in bits if b))
+    if s["procedure_type"]:
+        from radar.procedures import alert_text
+
+        txt = alert_text(s["procedure_type"], s["procedure_date"])
+        (st.error if txt.startswith("🔴") else st.warning)(f"{txt}. Détail dans « Situation ».")
+    star_button(
+        "entreprise",
+        f"siren:{siren}",
+        f"{s['nom']} (toute l'entreprise)",
+        {
+            "commune": s["siege_commune"],
+            "siren": siren,
+            "secteur": s["activite"],
+            "taille": f"{s['n_sites']} sites",
+        },
+        key=f"fav_entreprise_{siren}",
+    )
+
+    st.markdown("#### Offres de l'entreprise (tous ses sites)")
+    offers = _offers(siren, None)
+    if offers.empty:
+        st.caption("Aucune offre rapprochée de cette entreprise dans les données collectées.")
+    else:
+        st.dataframe(
+            offers.rename(
+                columns={
+                    "date_publication": "Publiée le",
+                    "titre": "Offre",
+                    "contrat": "Contrat",
+                    "domaine": "Domaine",
+                    "commune": "Lieu",
+                    "source": "Source",
+                    "url": "Annonce",
+                }
+            ),
+            hide_index=True,
+            width="stretch",
+            column_config={"Annonce": st.column_config.LinkColumn("Annonce", display_text="Voir")},
+        )
+
+    st.markdown(f"#### Ses sites ({len(sites)})")
+    table = pd.DataFrame(
+        {
+            "Site": sites["nom_etablissement"]
+            .fillna("")
+            .where(sites["nom_etablissement"].fillna("") != sites["nom"].fillna(""), ""),
+            "Lieu": sites["commune"].fillna("") + " " + sites["code_postal"].fillna("").astype(str),
+            "Taille": sites["tranche_libelle"],
+            "Siège": sites["siege"].fillna(False).astype(bool).map({True: "Siège", False: ""}),
+        }
+    )
+    if place is not None:
+        table["Distance"] = sites["distance_km"]
+    event = st.dataframe(
+        table,
+        hide_index=True,
+        width="stretch",
+        on_select="rerun",
+        selection_mode="single-row",
+        key=f"sites_{siren}",
+        column_config={"Distance": st.column_config.NumberColumn(format="%.1f km")},
+    )
+    st.caption(
+        ("Les plus proches de ta ville d'abord. " if place is not None else "")
+        + "Sites d'au moins 10 salariés. Clique sur un site pour ouvrir sa fiche."
+    )
+    rows = event.selection.rows if event is not None else []
+    if rows:
+        _go(("site", str(sites.iloc[rows[0]]["siret"])))
+        st.rerun(scope="fragment")
+    _situation(siren)
+    st.markdown(f"[Annuaire des entreprises]({s['url_annuaire']})")
+
+
 def _close_fiche() -> None:
     # Fenêtre fermée : on vide la sélection de la liste pour pouvoir rouvrir la même fiche.
     st.session_state["_liste_version"] = st.session_state.get("_liste_version", 0) + 1
+    st.session_state.pop(NAV_KEY, None)
 
 
-@st.dialog("Fiche entreprise", width="large", on_dismiss=_close_fiche)
-def open_fiche(siret: str, row: pd.Series | None = None, domaine: str | None = None) -> None:
-    fiche_content(siret, row, domaine)
+@st.dialog("Fiche", width="large", on_dismiss=_close_fiche)
+def open_fiche(
+    siret: str | None,
+    row: pd.Series | None = None,
+    domaine: str | None = None,
+    siren: str | None = None,
+) -> None:
+    """Fenêtre de fiche : un site (`siret`) ou une entreprise entière (`siren`, T57).
+
+    On passe de l'un à l'autre dans la même fenêtre (« Voir toute l'entreprise », clic sur un
+    site, « ← Retour »).
+    """
+    origin = ("site", str(siret)) if siret else ("entreprise", str(siren))
+    nav = st.session_state.get(NAV_KEY)
+    if not nav or nav["origin"] != origin:
+        nav = {"origin": origin, "view": origin}
+        st.session_state[NAV_KEY] = nav
+    kind, ident = nav["view"]
+    if nav["view"] != nav["origin"]:
+        if kind == "entreprise":  # venu d'un site
+            st.button("← Retour au site", key="fiche_retour", on_click=_go, args=(nav["origin"],))
+        else:  # un site ouvert depuis la liste de l'entreprise (SIREN = 9 premiers chiffres)
+            st.button(
+                "← Toute l'entreprise",
+                key="fiche_retour",
+                on_click=_go,
+                args=(("entreprise", ident[:9]),),
+            )
+    if kind == "entreprise":
+        company_content(ident, domaine)
+    else:
+        fiche_content(ident, row if ident == str(siret) else None, domaine)
 
 
 def render_fiche(spontaneous: pd.DataFrame) -> None:

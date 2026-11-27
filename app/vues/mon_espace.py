@@ -104,7 +104,11 @@ def favorites_section() -> None:
                 )
                 _follow_up(f, connected)
     if to_open:
-        open_fiche(to_open, None, st.session_state.get("domaine"))
+        domaine = st.session_state.get("domaine")
+        if to_open.startswith("siren:"):  # favori « toute l'entreprise » (T57)
+            open_fiche(None, None, domaine, siren=to_open.removeprefix("siren:"))
+        else:
+            open_fiche(to_open, None, domaine)
 
 
 account_page(

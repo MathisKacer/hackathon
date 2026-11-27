@@ -52,6 +52,11 @@ SITUATION_COURTE = {
 }
 
 
+def _pl(n: int, word: str) -> str:
+    """Accord au pluriel : _pl(2, "offre") → « offres »."""
+    return word + ("s" if n > 1 else "")
+
+
 def _n_filters_on() -> int:
     """Nombre de filtres modifiés (affiché sur le bouton « Filtres »)."""
     ss = st.session_state
@@ -65,6 +70,7 @@ def _n_filters_on() -> int:
             bool(ss.get("secteurs")),
             bool(ss.get("show_liquidation")),
             ss.get("tri") == TRI_P,
+            bool(ss.get("une_par_entreprise")),
         ]
     )
 
@@ -129,6 +135,12 @@ with st.container(border=True):
             help="Leur activité est en principe arrêtée. Les autres entreprises en difficulté "
             "restent affichées, avec une alerte.",
         )
+        une_par_entreprise = st.checkbox(
+            "Une ligne par entreprise",
+            key="une_par_entreprise",
+            help="Garde seulement le site le mieux classé de chaque entreprise "
+            "(les autres sites restent visibles dans sa fiche).",
+        )
         st.markdown("**Classement**")
         tri = st.radio("Classer par", TRIS, key="tri", horizontal=True)
         st.caption("Importance de chaque critère dans le score (0 = ignoré) :")
@@ -156,6 +168,15 @@ if place is not None:
         spontaneous = spontaneous.sort_values(
             ["p_reponse", "score"], ascending=False, na_position="last"
         ).reset_index(drop=True)
+
+# T57 : sites d'une même entreprise (SIREN) dans le rayon → « +N » ; option une ligne par entreprise
+if not spontaneous.empty:
+    siren = spontaneous["siren"] if "siren" in spontaneous else spontaneous["siret"].str[:9]
+    spontaneous = spontaneous.assign(_siren=siren.astype(str))
+    n_same = spontaneous.groupby("_siren")["siret"].transform("size")
+    spontaneous = spontaneous.assign(_autres_sites=n_same - 1)
+    if une_par_entreprise:
+        spontaneous = spontaneous.drop_duplicates("_siren").reset_index(drop=True)
 
 # Connecté : la recherche est enregistrée (« Mes recherches », page Mon espace).
 record_search(
@@ -185,10 +206,19 @@ if place is None:
         "recommandée."
     )
 else:
+    # T57 : entreprises (SIREN distincts) et sites ; les sites masqués par l'option comptent aussi
+    n_ent = spontaneous["_siren"].nunique() if not spontaneous.empty else 0
+    if une_par_entreprise and not spontaneous.empty:
+        n_sites = int(spontaneous["_autres_sites"].add(1).sum())
+    else:
+        n_sites = len(spontaneous)
+    sites_txt = f" ({n_sites} sites)" if n_sites != n_ent else ""
+    n_off = len(view)
     st.markdown(
-        f"Autour de **{place.label}** ({rayon} km) : **{len(spontaneous)}** entreprises "
-        f"pourraient t'accueillir{contrat_txt} sans avoir publié d'offre, et "
-        f"**{len(view)}** offres sont publiées."
+        f"Autour de **{place.label}** ({rayon} km) : **{n_ent}** {_pl(n_ent, 'entreprise')}"
+        f"{sites_txt} {'pourraient' if n_ent > 1 else 'pourrait'} t'accueillir{contrat_txt} "
+        f"sans avoir publié d'offre, et **{n_off}** {_pl(n_off, 'offre')} "
+        f"{'sont publiées' if n_off > 1 else 'est publiée'}."
     )
     if tri == TRI_P:
         st.info(SIMULATED_BANNER)
@@ -228,6 +258,9 @@ with tab_spont:
                 "Entreprise": nom,
                 "Lieu": spontaneous.get("commune"),
                 "Distance": spontaneous["distance_km"],
+                "Autres sites": spontaneous["_autres_sites"].map(
+                    lambda n: f"+{n}" if n > 0 else ""
+                ),
                 "Taille": spontaneous.get(
                     "tranche_effectif", pd.Series(index=spontaneous.index)
                 ).map(TRANCHE_LIBELLES),
@@ -241,6 +274,8 @@ with tab_spont:
         )
         if tri == TRI_P and "p_reponse" in spontaneous:
             table["Chance de réponse (démo)"] = spontaneous["p_reponse"]
+        if not table["Autres sites"].astype(bool).any():
+            table = table.drop(columns="Autres sites")
         if not table["★"].astype(bool).any():
             table = table.drop(columns="★")
         if table["Situation"].isna().all():
@@ -257,6 +292,9 @@ with tab_spont:
             key=f"liste_spont_{version}",
             column_config={
                 "Distance": st.column_config.NumberColumn(format="%.1f km"),
+                "Autres sites": st.column_config.TextColumn(
+                    help="Autres sites de la même entreprise dans le rayon (voir sa fiche)."
+                ),
                 "Score": st.column_config.ProgressColumn(
                     min_value=0.0, max_value=1.0, format="%.2f"
                 ),

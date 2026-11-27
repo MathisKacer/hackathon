@@ -209,3 +209,81 @@ def hiring_signal(row: pd.Series) -> dict | None:
         pot = row.get("lbb_potentiel")
         return {"lbb": True, "potentiel": float(pot) if pot is not None and pd.notna(pot) else None}
     return {"lbb": False}
+
+
+# --- Niveau entreprise (SIREN) : tous les sites d'une même société (T57) ------------------
+
+ANNUAIRE_ENTREPRISE_URL = "https://annuaire-entreprises.data.gouv.fr/entreprise/{siren}"
+SITE_COLS = [
+    "siret",
+    "nom",
+    "nom_etablissement",
+    "adresse",
+    "code_postal",
+    "commune",
+    "tranche_libelle",
+    "effectif_estime",
+    "siege",
+    "diffusion_partielle",
+    "lat",
+    "lon",
+    "naf_libelle",
+    "categorie",
+    "sigle",
+    "procedure_type",
+    "procedure_date",
+    "procedure_url",
+]
+
+
+def company_sites(
+    siren: str,
+    lat: float | None = None,
+    lon: float | None = None,
+    path: Path = FILES["entreprises"],
+) -> pd.DataFrame:
+    """Sites (établissements ≥ 10 salariés) d'une entreprise, les plus proches d'abord si une
+    position est donnée (`distance_km`), sinon le siège puis les plus gros."""
+    path = Path(path)
+    if not path.exists() or not siren:
+        return pd.DataFrame(columns=[*SITE_COLS, "distance_km"])
+    con = duckdb.connect()
+    keep = [c for c in SITE_COLS if c in _columns(con, path)]
+    df = (
+        con.execute(f"SELECT {', '.join(keep)} FROM '{path}' WHERE siren = ?", [str(siren)])
+        .df()
+        .reindex(columns=SITE_COLS)
+    )
+    if lat is not None and lon is not None:
+        from radar.spontaneous import haversine_km
+
+        df["distance_km"] = haversine_km(lat, lon, df["lat"], df["lon"])
+        return df.sort_values("distance_km", na_position="last").reset_index(drop=True)
+    df["distance_km"] = float("nan")
+    df["_siege"] = df["siege"].fillna(False).astype(bool)
+    df = df.sort_values(["_siege", "effectif_estime"], ascending=[False, False], na_position="last")
+    return df.drop(columns="_siege").reset_index(drop=True)
+
+
+def company_summary(sites: pd.DataFrame, siren: str) -> dict:
+    """Résumé d'une entreprise à partir de ses sites (sortie de company_sites)."""
+    if sites.empty:
+        return {"siren": siren, "nom": None, "n_sites": 0}
+    siege = sites[sites["siege"].fillna(False).astype(bool)]
+    ref = siege.iloc[0] if not siege.empty else sites.iloc[0]
+    eff = sites["effectif_estime"].dropna()
+    return {
+        "siren": siren,
+        "nom": ref.get("nom"),
+        "sigle": ref.get("sigle") if pd.notna(ref.get("sigle")) else None,
+        "categorie": ref.get("categorie") if pd.notna(ref.get("categorie")) else None,
+        "activite": ref.get("naf_libelle") if pd.notna(ref.get("naf_libelle")) else None,
+        "n_sites": len(sites),
+        "effectif_total": int(eff.sum()) if not eff.empty else None,
+        "siege_commune": ref.get("commune") if not siege.empty else None,
+        "procedure_type": ref.get("procedure_type")
+        if pd.notna(ref.get("procedure_type"))
+        else None,
+        "procedure_date": ref.get("procedure_date"),
+        "url_annuaire": ANNUAIRE_ENTREPRISE_URL.format(siren=siren),
+    }

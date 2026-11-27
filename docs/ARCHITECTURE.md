@@ -43,7 +43,7 @@ hackathon/
 │   ├── recruteurs.py           # T51 : recruteurs potentiels LBA sur un ROME du domaine → `recruteur_lba` (D26)
 │   ├── spontaneous.py          # T40 : couche orange — entreprises du rayon sans offre correspondante, classées (D19)
 │   ├── procedures.py           # T23 : pénalité et alerte BODACC selon la situation et le contrat (D24)
-│   ├── fiche.py                # T43 : données de la fiche entreprise (SIRENE complet, offres, BODACC, niveau de preuve, La Bonne Boîte)
+│   ├── fiche.py                # T43 : données de la fiche (site : SIRENE, offres, BODACC, niveau de preuve, La Bonne Boîte ; entreprise T57 : company_sites, company_summary)
 │   ├── recherche.py            # D30 : recherche d'entreprises par nom / SIREN / SIRET, tolérante aux fautes
 │   ├── collect/                # un module par source : adzuna.py, lba.py, lbb.py (La Bonne Boîte, T28), sirene.py, bodacc.py…
 │   ├── process/

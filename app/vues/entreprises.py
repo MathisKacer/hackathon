@@ -10,7 +10,7 @@ import pandas as pd
 import streamlit as st
 from fiche_ui import open_fiche
 
-from radar.recherche import load_index, search_companies
+from radar.recherche import load_index, search_companies, with_companies
 
 SITUATION_COURTE = {
     "sauvegarde": "🟡 Sauvegarde",
@@ -55,25 +55,34 @@ if hits.empty:
     st.caption("La recherche porte sur les établissements d'au moins 10 salariés.")
     st.stop()
 
-etab = hits["nom_etablissement"]
+# T57 : l'entreprise entière d'abord (une ligne par SIREN à plusieurs sites), puis les sites.
+rows_all = with_companies(hits)
+is_company = rows_all["_type"].eq("entreprise")
+etab = rows_all["nom_etablissement"]
 names = [
-    f"{e} ({n})" if isinstance(e, str) and e and e != n else n
-    for e, n in zip(etab, hits["nom"].astype(str), strict=True)
+    f"{n} — toute l'entreprise"
+    if comp
+    else (f"{e} ({n})" if isinstance(e, str) and e and e != n else n)
+    for comp, e, n in zip(is_company, etab, rows_all["nom"].astype(str), strict=True)
 ]
+lieu = rows_all["commune"].fillna("") + " " + rows_all["code_postal"].fillna("").astype(str)
+n_sites = rows_all["_n_sites"].fillna(1).astype(int)
 table = pd.DataFrame(
     {
         "Entreprise": names,
-        "Lieu": hits["commune"].fillna("") + " " + hits["code_postal"].fillna("").astype(str),
-        "Taille": hits["tranche_libelle"],
-        "Activité": hits["naf_libelle"],
-        "Situation": hits["procedure_type"].map(SITUATION_COURTE),
+        "Lieu": lieu.where(~is_company, n_sites.map(lambda n: f"{n} sites en France")),
+        "Taille": rows_all["tranche_libelle"].where(~is_company, None),
+        "Activité": rows_all["naf_libelle"],
+        "Situation": rows_all["procedure_type"].map(SITUATION_COURTE),
     }
 )
 if table["Situation"].isna().all():
     table = table.drop(columns="Situation")
 
+n_comp = int(is_company.sum())
 st.write(
-    f"{len(hits)} établissement{'s' if len(hits) > 1 else ''}"
+    (f"{n_comp} entreprise{'s' if n_comp > 1 else ''} et " if n_comp else "")
+    + f"{len(hits)} site{'s' if len(hits) > 1 else ''}"
     + (" (les 50 plus proches de ta recherche)" if len(hits) == 50 else "")
     + " — clique sur une ligne pour ouvrir la fiche."
 )
@@ -88,4 +97,9 @@ event = st.dataframe(
 )
 rows = event.selection.rows if event is not None else []
 if rows:
-    open_fiche(hits.iloc[rows[0]]["siret"], None, st.session_state.get("domaine"))
+    r = rows_all.iloc[rows[0]]
+    domaine = st.session_state.get("domaine")
+    if r["_type"] == "entreprise":
+        open_fiche(None, None, domaine, siren=r["siren"])
+    else:
+        open_fiche(r["siret"], None, domaine)

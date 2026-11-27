@@ -59,3 +59,15 @@ def test_siren_siret_and_empty(tmp_path):
     assert out.empty and "_score" in out.columns
     assert search_companies(idx, "   ").empty
     assert search_companies(load_index(tmp_path / "absent.parquet"), "sopra").empty
+
+
+def test_with_companies_puts_whole_company_first(tmp_path):
+    from radar.recherche import with_companies
+
+    idx = _index(tmp_path)
+    out = with_companies(search_companies(idx, "sopra steria"))
+    assert out["_type"].tolist() == ["entreprise", "site", "site"]
+    assert out["siren"].iloc[0] == "111111111" and out["_n_sites"].iloc[0] == 2
+    # une entreprise à un seul site n'a pas de ligne « entreprise »
+    assert with_companies(search_companies(idx, "societe generale"))["_type"].tolist() == ["site"]
+    assert with_companies(search_companies(idx, "zzzzqqq")).empty
