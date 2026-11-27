@@ -4,6 +4,33 @@
 
 ---
 
+## 2026-11-27 — T14 : test de l'API ROMEO ✅ (résultat : non retenue)
+
+**Fait :**
+- Scope trouvé : `api_romeov2` (jeton accepté ; `api_romeov1` et `romeo` refusés). Point d'accès : `POST /partenaire/romeo/v2/predictionMetiers`. Limites mesurées : **20 intitulés par appel**, **3 requêtes/s**.
+- Test sur **200 vrais titres Adzuna distincts** (échantillon fixé par graine) : 50 anglais et 50 français classés `autre` par `classify`, plus 20 titres par domaine. Code ROME n°1 → domaine via `domains.yaml`, **relecture à la main** de tous les désaccords. Deuxième passe avec la description en contexte.
+- Docs : D25 dans `DECISIONS.md`, ligne ROMEO de `SOURCES.md` complétée (technique + résultats), T14 en « Fait ».
+- Rien dans le code : les scripts de test sont restés dans mon espace temporaire. Ils contiennent des titres d'offres Adzuna, qu'on ne redistribue pas.
+
+**Fichiers touchés :**
+- `docs/DECISIONS.md`, `docs/SOURCES.md`, `docs/TACHES.md`, `docs/journal/emma.md`
+
+**Résultats / chiffres clés :**
+- Sur les titres laissés en `autre` : ROMEO en place 27/100 dans un domaine, dont ~13 justes seulement.
+- Sur les titres déjà classés : accord 51/100 ; sur les désaccords, mots-clés ~26 justes contre ROMEO ~10.
+- Points faibles de ROMEO : titres RH anglais (« HR Generalist » → cadre de santé, « People Partner » → événementiel), titres data pourtant évidents (« Data Engineer - Aérospatial » → R&D industrie), titres commerciaux (« Account Executive - Acquisition » → fusions-acquisitions).
+- Points forts : quelques vraies corrections des mots-clés (« Gestionnaire de paie… cabinet d'expertise comptable » → rh ; « Conducteur travaux CFO » → hors finance ; « Stage SEO… IA » → marketing).
+- Le score de confiance ne permet pas de filtrer les erreurs. La description en contexte rend ROMEO instable (147/200 codes changés) sans l'améliorer.
+
+**Problèmes / points d'attention pour l'équipe :**
+- **ROMEO n'est pas branché.** Inutile d'ajouter `api_romeov2` à vos `.env`.
+- Les quelques erreurs des mots-clés révélées par le test pourraient être corrigées dans `domains.yaml` (ex. exclure « expertise comptable » quand le titre parle de paie). Gain faible : à faire seulement dans T9 si quelqu'un y touche.
+
+**Prochaine étape :**
+- D21 attend toujours l'avis de Mathis et Maxence.
+
+---
+
 ## 2026-11-27 — Proposition D21 : noter les domaines autres que data
 
 **Fait :**

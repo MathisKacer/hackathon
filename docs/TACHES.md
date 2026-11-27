@@ -74,11 +74,11 @@
 
 ## 🔵 En cours
 
-- [ ] T14 — 🔗T13,T8 **Tester l'API ROMEO** (intitulé de poste → codes ROME) sur ~100 titres Adzuna classés `autre` ; comparer aux mots-clés ; noter débit et limites dans `SOURCES.md` — @emma
 - _…_
 
 ## ✅ Fait
 
+- [x] T14 — **Test de l'API ROMEO** sur 200 vrais titres Adzuna : **non retenue**, moins fiable que les mots-clés et instable (D25) — @emma
 - [x] T23 — **BODACC : entreprises en difficulté** (D24) : `scripts/collect_bodacc.py` (aussi dans `build_all.py`) → situation par SIREN (sauvegarde / redressement / liquidation / plan) dans `entreprises.parquet` ; dans la couche orange, score pénalisé selon la situation **et le contrat visé**, drapeau 🟡/🟠/🔴 + lien BODACC (liste et fiche), liquidations masquées par défaut (case pour les afficher). 11 124 établissements en alerte (2,7 %). Aucune entreprise supprimée — @celia
 - [x] T37 — 🔗T36,T40 Intégration dans l'app : tri par P(réponse) + bandeau « démonstrateur : réponses simulées » — @maxence → `radar/response/predict.py` (SIRET affichés, + distance au logit), réglage « Classer par Score / P(réponse) simulée », colonne et fiche, bandeau ; emploi non couvert, « Tous » = moyenne stage/alternance ; D23
 - [x] T42 — 🔗T40 **Curseurs de poids** → recalcul du score en direct — @maxence → 5 curseurs 0–5 (intensité, besoin attendu, proximité, opportunité cachée, dynamisme), score = moyenne pondérée, apport de chaque composante dans la liste et la fiche, bouton « Poids par défaut », enregistrés au profil ; D22

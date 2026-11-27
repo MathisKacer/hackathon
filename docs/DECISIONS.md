@@ -14,6 +14,19 @@
 
 ---
 
+### D25 — API ROMEO testée et non retenue pour classer les offres (2026-11-27, @emma)
+**Contexte :** T14. Les offres Adzuna n'ont pas de code ROME, donc `classify` ne s'appuie que sur des mots-clés dans le titre. ROMEO (France Travail) prédit des codes ROME à partir d'un intitulé : on espérait un classement plus robuste et une T9 plus simple.
+**Test :** 200 titres distincts tirés des vraies offres Adzuna : 50 titres anglais et 50 titres français classés `autre`, plus 20 titres classés par domaine. Code ROME n°1 de ROMEO → domaine via `domains.yaml` ; chaque désaccord avec les mots-clés a été relu à la main. Deuxième passe avec la description (500 car.) en `contexte`.
+**Résultats :**
+- titres `autre` que ROMEO place dans un domaine : 27/100, dont **~13 justes** (PMO, SOC Analyst, ServiceNow…) et ~12 faux (« Customer Success Manager » → vérification client bancaire, « Account Executive » → fusions-acquisitions, « Hardware Architect » → architecte base de données) ;
+- titres déjà classés : accord 51/100 ; sur les désaccords, **les mots-clés ont raison ~26 fois, ROMEO ~10 fois** (ROMEO corrige quelques vraies erreurs : paie en cabinet comptable → rh, « CFO » courant faible, SEO + IA → marketing) ;
+- le `scorePrediction` (0,60–0,85) ne sépare pas les bonnes réponses des mauvaises ;
+- avec la description, le code change pour 147/200 titres, sans gain (accord 48/100).
+
+**Décision :** ne pas brancher ROMEO dans `classify` ni dans le pipeline ; garder les mots-clés de `domains.yaml` (T6, T8).
+**Alternatives écartées :** ROMEO seul (moins bon que les mots-clés) ; ROMEO en repli sur les `autre` au-dessus d'un seuil (gain de quelques dizaines de titres pour ~25 % d'erreurs, et un appel réseau de plus dans le pipeline).
+**Conséquences :** pas de nouvelle dépendance ni de nouveau scope à ajouter dans les `.env`. T9 se fera avec des codes ROME et des mots-clés, comme T6. Si les besoins changent, les détails techniques de l'API (point d'accès, limites) sont dans `SOURCES.md`.
+
 ### D24 — Procédures collectives (BODACC) : pénaliser et alerter, sans supprimer (2026-11-27, @celia)
 **Contexte :** T23. Recommander une entreprise en difficulté sans le dire décrédibilise l'outil ; mais la supprimer ferait perdre de l'information (à terme, Radar veut recenser un maximum d'entreprises avec leur situation).
 **Décision :** collecte des annonces BODACC « procédures collectives » des **2 dernières années** (~405 000, un export parquet, cache `data/raw/bodacc_collectives.parquet`) ; pour chaque SIREN, le **dernier événement qui change la situation** : `sauvegarde`, `redressement`, `liquidation` (y compris clôture pour insuffisance d'actif et plan de cession), `plan` (plan adopté, l'entreprise poursuit) ou `fin` (procédure close sans liquidation → plus d'alerte). Colonnes `procedure_type/_date/_nature/_url` et `procedure_collective` dans `entreprises.parquet` ; **aucune entreprise supprimée**. Dans la couche orange (`radar/procedures.py`) : score multiplié par un coefficient qui dépend de la situation **et du contrat visé** (une alternance ou un emploi engage plus qu'un stage) — sauvegarde/plan ×0,85 (stage) à ×0,75 (alternance, emploi), redressement ×0,6 à ×0,4, liquidation ×0,1 à ×0,05 ; drapeau 🟡/🟠/🔴 + phrase + lien BODACC dans la liste et la fiche ; **liquidations masquées par défaut** (case « Afficher aussi les entreprises en liquidation », enregistrée dans le profil).
