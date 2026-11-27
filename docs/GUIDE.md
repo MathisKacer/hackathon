@@ -237,3 +237,17 @@ Par ordre d'intérêt (✅ = déjà une tâche dans `TACHES.md`) :
 
 **Tests.** `uv run pytest -q tests/test_fiche.py` (6 tests, dont l'affichage avec AppTest).
 
+## 11. La Bonne Boîte dans la couche orange (T28, T29, D27)
+
+**À quoi ça sert.** Montrer qu'une entreprise est signalée par **France Travail (La Bonne Boîte)** comme susceptible d'embaucher sur un métier data, d'après les déclarations d'embauche réelles. C'est la composante « **Potentiel d'embauche** » du score (`c_embauche`).
+
+**Ce que voit l'utilisateur.**
+- Curseur « Potentiel d'embauche » (ancien nom : « Besoin attendu »), avec une aide qui explique la règle.
+- Dans la liste orange, une colonne **« La Bonne Boîte »** avec ✔ pour les établissements signalés (la colonne n'apparaît que s'il y en a au moins un).
+- Dans la fenêtre de la carte : « ✔ Signalée par La Bonne Boîte (France Travail) (potentiel x) ».
+
+**Comment ça marche.**
+- `scripts/collect_lbb.py` → `data/raw/lbb.parquet` (1 736 établissements data en France, 30 appels) ; `build_all.py` → `scores.parquet` avec `c_embauche_source` (`la_bonne_boite` / `proxy_besoin_attendu`) et `lbb_potentiel` (`radar/score/embauche.py`).
+- `radar/spontaneous.py › signaled_by_lbb(df)` : vrai si `c_embauche_source == "la_bonne_boite"`, faux partout si la colonne manque (anciens scores, données factices) → pas d'erreur, pas de colonne.
+- Limite : La Bonne Boîte ne couvre que 0,3 % des établissements du référentiel (L11) ; autour de Rennes, quelques dizaines.
+

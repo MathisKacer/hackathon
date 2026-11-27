@@ -4,6 +4,31 @@
 
 ---
 
+## 2026-11-27 — T29 : La Bonne Boîte dans l'app ✅ (+ correction des dates factices)
+
+**Fait :**
+- T29 reprise à la place de @maxence, qui ne l'avait pas commencée (vérifié : ni commit ni branche).
+- `radar/spontaneous.py` : curseur « Besoin attendu » renommé **« Potentiel d'embauche »**, explication corrigée (La Bonne Boîte d'abord, estimation sinon) ; nouvelle fonction `signaled_by_lbb(df)` et constante `LBB_SOURCE`.
+- `app/streamlit_app.py` : colonne **« La Bonne Boîte » (✔)** dans la liste orange (affichée seulement s'il y a au moins un établissement signalé), ligne « ✔ Signalée par La Bonne Boîte (France Travail) (potentiel x) » dans la fenêtre de la carte (`_lbb_html`), légende du tableau mise à jour.
+- **Bug trouvé et corrigé dans mon générateur factice (T5) :** il écrivait les dates en vraies dates, alors que les collecteurs réels les écrivent en texte ISO. Sur un pod qui mélange vraies offres Adzuna et `lba.parquet` factice (le mien), l'app plantait sur `offers['date_collecte'].max()` (`'>=' not supported between 'str' and 'Timestamp'`). Le générateur écrit maintenant du texte ISO (test ajouté). Sur mon pod, j'ai converti le seul `lba.parquet` factice, **sans relancer le générateur** (qui aurait écrasé les vraies offres Adzuna).
+- Tests : `tests/test_lbb_display.py` (3) + 1 test de format de dates dans `tests/test_fake_data.py`.
+- Docs : section 11 du `GUIDE.md`, T29 en « Fait ».
+
+**Fichiers touchés :**
+- `radar/spontaneous.py`, `app/streamlit_app.py`, `radar/fake_data.py`, `tests/test_lbb_display.py`, `tests/test_fake_data.py`
+- `docs/GUIDE.md`, `docs/TACHES.md`, `docs/journal/emma.md`
+
+**Vérifié :**
+- `pytest` 273/273, ruff OK, après fusion avec le suggesteur de ville de Maxence (T55).
+- App lancée (Streamlit AppTest, ville « Rennes ») : sans les colonnes La Bonne Boîte → aucune erreur, pas de colonne ✔ ; avec une copie des scores où 5 établissements rennais sont signalés → colonne présente, 5 ✔ sur 236, curseur « Potentiel d'embauche ».
+
+**Problèmes / points d'attention pour l'équipe :**
+- Les ✔ n'apparaîtront chez vous qu'après `collect_lbb.py` + `build_all.py` (@mathis) et le partage du nouveau `scores.parquet`.
+- @celia : T38 (fiche entreprise) peut réutiliser `signaled_by_lbb` et `LBB_SOURCE` de `radar/spontaneous.py`.
+- Si vous avez des données factices et réelles mélangées dans `data/raw/` : regénérez seulement ce qui est factice, jamais avec `--force` si de vraies offres sont présentes.
+
+---
+
 ## 2026-11-27 — T28 : `c_embauche` réel avec La Bonne Boîte ✅
 
 **Fait :**
