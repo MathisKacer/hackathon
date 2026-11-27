@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-11-27 — Tâche T48 : connexion facultative + profil
+
+**Fait :**
+- `radar/accounts.py` : comptes et profils en SQLite (`data/app/radar.db`), mots de passe scrypt (bibliothèque standard), suppression en cascade.
+- `app/compte.py` : bloc de la barre latérale. Mode démo anonyme par défaut ; connexion / création de compte (les réglages actuels deviennent le profil) ; enregistrer, se déconnecter, supprimer son compte (case à cocher). 5 essais de connexion par session.
+- `app/streamlit_app.py` : une `key` par réglage, `PROFILE_KEYS`, appel du bloc compte. Valeurs par défaut via `session_state.setdefault`.
+- D14 mise à jour (scrypt au lieu de `streamlit-authenticator`), L17–L18 dans `LIMITES.md`.
+
+**Fichiers touchés :**
+- `radar/accounts.py`, `app/compte.py`, `app/streamlit_app.py`, `tests/test_accounts.py`, `tests/test_compte_ui.py`, `docs/*`
+
+**Résultats / chiffres clés :**
+- 19 tests T48 (13 module, 6 parcours Streamlit avec AppTest, dont l'app complète sur offres factices) ; suite complète : 133 tests OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- T40/T41/T42 : chaque nouveau réglage doit avoir une `key` et figurer dans `PROFILE_KEYS`, sinon il n'est pas enregistré dans le profil.
+- Les données factices font planter l'app (format de `date_collecte`) → tâche T19.
+
+**Prochaine étape :**
+- T49 (historique des recherches) : ajouter une table `recherches` dans `radar/accounts.py` et une liste « Mes recherches » dans `app/compte.py`.
+
+---
+
 ## 2026-11-27 — Fusion des deux versions de T20 (avec Mathis)
 
 **Fait :**

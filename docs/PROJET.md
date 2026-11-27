@@ -62,9 +62,11 @@ Voir [`SOURCES.md`](SOURCES.md). ⚠️ L'API Offres d'emploi France Travail est
 
 - Rapprochement offres ↔ SIRET approximatif (offres anonymes, cabinets) → appariement flou nom + commune, avec **taux de rapprochement affiché**.
 - Pas d'historique des offres (24 h : un seul instantané) → le score décrit le marché **aujourd'hui**.
-- Quota Adzuna (~250 appels/jour) face à l'échelle nationale → utiliser `top_companies` par département, plus La bonne alternance (nationale, avec SIRET).
+- Quota Adzuna (~240 appels/jour) face à l'échelle nationale → collecte région par région sur plusieurs jours, plus La bonne alternance (nationale, avec SIRET).
 - Signal partiel (les stages se publient surtout sur des plateformes sans API) → l'assumer au pitch et croiser plusieurs sources.
 - RGPD : pas d'e-mails ni de noms de personnes (les dirigeants sont dans SIRENE : ne pas les afficher), uniquement des sites et pages carrière.
+
+**Limites détaillées, réglables ou non, et ce qu'il faut en dire au pitch : [`LIMITES.md`](LIMITES.md).**
 
 ## Critères d'évaluation du jury
 

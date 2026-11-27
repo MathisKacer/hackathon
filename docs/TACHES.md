@@ -36,9 +36,14 @@
 - [ ] T42 — 🔗T40 **Curseurs de poids** → recalcul du score en direct
 
 **Intégration**
-- [ ] T50 — 🔗T11/T12,T20,T30 **Pipeline `scripts/build_all.py`** : brut → `offres.parquet` → `scores.parquet` ; brancher l'app sur les vraies données (**jalon V1**)
 
 ## 🟡 P2 — Valeur ajoutée (H+8 → H+16)
+
+**Lever les limites connues (voir `docs/LIMITES.md`)**
+- [ ] T26 — 🔗T21 **Familles de marque** (L7) : une entreprise ETI/GE dont une entité a des offres du domaine → ses autres entités (même début de nom) sont exclues de la couche orange (`a_offre_groupe`)
+- [ ] T27 — 🔗T21 **Revue des intermédiaires** (L8) : passer en revue les plus gros émetteurs + `volume_suspect`, compléter `INTERMEDIARIES` ; à refaire à chaque nouvelle source (LBA)
+- [ ] T28 — 🔗T30 **`c_embauche` réel** (L11) : La Bonne Boîte v2 (codes ROME data × départements, ≤ 1 req/s, SIRET fourni) + recruteurs potentiels LBA (T17) ; remplace le proxy
+- [ ] T18 — 🔗T16 **Autres domaines** (L1) : collecter Adzuna sur d'autres requêtes (finance, marketing…) avec le quota des jours suivants, Bretagne + grandes villes d'abord ; puis noter ces domaines (`SCORED_DOMAINS`)
 
 **Modèle de réponse (démonstrateur, réponses simulées)**
 - [ ] T35 — 🔗T20 **Simulateur** : règle paramétrique P(réponse | besoin, taille, secteur, distance, historique d'embauche…) dans `radar/response/params.yaml`, tirage des réponses sur les entreprises réelles → `candidatures_simulees.parquet`
@@ -46,13 +51,16 @@
 - [ ] T37 — 🔗T36,T40 Intégration dans l'app : tri par P(réponse) + bandeau « démonstrateur : réponses simulées »
 
 - [ ] T32 — Explication automatique par entreprise (« recommandée car… ») à partir des contributions au score
-- [ ] T33 — Modèle gamma-Poisson (nombre d'offres du domaine, avec l'effectif comme exposition) ; comparer au bêta-binomial
 - [ ] T34 — **Validation sans vérité terrain** : stabilité du classement (bootstrap), sensibilité aux poids, cohérence avec La Bonne Boîte et la tension du marché → graphiques pour les slides
-- [ ] T22 — Enrichissement finances (CA N et N-1, via Recherche d'entreprises ou les ratios INPI) → composante dynamisme
+- [ ] T22 — Enrichissement finances (CA N et N-1, via Recherche d'entreprises ou les ratios INPI) → composante dynamisme (L10 : privilégier les ratios INPI en masse, pas 276 000 appels d'API)
 - [ ] T23 — BODACC : écarter ou pénaliser les entreprises en procédure collective
 - [ ] T24 — La Bonne Boîte (si l'accès est obtenu) → composante probabilité d'embauche
 - [ ] T43 — **Fiche entreprise** : décomposition du score, intervalle crédible, offres récentes, effectif, CA, lien vers l'Annuaire des entreprises
 - [ ] T44 — Affichage du **niveau de preuve** (nombre d'offres observées) et du taux de rapprochement global
+
+**Comptes (optionnels, D14) : le mode démo anonyme reste le parcours par défaut**
+- [ ] T49 — 🔗T48 **Historique des recherches** (connecté seulement) : chaque recherche enregistrée (date, paramètres, nombre de résultats, top 5 SIRET) ; liste « Mes recherches » avec bouton « Relancer » ; en anonyme, rien n'est écrit (`st.session_state` seulement)
+- [ ] T19 — **Données factices vs vraies offres** : dans `fake_data`, `date_collecte` est une date alors que les offres Adzuna l'ont en texte → l'app plante sur les données factices (`offers['date_collecte'].max()[:10]`, dernière ligne de `streamlit_app.py`) et elles n'ont pas `region_requete`. Aligner l'un ou l'autre
 
 ## 🟢 P3 — Bonus (seulement si le P2 est fini)
 
@@ -70,8 +78,14 @@
 
 ## 🔵 En cours
 
+- [ ] T25 — 🔗T21 **Rattrapage du rapprochement** (L6, L9) : pour les noms non rapprochés (~1 200), API Recherche d'entreprises (`/search?q=<nom>` + proximité ; gère sigles et noms commerciaux, ~7 req/s) + table d'alias manuelle pour les 30 plus gros émetteurs (SFR, EY, Pennylane…) ; objectif : SFR & co ne sortent plus en orange — @mathis
+- [ ] T50 — 🔗T11/T12,T20,T30 **Pipeline `scripts/build_all.py`** : brut → `offres.parquet` → `scores.parquet` ; brancher l'app sur les vraies données (**jalon V1**) — @mathis
+- [ ] T17 — 🔗T11 **Partager les données LBA sur S3** (`offres_raw/lba.parquet`, `lba_recruteurs.parquet`) : relancer `scripts/collect_lba.py` sur Onyxia puis `scripts/share_s3.py` — @maxence
+
 ## ✅ Fait
 
+- [x] T48 — **Connexion facultative + profil** (D14) : mode démo anonyme par défaut ; bloc compte dans la barre latérale (connexion, création, enregistrer le profil, déconnexion, suppression) ; `radar/accounts.py` + `app/compte.py`, SQLite `data/app/radar.db`, mots de passe scrypt. ⚠️ **T40/T41/T42** : donner une `key` à chaque nouveau réglage et l'ajouter à `PROFILE_KEYS` dans `app/streamlit_app.py` — @celia
+- [x] T33 — Modèle gamma-Poisson (nombre d'offres du domaine, avec l'effectif comme exposition) ; comparer au bêta-binomial → fait dans T30 (D13)
 - [x] T17 — 🔗T11 **Partager les données LBA sur S3** (`offres_raw/lba.parquet`, `lba_recruteurs.parquet`) : relancer `scripts/collect_lba.py` sur Onyxia puis `scripts/share_s3.py` — @maxence → déposés sur S3 (espace privé de Maxence, liens 24 h envoyés en MP) ; ⚠️ `share_s3.py` se lance avec `python3` (système Onyxia), pas `uv run` (botocore absent du venv)
 - [x] T31 — 🔗T30 **Rétrécissement bêta-binomial** : a priori par secteur NAF, a posteriori, intervalle crédible — @mathis → fusionnée dans T30 : gamma-Poisson au lieu de bêta-binomial (D13)
 - [x] T30 — 🔗T5 **Score v0** sur données factices : composantes simples (part brute des offres du domaine, opportunité cachée, distance, taille) → `scores.parquet` — @mathis → gamma-Poisson réel (D13), `scripts/build_scores.py`
