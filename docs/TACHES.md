@@ -44,7 +44,6 @@
 - [ ] T18 — 🔗T16 **Autres domaines** (L1) : collecter Adzuna sur d'autres requêtes (finance, marketing…) avec le quota des jours suivants, Bretagne + grandes villes d'abord ; puis noter ces domaines (`SCORED_DOMAINS`)
 
 **Modèle de réponse (démonstrateur, réponses simulées)**
-- [ ] T37 — 🔗T36,T40 Intégration dans l'app : tri par P(réponse) + bandeau « démonstrateur : réponses simulées » — données prêtes : `p_reponse.parquet` (à distance nulle, filtre `contrat_vise`) ; ajouter `coefficients['distance_10km'] × km / 10` au logit, coefficient dans `data/processed/modele_reponse.json` (D18)
 
 - [ ] T32 — Explication automatique par entreprise (« recommandée car… ») à partir des contributions au score
 - [ ] T34 — **Validation sans vérité terrain** : stabilité du classement (bootstrap), sensibilité aux poids, cohérence avec La Bonne Boîte et la tension du marché → graphiques pour les slides
@@ -75,6 +74,7 @@
 ## 🔵 En cours
 
 - [ ] T23 — BODACC : écarter ou pénaliser les entreprises en procédure collective — @celia
+- [ ] T37 — 🔗T36,T40 Intégration dans l'app : tri par P(réponse) + bandeau « démonstrateur : réponses simulées » — données prêtes : `p_reponse.parquet` (à distance nulle, filtre `contrat_vise`) ; ajouter `coefficients['distance_10km'] × km / 10` au logit, coefficient dans `data/processed/modele_reponse.json` (D18) — @maxence
 - _…_
 
 ## ✅ Fait
