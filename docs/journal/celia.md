@@ -16,6 +16,7 @@
 
 **Résultats / chiffres clés :**
 - Orange autour de Rennes : 15 sites dans la recherche, le mieux classé « Cible prioritaire ». 349 tests OK.
+- Vérifié ensuite avec les **vraies données** de Mathis : il a fallu corriger le chargement des offres (l'app ne lisait que les offres brutes, absentes de la liste du README ; repli sur `offres.parquet`). Rennes, stage : 3 714 entreprises (4 349 sites), 8 offres, 435 cibles prioritaires ; fiche d'Infotel Conseil complète (signal, explication, chance de réponse).
 
 ---
 

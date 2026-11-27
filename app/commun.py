@@ -72,7 +72,12 @@ WIDGET_KEYS = [
 
 @st.cache_data(show_spinner="Chargement des offres…")
 def get_offers() -> pd.DataFrame:
-    df = prepare_offers(load_raw_offers())
+    # Offres brutes si on les a (collecte), sinon offres.parquet : c'est ce fichier que le README
+    # demande de récupérer, et il contient les mêmes colonnes (+ classement et SIRET).
+    raw = load_raw_offers()
+    if raw.empty and FILES["offres"].exists():
+        raw = pd.read_parquet(FILES["offres"])
+    df = prepare_offers(raw)
     if df.empty:
         return df
     # Adzuna donne la région de sa requête ; les autres sources (LBA) : déduite du code postal.
