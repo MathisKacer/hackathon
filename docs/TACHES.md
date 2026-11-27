@@ -78,6 +78,7 @@
 
 ## 🔵 En cours
 
+- [ ] T76 — **Infos de candidature spontanée dans les fiches** : dans la fiche site, le palier de priorité et le signal (« N offres du domaine, mais aucune pour ton contrat » / « aucune offre publiée ») et la famille de marque, comme dans la fenêtre de la carte, y compris quand la fiche est ouverte depuis la recherche ou la liste des sites ; dans la fiche entreprise, un bloc « Candidature spontanée » (ses sites dans la recherche en cours, le mieux classé, le signal) — @celia
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
 - _…_
 
