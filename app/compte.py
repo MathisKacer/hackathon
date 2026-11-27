@@ -119,8 +119,11 @@ def login_forms(profile_keys: dict) -> None:
         password = st.text_input("Mot de passe", type="password", help=accounts.PASSWORD_RULES)
         confirm = st.text_input("Confirmer le mot de passe", type="password")
         st.caption(
-            f"{accounts.PASSWORD_MIN} caractères minimum, dont au moins 3 types parmi : "
-            "minuscule, majuscule, chiffre, caractère spécial."
+            "**Ton mot de passe doit contenir :**\n"
+            f"- au moins {accounts.PASSWORD_MIN} caractères\n"
+            f"- au moins {accounts.PASSWORD_MIN_CATEGORIES} de ces 4 éléments : une minuscule, "
+            "une majuscule, un chiffre, un caractère spécial (! ? @ # …)\n"
+            "- ni ton identifiant, ni un mot de passe trop courant"
         )
         if st.form_submit_button("Créer mon compte", width="stretch"):
             if password != confirm:
