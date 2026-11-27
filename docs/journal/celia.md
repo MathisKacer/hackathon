@@ -4,6 +4,25 @@
 
 ---
 
+## 2026-11-27 — T56 interface en 3 pages (D30) et T38 La Bonne Boîte dans la fiche
+
+**Fait :**
+- Refonte de l'interface avec Celia : navigation en haut, 3 pages (Explorer, Entreprises, Mon espace), recherche en haut + panneau « Filtres », phrase de résultat, fiche en fenêtre au clic, textes sans jargon, thème sobre.
+- `radar/recherche.py` : recherche d'entreprises sur ~406 000 établissements (présélection par début de mot, note mot par mot ; 0,05–0,4 s ; « spora steira » → Sopra Steria ; sigles ; SIREN/SIRET).
+- Intégration des 15 commits de l'équipe faits pendant la refonte : suggesteur de ville (T55), La Bonne Boîte (T29), explication (T32) ; `app/carte.py` vérifié identique à la carte de `main`.
+- T38 : signal La Bonne Boîte dans la fiche.
+
+**Fichiers touchés :**
+- `app/streamlit_app.py`, `app/commun.py`, `app/carte.py`, `app/vues/*`, `app/fiche_ui.py`, `app/compte.py`, `radar/recherche.py`, `radar/fiche.py`, `.streamlit/config.toml`, tests, `CLAUDE.md`, `docs/*`
+
+**Résultats / chiffres clés :**
+- 286 tests OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- La carte et le popup sont dans `app/carte.py` ; les pages dans `app/vues/`. Nouvelle consigne des réglages dans `CLAUDE.md`.
+
+---
+
 ## 2026-11-27 — Tâche T43 : fiche entreprise
 
 **Fait :**

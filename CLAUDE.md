@@ -81,16 +81,17 @@ uv run ruff format . && uv run ruff check --fix .   # formatage + lint, avant ch
 - Chemins et clés : toujours via `from radar.config import PATHS, FILES, settings` ; jamais de chemin en dur ni de `os.getenv` dispersé.
 - Appels HTTP : passer par un cache disque dans `PATHS.cache` (quota Adzuna ~250 appels/jour).
 
-## Comptes et réglages de l'app (T48, T49, D14) — à respecter dans `app/streamlit_app.py`
+## Structure de l'app et réglages (D30) — à respecter
 
-L'app a un **mode démo anonyme** (par défaut, rien n'est enregistré) et une **connexion facultative** qui enregistre le profil (= les réglages de recherche) et l'historique des recherches. Pour que ça continue de marcher, **tout nouveau réglage de recherche** (T40, T41, T42…) doit :
-1. avoir une `key` (ex. `st.slider(..., key="rayon_km")`) ;
-2. être ajouté à `PROFILE_KEYS` avec ses options permises (`None` = valeur libre), sinon il n'est pas enregistré dans le profil ;
-3. avoir un libellé dans `PROFILE_LABELS` (affiché dans « Mes recherches ») ;
-4. prendre sa valeur par défaut avec `st.session_state.setdefault("rayon_km", 20)`, **pas** avec `value=` (sinon Streamlit avertit quand un profil la remplace) ;
-5. être créé **après** `account_sidebar(PROFILE_KEYS)` dans la barre latérale.
+L'app a **3 pages** (barre de navigation en haut, plus de barre latérale) : `app/streamlit_app.py` (point d'entrée, navigation) ; `app/vues/explorer.py` (recherche, carte, listes « Candidatures spontanées » / « Offres ») ; `app/vues/entreprises.py` (recherche d'entreprises) ; `app/vues/mon_espace.py` (compte, profil, historique). Code partagé : `app/commun.py` (constantes, chargements, réglages du profil), **`app/carte.py` (carte folium et popup)**, `app/fiche_ui.py` (fiche entreprise, ouverte en fenêtre `st.dialog`), `app/compte.py` (comptes). Pas de numéros de tâche, de noms de fichiers ni de commandes dans les textes affichés à l'utilisateur.
 
-`top=` de `search_history(...)` : passer les **noms** des premières entreprises (ils sont affichés tels quels dans « Mes recherches »), pas les SIRET. Code : `radar/accounts.py` (base SQLite `data/app/radar.db`, hors Git) et `app/compte.py` ; tests : `tests/test_accounts.py`, `tests/test_compte_ui.py`. **Sécurité des mots de passe** (règles, hachage, blocage) : `docs/SECURITE.md`, à mettre à jour si on y touche.
+**Mode démo anonyme** par défaut ; la **connexion facultative** enregistre le profil (= les réglages de recherche) et l'historique. Tout **nouveau réglage de recherche** doit :
+1. être un widget de `app/vues/explorer.py` avec une `key` (dans la barre de recherche ou le panneau « Filtres ») ;
+2. être ajouté à `WIDGET_KEYS` dans `app/commun.py` (sinon il est perdu quand on change de page) ;
+3. être ajouté à `profile_keys()` avec ses options permises (`None` = libre) et à `PROFILE_LABELS` (`app/commun.py`) ;
+4. prendre sa valeur par défaut dans `init_defaults()` (`st.session_state.setdefault`), **pas** avec `value=`.
+
+`record_search(..., top=...)` : passer les **noms** des premières entreprises, pas les SIRET. Code : `radar/accounts.py` (SQLite `data/app/radar.db`, hors Git), `app/compte.py` ; tests : `tests/test_accounts.py`, `tests/test_compte_ui.py`. **Sécurité des mots de passe** : `docs/SECURITE.md`.
 
 ## Style de réponse attendu de Claude
 

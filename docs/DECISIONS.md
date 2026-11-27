@@ -14,6 +14,12 @@
 
 ---
 
+### D30 — Interface en 3 pages, épurée (2026-11-27, @celia)
+**Contexte :** la barre latérale cumulait compte, 13 réglages et 5 curseurs ; les textes montraient du jargon interne (numéros de tâches, fichiers, commandes) et beaucoup d'emojis ; l'idée centrale n'était expliquée qu'en bas de la barre latérale.
+**Décision :** navigation en haut avec 3 pages (`st.navigation`) : **Explorer** (recherche en haut : ville, contrat, domaine, rayon ; le reste dans un panneau « Filtres » ; phrase de résultat ; carte ; onglets « Candidatures spontanées » / « Offres » ; clic sur une ligne → fiche dans une fenêtre `st.dialog`), **Entreprises** (barre de recherche sur les ~406 000 établissements, tolérante aux fautes, `radar/recherche.py`), **Mon espace** (compte, profil, historique avec « Relancer »). Code de la carte déplacé **sans modification** dans `app/carte.py`. Réglages conservés entre les pages (`persist_widget_state`). Thème sobre (`.streamlit/config.toml` : bleu nuit, police Inter) qui laisse au bleu et à l'orange de la carte leur sens. On garde les mots « Candidatures spontanées » et « Offres ».
+**Alternatives écartées :** une seule page avec recherche d'entreprises intégrée (moins lisible) ; fiche sous la liste (on la perdait de vue).
+**Conséquences :** nouvelle consigne pour les réglages dans `CLAUDE.md` (`WIDGET_KEYS`, `profile_keys()`, `init_defaults()` dans `app/commun.py`). Commande de lancement inchangée.
+
 ### D29 — Explication « Recommandée car … » (2026-11-27, @mathis)
 **Contexte :** T32. Le jury et l'étudiant doivent comprendre pourquoi une entreprise est proposée en candidature spontanée, sans lire une décomposition chiffrée.
 **Décision :** `radar/explain.py`, fonction pure `explain(ligne, contrat)`. Raisons candidates tirées des colonnes existantes : **opportunité cachée** (offres du domaine en ligne mais aucune pour le contrat visé, détaillées par type de contrat), **La Bonne Boîte**, **recruteur d'alternants LBA**, **besoin du secteur / de l'entreprise** (rang centile de `c_intensite`), **taille de l'établissement**, **proximité** (≤ 5 km). L'opportunité cachée vient toujours en premier (c'est la raison d'être de la couche orange), puis les autres **par apport au score** (`apport_<composante>`, donc cohérent avec les curseurs T42) ; 3 raisons maximum, plus une mise en garde si `couverture = 0`. Branchée par une ligne en fin de `rank_spontaneous` (colonne `explication`, lue par la fiche T43 et le popup de la carte), pour les **1 000 premières** entreprises seulement.

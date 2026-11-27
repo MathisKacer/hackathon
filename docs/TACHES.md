@@ -37,7 +37,6 @@
 
 ## 🟡 P2 — Valeur ajoutée (H+8 → H+16)
 
-- [ ] T38 — 🔗T28, T43, scores régénérés par @mathis **Fiche entreprise : La Bonne Boîte** (D27). Dans `radar/fiche.py` / `app/fiche_ui.py`, si `c_embauche_source == "la_bonne_boite"` : afficher « Signalée par La Bonne Boîte (France Travail) comme susceptible d'embaucher en data », avec `lbb_potentiel` (potentiel d'embauche, médiane 2,8, max 86) ; sinon indiquer que `c_embauche` est une estimation (proxy) — @celia
 **Lever les limites connues (voir `docs/LIMITES.md`)**
 - [ ] T26 — 🔗T21 **Familles de marque** (L7) : une entreprise ETI/GE dont une entité a des offres du domaine → ses autres entités (même début de nom) sont exclues de la couche orange (`a_offre_groupe`)
 - [ ] T27 — 🔗T21 **Revue des intermédiaires** (L8) : passer en revue les plus gros émetteurs + `volume_suspect`, compléter `INTERMEDIARIES` ; à refaire à chaque nouvelle source (LBA)
@@ -76,6 +75,8 @@
 
 ## ✅ Fait
 
+- [x] T56 — **Interface en 3 pages** (D30) : navigation en haut (Explorer, Entreprises, Mon espace), recherche en haut + panneau « Filtres », phrase de résultat, fiche en fenêtre au clic, **recherche d'entreprises** tolérante aux fautes (`radar/recherche.py`), Mon espace (profil, historique, « Relancer »), thème sobre ; carte déplacée sans modification dans `app/carte.py` ; T55, T29 et T32 intégrés — @celia
+- [x] T38 — **Fiche entreprise : La Bonne Boîte** (D27) : « ✔ Signalée par La Bonne Boîte (France Travail) comme susceptible d'embaucher en … » avec le potentiel (médiane 2,8), sinon « potentiel estimé » (`radar.fiche.hiring_signal`) — @celia
 - [x] T32 — Explication automatique par entreprise (« recommandée car… ») à partir des contributions au score — — @mathis _(signalé par @celia)_ ; coordination avec T43 (faite) : écrire la phrase dans une colonne **`explication`** (la fiche de T43 l'affiche déjà si elle existe) ; Mathis garde le popup de la carte, le panneau « Fiche entreprise » (`app/fiche_ui.py`) est à Celia → `radar/explain.py` (D29), colonne `explication` dans `rank_spontaneous`, popup de la carte
 - [x] T29 — **App : La Bonne Boîte** — curseur « Potentiel d'embauche », colonne ✔ « La Bonne Boîte » dans la liste orange, ligne dans la fenêtre de la carte (D27) — @emma (reprise de @maxence)
 - [x] T55 — 🔗T40 **Suggesteur de ville** : on tape le nom de la ville et on la valide dans une liste déroulante « Ville (code postal) » — @maxence → `radar/communes.py` (35 493 choix, geo.api.gouv.fr, cache 30 j, repli référentiel), clé de profil `ville` (remplace `adresse`) ; D28

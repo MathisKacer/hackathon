@@ -3,6 +3,8 @@
 > **Mode d'emploi** des parties construites par @celia : à quoi elles servent, comment les utiliser, comment elles marchent, comment les régler, et ce qu'on peut faire ensuite.
 > Pour le reste de l'app (carte, score, poids, P(réponse)) : `ARCHITECTURE.md` et les décisions D19 à D23.
 > Mettre à jour ce guide quand on change une de ces fonctionnalités.
+>
+> **Depuis D30, l'app a 3 pages** : *Explorer* (recherche, carte, listes ; la fiche s'ouvre en fenêtre au clic sur une ligne), *Entreprises* (barre de recherche : nom, SIREN ou SIRET, fautes tolérées, ville facultative) et *Mon espace* (compte, profil, historique, « Relancer »). Les sections ci-dessous parlent parfois de « barre latérale » : le compte est maintenant dans *Mon espace*, et les réglages dans la recherche d'Explorer et son panneau « Filtres ».
 
 ## Sommaire
 
