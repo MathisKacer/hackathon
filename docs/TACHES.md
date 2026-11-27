@@ -31,10 +31,7 @@
 **Score**
 
 **App**
-<<<<<<< HEAD
 - [ ] T51 — 🔗T40,T17 **Recruteurs LBA dans la couche orange** : quand le contrat visé est l'alternance, marquer (ou bonifier) les entreprises présentes dans `lba_recruteurs.parquet` avec un ROME du domaine (signal « recrute des alternants sans offre publiée »)
-=======
->>>>>>> 77c9fd9a993be1519044eacb133f72a9d0be9cbb
 - [ ] T41 — 🔗T40 **Filtres** : domaine, type de contrat visé (stage / alternance / emploi), taille, secteur
 - [ ] T42 — 🔗T40 **Curseurs de poids** → recalcul du score en direct
 
@@ -79,11 +76,8 @@
 
 ## 🔵 En cours
 
-<<<<<<< HEAD
-=======
-- [ ] T40 — 🔗T4,T5 **Page de recherche + couche 2 « Candidature spontanée » (orange)** : adresse → géocodage (Géoplateforme) → rayon → même carte folium, entreprises **sans offre correspondante** classées par score ; légende des deux couches + deux listes triées — @maxence _(signalé par @celia)_
-- [ ] T17 — 🔗T11 **Partager les données LBA sur S3** (`offres_raw/lba.parquet`, `lba_recruteurs.parquet`) : relancer `scripts/collect_lba.py` sur Onyxia puis `scripts/share_s3.py` — @maxence
->>>>>>> 77c9fd9a993be1519044eacb133f72a9d0be9cbb
+- _…_
+
 
 ## ✅ Fait
 
