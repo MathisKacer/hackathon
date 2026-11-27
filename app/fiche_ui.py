@@ -159,7 +159,9 @@ def _why(r: pd.Series) -> None:
         c3.metric("Chance de réponse", f"{100 * float(p):.0f} %", help=CHANCE_HELP)
     # T80 : correspondance avec le CV (à part du score)
     m = match_summary(r)
-    if m is not None:
+    if m is not None and "info" in m:  # T87 : compétences indiquées, aucune reconnue
+        st.caption(f"🎯 {m['info']}")
+    elif m is not None:
         st.markdown(
             f"**Correspondance avec ton profil : :{MATCH_MD_COLORS.get(m['palier'], 'gray')}"
             f"[{m['palier']}]** ({m['pourcentage']}, {m['source']})",

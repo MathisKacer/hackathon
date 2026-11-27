@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 
 from radar.competences import (
+    NO_MATCH_MESSAGE,
     SKILL_LABELS,
     SkillProfile,
     add_match,
@@ -161,3 +162,10 @@ def test_custom_skills_count_only_when_recognized():
     assert custom_skills(skills) == ["QGIS", "SQL Server", "Stata"]
     assert match_skills(skills) == ["Python", "SQL"]  # « SQL Server » → SQL ; QGIS ignoré
     assert match_skills(["QGIS"]) == []
+
+
+def test_match_summary_explains_unrecognized_skills():
+    """T87 : compétences indiquées mais aucune reconnue → message au lieu de rien."""
+    assert match_skills(["Célia"]) == []
+    m = match_summary({"correspondance": float("nan"), "correspondance_info": NO_MATCH_MESSAGE})
+    assert m == {"info": NO_MATCH_MESSAGE}

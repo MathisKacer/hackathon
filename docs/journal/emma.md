@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-11-27 — T87 : correspondance plus visible ✅
+
+**Fait :**
+- Constat (Emma ne voyait pas la correspondance) : son profil ne contenait qu'une compétence non reconnue (« Célia »), donc aucune correspondance calculée, sans explication ; et la colonne était la dernière du tableau (13 colonnes).
+- `NO_MATCH_MESSAGE` + colonne `correspondance_info` (Explorer) ; `match_summary` renvoie `{"info": …}` → message dans la liste (`st.info`), la fenêtre de la carte et la fiche.
+- Colonne « Correspondance » insérée juste après « Priorité » ; dans la fenêtre de la carte, la ligne 🎯 est juste sous la priorité.
+
+**Fichiers touchés :**
+- `radar/competences.py`, `app/vues/explorer.py`, `app/carte.py`, `app/fiche_ui.py`, `tests/test_competences.py`, `docs/GUIDE.md`, `docs/TACHES.md`
+
+**Résultats / chiffres clés :**
+- Vraies données, Rennes : « Célia » → message dans la liste et la fenêtre ; « Python, SQL, Statistiques » → colonne après « Priorité », ligne 🎯 sous la priorité. Toute la suite passe.
+
+**Problèmes / points d'attention pour l'équipe :**
+- Rien ne s'affiche sans ville ni hors du domaine data (seul noté) : dit dans le GUIDE.
+- Le serveur Streamlit du pod tournait depuis 23 h 13 : le relancer pour être sûr d'avoir la dernière version.
+
+**Prochaine étape :**
+- —
+
+---
+
 ## 2026-11-27 — T86 : compétences une à une, sans bouton ✅
 
 **Fait :**

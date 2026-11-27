@@ -232,6 +232,14 @@ SOURCE_LABELS = {
 }
 
 
+# T87 : affiché quand l'étudiant a indiqué des compétences, mais qu'aucune n'est reconnue dans
+# les offres (ex. seulement « QGIS ») : sinon la correspondance disparaît sans explication.
+NO_MATCH_MESSAGE = (
+    "Aucune de tes compétences n'est reconnue dans les offres : la correspondance ne peut pas "
+    "être calculée. Ajoute par exemple Python, SQL, Excel, comptabilité…"
+)
+
+
 def match_tier(part: float | None) -> str | None:
     """Palier en mots (« Forte »…) d'une part de correspondance ; None si inconnue."""
     if part is None or pd.isna(part):
@@ -317,10 +325,13 @@ def match_summary(row) -> dict[str, str] | None:
 
     {"palier": "Forte", "pourcentage": "31 %", "source": "d'après les offres de son secteur",
      "as": "Python, SQL", "manque": "Cloud GCP, Spark"} (clés « as » / « manque » absentes si vides)
+    T87 : {"info": NO_MATCH_MESSAGE} si des compétences sont indiquées mais aucune reconnue
+    (colonne `correspondance_info`).
     """
     part = row.get("correspondance")
     if part is None or pd.isna(part):
-        return None
+        info = row.get("correspondance_info")
+        return {"info": info} if isinstance(info, str) and info else None
     out = {
         "palier": match_tier(float(part)) or "",
         "pourcentage": f"{100 * float(part):.0f} %",

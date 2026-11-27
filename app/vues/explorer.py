@@ -50,7 +50,7 @@ from streamlit_folium import st_folium
 from style import GREEN, LINK_STYLE, Tile, fmt_int, hero, kpi_tiles, pill
 
 from radar.collect.sirene import tranche_display
-from radar.competences import MATCH_COLORS, add_match, match_skills
+from radar.competences import MATCH_COLORS, NO_MATCH_MESSAGE, add_match, match_skills
 from radar.familles import mark_family_offers
 from radar.filters import SECTIONS, TAILLES, filter_companies
 from radar.niveau import levels_label
@@ -213,9 +213,12 @@ if place is not None:
     spontaneous = mark_family_offers(spontaneous, get_families(domaine), contrat)
     # T80 : correspondance CV ↔ entreprise, à part du score (rien ne change sans compétences)
     profile = get_skill_profile(domaine) if competences else None
-    if profile is not None:
+    if profile is not None and match_skills(competences):
         # T83 : les compétences tapées à la main comptent si on les reconnaît (« SQL Server »)
         spontaneous = add_match(spontaneous, match_skills(competences), profile)
+    elif competences and not spontaneous.empty:
+        # T87 : compétences indiquées mais aucune reconnue → le dire (liste, carte, fiche)
+        spontaneous = spontaneous.assign(correspondance_info=NO_MATCH_MESSAGE)
     sort_col = {TRI_P: "p_reponse", TRI_MATCH: "correspondance"}.get(tri)
     if sort_col in spontaneous and spontaneous[sort_col].notna().any():
         spontaneous = spontaneous.sort_values(
@@ -412,9 +415,13 @@ with tab_spont:
         # T64 : toujours affichée quand le modèle couvre le contrat et le domaine
         if "p_reponse" in shown and shown["p_reponse"].notna().any():
             table["Chance de réponse"] = shown["p_reponse"]
-        # T80 : correspondance avec le CV, en paliers de mots (pourcentage dans la fiche)
+        # T80 : correspondance avec le CV, en paliers de mots (pourcentage dans la fiche) ;
+        # T87 : juste après « Priorité », pour qu'on la voie sans faire défiler le tableau
         if "correspondance" in shown and shown["correspondance"].notna().any():
-            table["Correspondance"] = shown["correspondance_palier"]
+            pos = table.columns.get_loc("Priorité") + 1
+            table.insert(pos, "Correspondance", shown["correspondance_palier"].to_numpy())
+        elif "correspondance_info" in shown:
+            st.info(NO_MATCH_MESSAGE, icon=":material/info:")
         if not table["Autres sites"].astype(bool).any():
             table = table.drop(columns="Autres sites")
         if not table["★"].astype(bool).any():

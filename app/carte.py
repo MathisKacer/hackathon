@@ -95,12 +95,12 @@ def _company_popup(r: pd.Series) -> str:
         f"<div style='font-family:sans-serif;font-size:13px'>"
         f"<b>{title}</b><br><span style='color:#555'>{'<br>'.join(lines)}</span><br>"
         f"{_tier_html(r)} · {signal}<br>"
+        f"{_match_html(r)}"  # T87 : juste sous la priorité
         f"{_explication_html(r)}"
         f"{_procedure_html(r)}"
         f"{_lbb_html(r)}"
         f"{_family_html(r)}"
         f"{_p_reponse_html(r)}"
-        f"{_match_html(r)}"
         f"{_score_breakdown_html(r)}"
         f'<a href="{url}" target="_blank" rel="noopener">Annuaire des entreprises</a></div>'
     )
@@ -165,9 +165,11 @@ def _match_html(r: pd.Series) -> str:
     m = match_summary(r)
     if m is None:
         return ""
+    if "info" in m:  # T87 : compétences indiquées, aucune reconnue
+        return f"<span style='color:#555'>🎯 {html.escape(m['info'])}</span><br>"
     color = MATCH_COLORS.get(m["palier"], "#555")
     txt = (
-        f"Correspondance avec ton profil : <b style='color:{color}'>{m['palier']}</b> "
+        f"🎯 Correspondance avec ton profil : <b style='color:{color}'>{m['palier']}</b> "
         f"({m['pourcentage']}, {html.escape(m['source'])})<br>"
     )
     if "as" in m:

@@ -441,9 +441,10 @@ Case vide quand SIRENE n'a pas l'information. **Pas de total calculé** : additi
 ## 16. Correspondance avec ton CV (T45, T80, D37, D40)
 
 **Utilisation.** Panneau « Filtres » › « Ton CV » : déposer son CV en PDF. Les compétences reconnues (Python, SQL, Power BI, comptabilité, paie, anglais…) remplissent la liste « Tes compétences » ; on peut la corriger ou la remplir à la main, sans CV, et **taper une compétence qui n'est pas dans la liste** (« QGIS », puis Entrée, T83). Dans Mon espace › Mes compétences, on les gère une à une : ✕ pour retirer, « Ajouter une compétence », dépôt du CV, tout est enregistré aussitôt dans le profil (T86). La liste d'Explorer, elle, ne change que la recherche en cours. Une compétence tapée ne compte dans la correspondance que si Radar y reconnaît une compétence de sa liste (« SQL Server » → SQL) ; sinon elle est seulement gardée dans le profil (D42). Dès qu'une compétence est choisie :
-- colonne **« Correspondance »** dans la liste des candidatures spontanées : **Forte**, **Bonne**, **Partielle** ou **Faible** ;
-- dans la fenêtre de la carte et dans la fiche : « Correspondance avec ton profil : Forte (35 %, d'après les offres de son secteur) », puis « Tu as : Machine learning, Python · Souvent demandé aussi : Deep learning, Data visualisation » ;
+- colonne **« Correspondance »** dans la liste des candidatures spontanées, **juste après « Priorité »** : **Forte**, **Bonne**, **Partielle** ou **Faible** ;
+- dans la fenêtre de la carte (**juste sous la priorité**, avec 🎯) et dans la fiche : « Correspondance avec ton profil : Forte (35 %, d'après les offres de son secteur) », puis « Tu as : Machine learning, Python · Souvent demandé aussi : Deep learning, Data visualisation » ;
 - « Classer par › Correspondance » trie la liste par correspondance.
+- si aucune des compétences indiquées n'est reconnue dans les offres (ex. seulement « QGIS »), un message le dit dans la liste, la fenêtre de la carte et la fiche, au lieu de ne rien afficher (T87). Rien ne s'affiche non plus sans ville choisie ni hors du domaine data (seul domaine noté).
 
 **La correspondance ne change pas le score** ni la priorité : c'est un indicateur à part (D40).
 
