@@ -46,8 +46,6 @@
 - [ ] T18 — 🔗T16 **Autres domaines** (L1) : collecter Adzuna sur d'autres requêtes (finance, marketing…) avec le quota des jours suivants, Bretagne + grandes villes d'abord ; puis noter ces domaines (`SCORED_DOMAINS`)
 
 **Modèle de réponse (démonstrateur, réponses simulées)**
-- [ ] T35 — 🔗T20 **Simulateur** : règle paramétrique P(réponse | besoin, taille, secteur, distance, historique d'embauche…) dans `radar/response/params.yaml`, tirage des réponses sur les entreprises réelles → `candidatures_simulees.parquet`
-- [ ] T36 — 🔗T35 **Modèle de réponse** : logistique (puis arbres boostés si on a le temps) → `p_reponse.parquet` ; slides : calibration, AUC, paramètres retrouvés vs vrais
 - [ ] T37 — 🔗T36,T40 Intégration dans l'app : tri par P(réponse) + bandeau « démonstrateur : réponses simulées »
 
 - [ ] T32 — Explication automatique par entreprise (« recommandée car… ») à partir des contributions au score
@@ -77,6 +75,8 @@
 
 ## 🔵 En cours
 
+- [ ] T36 — 🔗T35 **Modèle de réponse** : logistique (puis arbres boostés si on a le temps) → `p_reponse.parquet` ; slides : calibration, AUC, paramètres retrouvés vs vrais — @mathis
+- [ ] T35 — 🔗T20 **Simulateur** : règle paramétrique P(réponse | besoin, taille, secteur, distance, historique d'embauche…) dans `radar/response/params.yaml`, tirage des réponses sur les entreprises réelles → `candidatures_simulees.parquet` — @mathis
 - [ ] T17 — 🔗T11 **Partager les données LBA sur S3** (`offres_raw/lba.parquet`, `lba_recruteurs.parquet`) : relancer `scripts/collect_lba.py` sur Onyxia puis `scripts/share_s3.py` — @maxence
 
 ## ✅ Fait
