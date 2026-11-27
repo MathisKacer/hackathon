@@ -9,6 +9,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 from fiche_ui import open_fiche
+from style import hero
 
 from radar.recherche import load_index, search_companies, with_companies
 
@@ -30,8 +31,11 @@ def _search(query: str, commune: str) -> pd.DataFrame:
     return search_companies(_index(), query, commune, limit=50)
 
 
-st.title("Entreprises")
-st.caption("Cherche une entreprise pour voir sa fiche : activité, taille, offres, situation.")
+hero(
+    "Entreprises",
+    "Cherche une entreprise pour voir sa fiche : activité, taille, sites, offres, situation.",
+    compact=True,
+)
 
 c1, c2 = st.columns([3, 1], vertical_alignment="bottom")
 query = c1.text_input(

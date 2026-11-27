@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-11-27 — Tâche T70 : apparence plus vivante (hors fiche)
+
+**Fait :**
+- `app/style.py` : CSS commun (fond, cartes arrondies avec ombre, onglets), bandeau d'en-tête, tuiles de chiffres, pastilles.
+- Explorer : bandeau + carte de recherche posée dessus ; « Comment ça marche » en 3 cartes ; tuiles (entreprises à démarcher, offres, cibles prioritaires, en difficulté) ; « Les meilleures cibles » (4 cartes avec palier T65 et « Voir la fiche »).
+- Icônes Material : navigation, Filtres, onglets, boutons de Mon espace. Bandeau compact sur Entreprises et Mon espace.
+
+**Fichiers touchés :**
+- `app/style.py`, `app/streamlit_app.py`, `app/vues/*`, `app/compte.py`, `tests/test_compte_ui.py`, `docs/*`
+
+**Résultats / chiffres clés :**
+- Autour de Rennes (scores factices) : tuiles 3 755 / 17 / 444 / 54. 320 tests OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- Les sélecteurs CSS internes de Streamlit changent d'une version à l'autre : on ne style que nos blocs à clé (`st-key-…`).
+- Vérification visuelle faite par Celia dans l'aperçu (pas de navigateur sans affichage utilisable sur le pod).
+- La fiche n'est pas retouchée (T67 d'Emma en cours dessus).
+
+---
+
 ## 2026-11-27 — Tâche T64 : « Chance de réponse » (D31)
 
 **Fait :**

@@ -7,16 +7,20 @@ Logique de classement inchangée : radar/spontaneous.py (T40, T41, T42, T23), T3
 
 from __future__ import annotations
 
+import html
+
 import pandas as pd
 import streamlit as st
 from carte import build_map
 from commun import (
+    BLUE,
     CHANCE_HELP,
     CONTRATS,
     DOMAINES,
     DOMAINS,
     FILES,
     NIVEAUX,
+    ORANGE,
     PAGES_DIR,
     PROFILE_LABELS,
     RAYONS,
@@ -39,11 +43,19 @@ from compte import record_search
 from favoris import favorite_refs, offer_ref, sync_offers_editor, temp_banner
 from fiche_ui import open_fiche
 from streamlit_folium import st_folium
+from style import GREEN, RED, Tile, fmt_int, hero, kpi_tiles, pill
 
 from radar.collect.sirene import TRANCHE_LIBELLES
 from radar.filters import SECTIONS, TAILLES, filter_companies
 from radar.niveau import levels_label
-from radar.paliers import add_tiers, rule_text, score_color, text_color_on, tier_color
+from radar.paliers import (
+    add_tiers,
+    rule_text,
+    score_color,
+    text_color_on,
+    tier_color,
+    tier_text,
+)
 from radar.response.predict import add_p_reponse
 from radar.spontaneous import COMPONENTS, haversine_km, rank_spontaneous, signaled_by_lbb
 
@@ -90,13 +102,14 @@ all_regions = all_regions_of(offers)
 PROFILE_KEYS = profile_keys(all_regions)
 
 # ------------------------------------------------------------------ recherche
-st.title("Où candidater ?")
-st.caption(
-    "Les offres publiées autour de toi, et les entreprises qui recrutent dans ton domaine "
-    "sans avoir publié d'offre pour ton contrat : les meilleures cibles de candidature spontanée."
+hero(
+    "Où candidater ?",
+    "Les offres publiées autour de toi, et surtout les entreprises qui recrutent dans ton "
+    "domaine sans avoir publié d'offre pour ton contrat : les meilleures cibles de candidature "
+    "spontanée.",
 )
 
-with st.container(border=True):
+with st.container(border=True, key="carte_recherche"):
     c1, c2 = st.columns([3, 2], vertical_alignment="bottom")
     # Suggesteur de ville (T55) : on tape le début du nom (ou un code postal) et on choisit
     # « Ville (codes postaux) ». index=None : la croix permet d'effacer pour changer de ville.
@@ -114,7 +127,9 @@ with st.container(border=True):
     )
     rayon = c4.selectbox("Rayon", RAYONS, key="rayon", format_func=lambda r: f"{r} km")
     n_on = _n_filters_on()
-    with c5.popover(f"Filtres ({n_on})" if n_on else "Filtres", width="stretch"):
+    with c5.popover(
+        f"Filtres ({n_on})" if n_on else "Filtres", width="stretch", icon=":material/tune:"
+    ):
         st.markdown("**Offres**")
         regions = st.multiselect(
             "Régions", all_regions, key="regions", placeholder="Toutes les régions"
@@ -224,14 +239,26 @@ contrat_txt = {
     "Emploi": " en emploi",
 }[contrat]
 if place is None:
-    st.markdown(
-        "**Comment ça marche**  \n"
-        "1. Choisis ta ville et le contrat que tu vises.  \n"
-        "2. La carte montre en **bleu** les offres publiées et en **orange** les entreprises "
-        "qui recrutent dans ton domaine sans offre pour ton contrat.  \n"
-        "3. Clique sur une entreprise de la liste pour voir sa fiche et pourquoi elle est "
-        "recommandée."
-    )
+    # Comment ça marche, en 3 cartes
+    steps = [
+        (":material/location_on:", "Choisis ta ville", "et le contrat que tu vises, en haut."),
+        (
+            ":material/map:",
+            "Repère sur la carte",
+            "en bleu les offres publiées, en orange les entreprises qui recrutent dans ton domaine "
+            "sans offre pour ton contrat.",
+        ),
+        (
+            ":material/apartment:",
+            "Ouvre une fiche",
+            "pour savoir pourquoi l'entreprise est recommandée et préparer ta candidature.",
+        ),
+    ]
+    for col, (n, (icon, title, text)) in zip(st.columns(3), enumerate(steps, 1), strict=True):
+        with col.container(border=True, key=f"etape_{n}"):
+            st.markdown(f"<span class='radar-step-n'>{n}</span>", unsafe_allow_html=True)
+            st.markdown(f"**{icon} {title}**")
+            st.caption(text)
 else:
     # T57 : entreprises (SIREN distincts) et sites ; les sites masqués par l'option comptent aussi
     n_ent = spontaneous["_siren"].nunique() if not spontaneous.empty else 0
@@ -239,14 +266,31 @@ else:
         n_sites = int(spontaneous["_autres_sites"].add(1).sum())
     else:
         n_sites = len(spontaneous)
-    sites_txt = f" ({n_sites} sites)" if n_sites != n_ent else ""
     n_off = len(view)
-    st.markdown(
-        f"Autour de **{place.label}** ({rayon} km) : **{n_ent}** {_pl(n_ent, 'entreprise')}"
-        f"{sites_txt} {'pourraient' if n_ent > 1 else 'pourrait'} t'accueillir{contrat_txt} "
-        f"sans avoir publié d'offre, et **{n_off}** {_pl(n_off, 'offre')} "
-        f"{'sont publiées' if n_off > 1 else 'est publiée'}."
+    n_prio = int((spontaneous.get("palier", pd.Series(dtype=int)) == 1).sum())
+    n_alert = (
+        int(spontaneous["procedure_type"].notna().sum()) if "procedure_type" in spontaneous else 0
     )
+    st.caption(f"Autour de **{place.label}** · {rayon} km{contrat_txt}")
+    tiles = [
+        Tile(
+            fmt_int(n_ent),
+            f"{_pl(n_ent, 'entreprise')} à démarcher sans offre publiée"
+            + (f" ({fmt_int(n_sites)} sites)" if n_sites != n_ent else ""),
+            ORANGE,
+        ),
+        Tile(
+            fmt_int(n_off), f"{_pl(n_off, 'offre')} {'publiées' if n_off > 1 else 'publiée'}", BLUE
+        ),
+        Tile(
+            fmt_int(n_prio),
+            f"{_pl(n_prio, 'cible')} {'prioritaires' if n_prio > 1 else 'prioritaire'}",
+            GREEN,
+        ),
+    ]
+    if n_alert:
+        tiles.append(Tile(fmt_int(n_alert), "en difficulté (signalées)", RED))
+    kpi_tiles(tiles)
     if spontaneous.empty and not FILES["scores"].exists():
         st.caption("Équipe : `scores.parquet` manquant (lancer `scripts/build_all.py`).")
 
@@ -260,9 +304,46 @@ if not (view.empty and spontaneous.empty):
         returned_objects=[],
     )
 
+# ------------------------------------------------------------------ meilleures cibles
+if place is not None and not spontaneous.empty:
+    st.markdown("#### :material/workspace_premium: Les meilleures cibles")
+    top = spontaneous.head(4)
+    for col, (i, r) in zip(st.columns(len(top)), top.iterrows(), strict=True):
+        with col.container(border=True, key=f"cible_{i}"):
+            rank = r.get("palier")
+            if pd.notna(rank):
+                st.markdown(pill(tier_text(rank, False), tier_color(rank)), unsafe_allow_html=True)
+            etab = r.get("nom_etablissement")
+            name = (
+                f"{etab} ({r['nom']})"
+                if isinstance(etab, str) and etab and etab != r["nom"]
+                else str(r["nom"])
+            )
+            sub_bits = [
+                str(r.get("commune") or "").title(),
+                f"{r['distance_km']:.1f} km",
+                TRANCHE_LIBELLES.get(r.get("tranche_effectif")),
+            ]
+            sub_txt = " · ".join(b for b in sub_bits if b)
+            st.markdown(
+                f"<div class='radar-card-title'>{html.escape(name)}</div>"
+                f"<div class='radar-card-sub'>{html.escape(sub_txt)}</div>",
+                unsafe_allow_html=True,
+            )
+            if st.button(
+                "Voir la fiche",
+                key=f"voir_cible_{i}",
+                icon=":material/open_in_new:",
+                width="stretch",
+            ):
+                open_fiche(r["siret"], r, domaine)
+
 # ------------------------------------------------------------------ listes
 tab_spont, tab_offers = st.tabs(
-    [f"Candidatures spontanées ({len(spontaneous)})", f"Offres ({len(view)})"]
+    [
+        f":material/domain: Candidatures spontanées ({len(spontaneous)})",
+        f":material/work: Offres ({len(view)})",
+    ]
 )
 with tab_spont:
     if place is None:

@@ -26,6 +26,7 @@ from __future__ import annotations
 from zoneinfo import ZoneInfo
 
 import streamlit as st
+from style import hero
 
 from radar import accounts
 
@@ -282,7 +283,7 @@ def account_page(
         st.switch_page(st.Page(explorer_page))
     user = _validated_user()
     if user is None:
-        st.title("Mon espace")
+        hero("Mon espace", "Ton compte, tes favoris et tes recherches.", compact=True)
         st.write(
             "Radar marche sans compte : rien n'est enregistré. Avec un compte, tes réglages "
             "et l'historique de tes recherches sont gardés d'une visite à l'autre."
@@ -294,18 +295,21 @@ def account_page(
             favorites_section()
         return
 
-    st.title(f"Bonjour {user['username']}")
+    hero(
+        f"Bonjour {user['username']}", "Tes réglages, tes favoris et tes recherches.", compact=True
+    )
     con = _con()
     c1, c2, _ = st.columns([1, 1, 2])
     if c1.button(
         "Enregistrer mes réglages",
+        icon=":material/save:",
         type="primary",
         width="stretch",
         help="Ta recherche actuelle devient ton profil.",
     ):
         accounts.save_profile(con, user["id"], _current_settings(profile_keys))
         st.toast("Réglages enregistrés.")
-    if c2.button("Se déconnecter", width="stretch"):
+    if c2.button("Se déconnecter", width="stretch", icon=":material/logout:"):
         st.session_state.pop(USER_KEY, None)
         st.rerun()
     profile = accounts.load_profile(con, user["id"])
@@ -333,6 +337,7 @@ def account_page(
             )
             right.button(
                 "Relancer",
+                icon=":material/replay:",
                 key=f"page_relancer_{s['id']}",
                 on_click=_relaunch_and_go,
                 args=(s["params"], profile_keys),

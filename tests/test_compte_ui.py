@@ -230,7 +230,7 @@ def test_full_app_runs_with_account_box(tmp_path, monkeypatch):
     at.run()
     assert not at.exception, at.exception
     # Page Explorer par défaut, recherche en haut (plus de barre latérale)
-    assert [t.value for t in at.title] == ["Où candidater ?"]
+    assert any("<h1>Où candidater ?</h1>" in m.value for m in at.markdown)  # bandeau (T70)
     assert at.segmented_control(key="contrat").value == "Tous"
     assert at.slider(key="max_age").value == 60  # dans le panneau « Filtres »
     assert not at.warning  # pas d'avertissement « valeur par défaut + session_state »
@@ -244,7 +244,7 @@ def test_full_app_runs_with_account_box(tmp_path, monkeypatch):
     at.switch_page(str(app_dir / "vues" / "mon_espace.py"))
     at.run()
     assert not at.exception, at.exception
-    assert [t.value for t in at.title] == ["Bonjour celia"]
+    assert any("<h1>Bonjour celia</h1>" in m.value for m in at.markdown)
     assert any(b.label == "Enregistrer mes réglages" for b in at.button)
     st.cache_data.clear()
     st.cache_resource.clear()

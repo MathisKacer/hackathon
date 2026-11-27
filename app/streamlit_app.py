@@ -15,9 +15,11 @@ from __future__ import annotations
 import streamlit as st
 from commun import PAGES_DIR, init_defaults, persist_widget_state
 from compte import current_user
+from style import inject_css
 
 st.set_page_config(page_title="Radar", page_icon="🧭", layout="wide")
 
+inject_css()  # apparence commune (T70, app/style.py)
 init_defaults()
 persist_widget_state()  # garde la recherche quand on change de page
 
@@ -27,11 +29,12 @@ if n_fav:
     s = "s" if n_fav > 1 else ""
     st.toast(f"{n_fav} favori{s} enregistré{s} dans ton compte.")
 pages = [
-    st.Page(PAGES_DIR / "explorer.py", title="Explorer", default=True),
-    st.Page(PAGES_DIR / "entreprises.py", title="Entreprises"),
+    st.Page(PAGES_DIR / "explorer.py", title="Explorer", icon=":material/explore:", default=True),
+    st.Page(PAGES_DIR / "entreprises.py", title="Entreprises", icon=":material/apartment:"),
     st.Page(
         PAGES_DIR / "mon_espace.py",
         title=f"Mon espace ({user['username']})" if user else "Se connecter",
+        icon=":material/person:",
         url_path="mon-espace",
     ),
 ]

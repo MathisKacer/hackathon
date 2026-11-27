@@ -71,11 +71,17 @@ def favorites_section() -> None:
                         x for x in (d.get("commune"), d.get("secteur"), d.get("taille")) if x
                     )
                 )
-                if b1.button("Voir la fiche", key=f"fav_voir_{f['ref']}", width="stretch"):
+                if b1.button(
+                    "Voir la fiche",
+                    key=f"fav_voir_{f['ref']}",
+                    width="stretch",
+                    icon=":material/open_in_new:",
+                ):
                     to_open = f["ref"]
                 b2.button(
                     "Retirer",
                     key=f"fav_retirer_e_{f['ref']}",
+                    icon=":material/delete:",
                     on_click=remove,
                     args=("entreprise", f["ref"]),
                     width="stretch",
@@ -94,10 +100,13 @@ def favorites_section() -> None:
                     bits.append("n'est plus en ligne")
                 left.caption(" · ".join(x for x in bits if x))
                 if d.get("url"):
-                    b1.link_button("Voir l'offre", d["url"], width="stretch")
+                    b1.link_button(
+                        "Voir l'offre", d["url"], width="stretch", icon=":material/link:"
+                    )
                 b2.button(
                     "Retirer",
                     key=f"fav_retirer_o_{f['ref']}",
+                    icon=":material/delete:",
                     on_click=remove,
                     args=("offre", f["ref"]),
                     width="stretch",

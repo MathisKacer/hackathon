@@ -67,6 +67,7 @@ hackathon/
 ├── app/commun.py, carte.py     # données et réglages partagés ; carte folium + popup
 ├── app/fiche_ui.py, compte.py  # fiche entreprise (fenêtre) ; comptes et historique
 ├── app/favoris.py              # T54 : favoris (étoile), temporaires en anonyme, repris à la connexion
+├── app/style.py                # T70 : CSS commun, bandeau d'en-tête, tuiles de chiffres, pastilles
 ├── scripts/                    # points d'entrée : collect_all.py, build_all.py, make_fake_data.py
 ├── notebooks/                  # exploration (sorties vidées avant commit)
 ├── tests/

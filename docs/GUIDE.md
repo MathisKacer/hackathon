@@ -50,6 +50,12 @@
 - Peu d'emojis : seulement les drapeaux d'alerte et le ✔ La Bonne Boîte.
 - **Les réglages sont conservés quand on change de page** (`persist_widget_state` dans `app/commun.py`).
 - **Thème sobre** (`.streamlit/config.toml`) : bleu nuit `#1D3557`, fond `#FAFAF7`, police Inter ; le bleu et l'orange restent réservés à la carte.
+- **Apparence (T70, `app/style.py`)** :
+  - un **bandeau d'en-tête** bleu nuit (dégradé, cercles « radar » discrets) sur chaque page ; sur Explorer, la carte de recherche est posée dessus ;
+  - sans ville : **3 cartes « Comment ça marche »** numérotées ; avec une ville : des **tuiles de chiffres** colorées (entreprises à démarcher en orange, offres publiées en bleu, cibles prioritaires en vert, entreprises en difficulté en rouge) ;
+  - **« Les meilleures cibles »** : les 4 premières entreprises en cartes (palier de priorité en pastille, ville, distance, taille, bouton « Voir la fiche ») au-dessus des onglets ;
+  - **icônes Material** (`:material/…:`) au lieu des emojis : navigation, bouton « Filtres », onglets, boutons de Mon espace ;
+  - le CSS cible nos blocs par leur **clé** (`st.container(key=...)` → classe `st-key-…`), plus stable que les identifiants internes de Streamlit. La fiche n'a pas encore été retravaillée (T67 en cours sur la fiche).
 
 **Organisation du code.**
 

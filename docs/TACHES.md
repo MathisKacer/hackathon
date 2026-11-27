@@ -77,12 +77,12 @@
 
 ## 🔵 En cours
 
-- [ ] T70 — **Apparence plus vivante** (hors fiche, en attendant T67) : bandeau d'en-tête coloré avec la recherche posée dessus, chiffres clés en tuiles colorées, meilleures cibles en cartes au-dessus du tableau, icônes sobres (Material) au lieu des emojis, finitions (coins arrondis, ombres, titres) — @celia
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
 - _…_
 
 ## ✅ Fait
 
+- [x] T70 — **Apparence plus vivante** (hors fiche) : bandeau d'en-tête coloré sur les 3 pages, recherche posée dessus, cartes « Comment ça marche », tuiles de chiffres colorées, « Les meilleures cibles » en cartes, icônes Material, finitions CSS (`app/style.py`). Reste : la fiche, après T67 — @celia
 - [x] T67 — **Niveau d'études attendu** (D34) — @emma : `radar/niveau.py` (champ LBA, sinon lu dans le titre et le début de l'annonce) ; filtre « Niveau d'études » + « Garder les offres sans niveau précisé », colonne « Niveau » (liste des offres, fiche), niveau dans la fenêtre des offres de la carte. Adzuna : 2,1 % des offres avec un niveau détecté (L27)
 - [x] T69 — 🔗T30,T27 **Score v1 : bayésien empirique avec covariables** (régression binomiale négative) + évaluation honnête. Constat (audit du 27/11) : la moyenne du secteur seule (AUC 0,895) bat l'intensité par entreprise (0,830) pour retrouver les recruteurs d'alternants data de LBA ; faux positifs (avocats, vétérinaires) dus au lissage fixe et au rang centile ; « 0 offre » traité à tort comme une preuve. Plan : covariables (âge, nb d'établissements, catégorie, augmentation de capital BODACC, densité d'entreprises data à proximité), probabilité de détection, a priori NAF hiérarchique à lissage estimé, comparaison à LightGBM ; découpage train/test par département ; tableau avant/après pour les slides (couvre l'essentiel de T34) — @mathis → **fait (D33)** : besoin caché AUC 0,72 → 0,84 ; `docs/EVAL_SCORE.md`
 - [x] T65 — **Score en mots et en couleurs** — @maxence → 4 paliers ●●● Cible prioritaire / ●●○ Bonne cible / ●○○ À considérer / ○○○ Moins indiquée, règle mixte (10/30/60 % meilleures de la recherche **et** score ≥ 0,60/0,45/0,30), dans la liste, sur la carte (couleur et taille des points) et dans la fiche ; score toujours visible ; `radar/paliers.py` ; D32 ; suite : dégradé continu d'orange selon le score (colonne Score, points de la carte étalés sur les scores affichés)
