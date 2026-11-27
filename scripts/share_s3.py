@@ -12,7 +12,7 @@ les offres Adzuna ne doivent pas être redistribuées publiquement. Partager les
     python3 scripts/share_s3.py data/processed/entreprises.parquet --hours 12
 
 Côté coéquipier (n'importe quelle machine), depuis la racine du dépôt :
-    curl -o data/raw/offres_raw/adzuna.parquet "<lien>"
+    curl --create-dirs -o data/raw/offres_raw/adzuna.parquet "<lien>"
 """
 
 from __future__ import annotations
@@ -74,7 +74,7 @@ def main() -> None:
             "get_object", Params={"Bucket": args.bucket, "Key": key}, ExpiresIn=args.hours * 3600
         )
         print(f"\n# {rel} ({f.stat().st_size / 1e6:.1f} Mo), lien valable {args.hours} h")
-        print(f'curl -o {rel} "{url}"')
+        print(f'curl --create-dirs -o {rel} "{url}"')
 
 
 if __name__ == "__main__":
