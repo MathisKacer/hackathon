@@ -25,6 +25,7 @@
 
 **Offres**
 - [x] T10 — 🔗T1 **Test Adzuna** : volume d'offres data en France et dans le 35, champs réellement renvoyés, nombre d'entreprises que renvoie `top_companies` → noter les résultats dans `SOURCES.md`
+- [ ] T16 — 🔗T12 **Compléter la collecte Adzuna** : relancer `uv run python scripts/collect_adzuna.py` chaque jour (reprend grâce au cache) ; découper l'Île-de-France par département (5 000/14 385 récupérées, plafond de 100 pages) ; ⚠️ le quota (~240/jour) est **partagé par tous ceux qui utilisent la même clé**
 - [ ] T13 — 🔗T6 **Classifieur d'offres** : `domaine` (data ou autre), `contrat` (stage / alternance / emploi), à partir du ROME, des mots-clés et du type de contrat
 
 **Entreprises**
@@ -76,10 +77,10 @@
 ## 🔵 En cours
 
 - [ ] T11 — 🔗T2 **Collecteur La bonne alternance**, France entière : offres + recruteurs potentiels, avec SIRET → `offres_raw/lba/` — @maxence
-- [ ] T12 — 🔗T10 **Collecteur Adzuna** France entière dans la limite du quota (offres « data » région par région, Bretagne et Île-de-France d'abord, offres de moins de 60 jours) + cache disque + compteur de quota → `data/raw/offres_raw/adzuna.parquet` — @mathis
 
 ## ✅ Fait
 
+- [x] T12 — 🔗T10 **Collecteur Adzuna** France entière dans la limite du quota (offres « data » région par région, Bretagne et Île-de-France d'abord, offres de moins de 60 jours) + cache disque + compteur de quota → `data/raw/offres_raw/adzuna.parquet` — @mathis
 - [x] T5 — **Générateur de données factices** : `uv run python scripts/make_fake_data.py` → tous les fichiers du contrat dans `data/` (voir `radar/fake_data.py`) — @emma
 - [x] T4 — **Squelette du dépôt** : `pyproject.toml` (uv), package `radar/`, `radar/config.py`, `.env.example`, ruff, `app/streamlit_app.py` vide — @mathis
 - [x] T0 — Structure de coordination (`CLAUDE.md`, `docs/`) — @mathis

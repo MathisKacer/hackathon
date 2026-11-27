@@ -206,7 +206,10 @@ def collect(
             for page_count, results in client.iter_search(what, region, max_days_old):
                 total = page_count
                 rows.extend(_to_row(r, what, region, collected_at) for r in results)
-            status[region] = f"complet ({len(rows) - n_before}/{total})"
+            got = len(rows) - n_before
+            # Plafond de pages atteint avant la fin → région incomplète (à découper par département)
+            label = "complet" if got >= total else "tronqué (plafond de pages)"
+            status[region] = f"{label} ({got}/{total})"
         except QuotaExceeded as e:
             status[region] = f"partiel ({len(rows) - n_before} offres) — {e}"
             log.warning("Arrêt : %s", e)

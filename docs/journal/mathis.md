@@ -2,6 +2,27 @@
 
 ---
 
+## 2026-11-27 — T12 : collecteur Adzuna
+
+**Fait :**
+- `radar/collect/adzuna.py` : collecte des offres « data » (< 60 jours) région par région ; cache disque requests-cache (la clé secrète n'est pas stockée dans le cache) ; compteur de quota quotidien (`data/cache/adzuna_quota.json`, arrêt à 240) ; ≤ 25 appels/min ; colonnes alignées sur `radar/schemas.py` (d'Emma) + colonnes propres à Adzuna.
+- `scripts/collect_adzuna.py` (options `--regions`, `--max-calls`, `--quota`). Tests sans réseau dans `tests/test_adzuna.py`.
+
+**Résultats / chiffres clés :**
+- `data/raw/offres_raw/adzuna.parquet` : **10 776 offres, 2 737 entreprises**, 230 appels utilisés aujourd'hui.
+- Complètes : Bretagne (633), Pays de la Loire (1 101), Auvergne-Rhône-Alpes (2 333), Occitanie (1 410). Île-de-France 5 000/14 385 (plafond de 100 pages). Nouvelle-Aquitaine partielle (300). Les autres régions ne sont pas commencées.
+- Bruit : « data » dans seulement 23 % des titres. 1 188 titres « stage », 106 « alternance ».
+- Variantes de noms (« CREDIT MUTUEL ARKEA » / « Crédit Mutuel Arkéa ») → à normaliser en T21.
+
+**Points d'attention pour l'équipe :**
+- Le quota Adzuna du jour est épuisé (230/240) : **ne pas appeler Adzuna aujourd'hui**, utiliser le parquet.
+- Le parquet n'est que sur mon pod → à déposer sur S3 pour l'équipe. Ne jamais partager `data/cache/`.
+
+**Prochaine étape :**
+- T16 : relancer demain pour compléter (reprise automatique via le cache) et découper l'Île-de-France par département.
+
+---
+
 ## 2026-11-27 — T4 : squelette du dépôt
 
 **Fait :**
