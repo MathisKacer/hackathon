@@ -50,6 +50,7 @@ Ce fichier est lu par **toutes** les sessions Claude Code de l'équipe. Plusieur
 
 ## Règles de sécurité / données
 
+- **Clés d'API** : `cp .env.example .env`, puis remplir. Le `.env` est **local à chaque pod Onyxia** (non versionné) : chaque membre crée le sien, et les clés se partagent par message privé, jamais via Git. Claude ne doit jamais afficher, journaliser ni committer le contenu du `.env`.
 - **Ne jamais committer de données** ni de secrets : jeux de données dans `data/` (ignoré par Git) ou sur le stockage S3 Onyxia/SSP Cloud ; identifiants dans des variables d'environnement ou `.env` (ignoré).
 - Ne pas committer de notebooks avec des sorties volumineuses (vider les sorties avant commit).
 
