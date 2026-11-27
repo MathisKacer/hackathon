@@ -42,7 +42,7 @@ from compte import record_search
 from favoris import favorite_refs, offer_ref, sync_offers_editor, temp_banner
 from fiche_ui import open_fiche
 from streamlit_folium import st_folium
-from style import GREEN, RED, Tile, fmt_int, hero, kpi_tiles, pill
+from style import GREEN, LINK_STYLE, RED, Tile, fmt_int, hero, kpi_tiles, pill
 
 from radar.collect.sirene import TRANCHE_LIBELLES
 from radar.filters import SECTIONS, TAILLES, filter_companies
@@ -389,25 +389,34 @@ with tab_spont:
         version = st.session_state.get("_liste_version", 0)
         # T65 : couleur du palier sur la colonne « Priorité » (du plus foncé au gris).
         tier_colors = dict(zip(shown["palier_libelle"], shown["palier"], strict=True))
-        styled = table.style.map(
-            lambda v: f"color: {tier_color(tier_colors.get(v))}; font-weight: 600",
-            subset=["Priorité"],
-        ).map(  # dégradé d'orange selon le score (clair → foncé)
-            lambda v: (
-                f"background-color: {score_color(v)}; color: {text_color_on(score_color(v))}"
-                if pd.notna(v)
-                else ""
-            ),
-            subset=["Score"],
+        styled = (
+            table.style.map(  # T72 : le nom ressemble à un lien (clic → fiche)
+                lambda _: LINK_STYLE, subset=["Entreprise"]
+            )
+            .map(
+                lambda v: f"color: {tier_color(tier_colors.get(v))}; font-weight: 600",
+                subset=["Priorité"],
+            )
+            .map(  # dégradé d'orange selon le score (clair → foncé)
+                lambda v: (
+                    f"background-color: {score_color(v)}; color: {text_color_on(score_color(v))}"
+                    if pd.notna(v)
+                    else ""
+                ),
+                subset=["Score"],
+            )
         )
         event = st.dataframe(
             styled,
             hide_index=True,
             width="stretch",
             on_select="rerun",
-            selection_mode="single-row",
+            selection_mode="single-cell",  # T72 : clic sur le nom (pas de case à cocher)
             key=f"liste_spont_{version}",
             column_config={
+                "Entreprise": st.column_config.TextColumn(
+                    help="Clique sur le nom pour ouvrir la fiche."
+                ),
                 "Distance": st.column_config.NumberColumn(format="%.1f km"),
                 "Autres sites": st.column_config.TextColumn(
                     help="Autres sites de la même entreprise dans le rayon (voir sa fiche)."
@@ -424,7 +433,7 @@ with tab_spont:
         )
         more = len(spontaneous) - len(shown)
         st.caption(
-            "Clique sur une ligne pour ouvrir la fiche de l'entreprise."
+            "Clique sur le nom d'une entreprise pour ouvrir sa fiche."
             + (
                 f" Les {fmt_int(len(shown))} premières sur {fmt_int(len(spontaneous))} : "
                 "réduis le rayon ou utilise les filtres pour affiner."
@@ -432,9 +441,9 @@ with tab_spont:
                 else ""
             )
         )
-        rows = event.selection.rows if event is not None else []
-        if rows:
-            r = shown.iloc[rows[0]]
+        cells = event.selection.cells if event is not None else []
+        if cells and cells[0][1] == "Entreprise":
+            r = shown.iloc[cells[0][0]]
             open_fiche(r["siret"], r, domaine)
 
 with tab_offers:

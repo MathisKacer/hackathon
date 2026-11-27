@@ -9,7 +9,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 from fiche_ui import open_fiche
-from style import hero
+from style import LINK_STYLE, hero
 
 from radar.recherche import load_index, search_companies, with_companies
 
@@ -88,20 +88,24 @@ st.write(
     (f"{n_comp} entreprise{'s' if n_comp > 1 else ''} et " if n_comp else "")
     + f"{len(hits)} site{'s' if len(hits) > 1 else ''}"
     + (" (les 50 plus proches de ta recherche)" if len(hits) == 50 else "")
-    + " — clique sur une ligne pour ouvrir la fiche."
+    + " — clique sur un nom pour ouvrir la fiche."
 )
 version = st.session_state.get("_liste_version", 0)
 event = st.dataframe(
-    table,
+    # T72 : le nom ressemble à un lien ; un clic sur le nom ouvre la fiche
+    table.style.map(lambda _: LINK_STYLE, subset=["Entreprise"]),
     hide_index=True,
     width="stretch",
     on_select="rerun",
-    selection_mode="single-row",
+    selection_mode="single-cell",
     key=f"liste_entreprises_{version}",
+    column_config={
+        "Entreprise": st.column_config.TextColumn(help="Clique sur le nom pour ouvrir la fiche.")
+    },
 )
-rows = event.selection.rows if event is not None else []
-if rows:
-    r = rows_all.iloc[rows[0]]
+cells = event.selection.cells if event is not None else []
+if cells and cells[0][1] == "Entreprise":
+    r = rows_all.iloc[cells[0][0]]
     domaine = st.session_state.get("domaine")
     if r["_type"] == "entreprise":
         open_fiche(None, None, domaine, siren=r["siren"])

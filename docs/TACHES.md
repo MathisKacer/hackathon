@@ -76,13 +76,13 @@
 
 ## 🔵 En cours
 
-- [ ] T72 — **Ouvrir une entreprise en cliquant sur son nom** (au lieu de la case à cocher sur le côté) dans la liste des candidatures spontanées et les résultats de recherche ; le tableau, ses colonnes et la recherche restent identiques — @celia
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
 - [ ] T26 — 🔗T21 **Familles de marque** (L7) : une entreprise ETI/GE dont une entité a des offres du domaine → ses autres entités (même début de nom) sont exclues de la couche orange (`a_offre_groupe`) — @maxence
 - _…_
 
 ## ✅ Fait
 
+- [x] T72 — **Ouvrir une entreprise en cliquant sur son nom** — @celia : plus de case à cocher ; le nom est en bleu souligné et un clic sur le nom ouvre la fiche dans la fenêtre (sélection d'une cellule, `selection_mode="single-cell"`), dans la liste des candidatures spontanées et les résultats de recherche. Tableau, colonnes, tri et recherche inchangés ; style commun `LINK_STYLE` (`app/style.py`)
 - [x] T66 — **Filtre « Régions »** — @maxence → **supprimé** plutôt que masqué (la ville et le rayon le rendent inutile) : fenêtre « Filtres », `WIDGET_KEYS`, `profile_keys()`, `PROFILE_LABELS`, `filter_offers` ; anciennes valeurs de profil ignorées ; D35
 - [x] T71 — 🐞 **Liste qui plantait sur une grande ville** — @celia : la liste « Candidatures spontanées » n'affiche (et ne colore) que les **500 premières** lignes du classement (`MAX_LIST_ROWS`, `app/vues/explorer.py`), avec la mention « Les 500 premières sur N : réduis le rayon ou utilise les filtres » ; tuiles et carte comptent toujours tout. Vérifié sur Paris 20 km (~59 000 entreprises) : l'ancienne version plantait (472 440 cellules > 262 144), la nouvelle non. ℹ️ @maxence : correction faite dans ton code de T65 (couleurs « Priorité » / « Score »), rien d'autre ne change
 - [x] T70 — **Apparence plus vivante** (hors fiche) : bandeau d'en-tête coloré sur les 3 pages, recherche posée dessus, cartes « Comment ça marche », tuiles de chiffres colorées, « Les meilleures cibles » en cartes, icônes Material, finitions CSS (`app/style.py`). Reste : la fiche, après T67 — @celia

@@ -44,7 +44,7 @@
 4. **La carte** : offres en bleu, candidatures spontanées en orange (`app/carte.py`, inchangé).
 5. **Deux onglets** : « Candidatures spontanées » (Entreprise, Lieu, Distance, Autres sites, Taille, Situation, La Bonne Boîte ✔, Score, **Chance de réponse** — estimation issue de réponses simulées, expliquée en info-bulle, D31) et « Offres » (niveau d'études, lien vers chaque annonce).
 6. **La liste n'affiche que les 500 premières entreprises** du classement (T71 : au-delà, la mise en couleur plantait sur les grandes villes) ; une mention le signale.
-7. **Un clic sur une ligne** de « Candidatures spontanées » ouvre la **fiche dans une fenêtre** par-dessus la page (section 10). Fermer la fenêtre permet d'en ouvrir une autre.
+7. **Un clic sur le nom d'une entreprise** (en bleu souligné, comme un lien) dans « Candidatures spontanées » ouvre la **fiche dans une fenêtre** (T72 ; plus de case à cocher) par-dessus la page (section 10). Fermer la fenêtre permet d'en ouvrir une autre.
 
 **Principes.**
 - Textes courts, en français simple : pas de numéros de tâches, de noms de fichiers ni de commandes à l'écran (ils restent dans les commentaires du code).
@@ -305,7 +305,7 @@ Par ordre d'intérêt (✅ = déjà une tâche dans `TACHES.md`) :
 
 **À quoi ça sert.** Trouver une entreprise précise et voir sa fiche, **dans toute la France** (les ~406 000 établissements d'au moins 10 salariés), pas seulement autour de sa ville. Va vers l'idée « tout savoir sur une entreprise dès qu'on la cherche ».
 
-**Ce que voit l'utilisateur.** Une barre « Nom de l'entreprise, SIREN ou SIRET » et un champ facultatif « Ville ou code postal » (début du nom de la commune, ou début du code postal : « 35 » = Ille-et-Vilaine). Jusqu'à 50 établissements, les plus proches de la recherche d'abord, puis les plus gros. Colonnes : Entreprise, Lieu, Taille, Activité, Situation (BODACC). **Un clic ouvre la fiche** en fenêtre.
+**Ce que voit l'utilisateur.** Une barre « Nom de l'entreprise, SIREN ou SIRET » et un champ facultatif « Ville ou code postal » (début du nom de la commune, ou début du code postal : « 35 » = Ille-et-Vilaine). Jusqu'à 50 établissements, les plus proches de la recherche d'abord, puis les plus gros. Colonnes : Entreprise, Lieu, Taille, Activité, Situation (BODACC). **Un clic sur le nom ouvre la fiche** en fenêtre (T72).
 
 **Ce qu'elle tolère.**
 

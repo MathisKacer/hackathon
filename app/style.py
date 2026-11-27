@@ -20,6 +20,8 @@ NAVY = "#1D3557"
 NAVY_LIGHT = "#2B4C7E"
 BG_CARD = "#FFFFFF"
 GREEN = "#2E7D32"
+# Texte cliquable dans un tableau (T72) : le nom d'une entreprise ouvre sa fiche.
+LINK_STYLE = "color: #1a56db; text-decoration: underline; font-weight: 600"
 RED = "#B3261E"
 
 CSS = f"""

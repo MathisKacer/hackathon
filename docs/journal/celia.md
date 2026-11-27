@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-11-27 — Tâche T72 : nom cliquable ; T73 ajoutée
+
+**Fait :**
+- Liste des candidatures spontanées et résultats de recherche : le nom de l'entreprise est en bleu souligné ; un clic sur le nom ouvre la fiche (sélection d'une cellule), plus de case à cocher. Tableau, colonnes, tri et recherche inchangés (demande de Celia).
+- T73 ajoutée (effectifs : tranche par site plus claire, tranche officielle de l'entreprise + total estimé à partir des sites), à faire plus tard.
+
+**Fichiers touchés :**
+- `app/vues/explorer.py`, `app/vues/entreprises.py`, `app/style.py`, `docs/*`
+
+**Résultats / chiffres clés :**
+- Clic simulé : sur « Lieu » rien, sur le nom la fiche s'ouvre (Explorer et Entreprises). 344 tests OK.
+
+---
+
 ## 2026-11-27 — Tâche T71 : liste qui plantait sur une grande ville
 
 **Fait :**
