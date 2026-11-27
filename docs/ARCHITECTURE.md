@@ -100,6 +100,7 @@ Voir **D13** dans `DECISIONS.md` (le bêta-binomial initialement prévu a été 
 - **Composantes** dans [0, 1] par rangs centiles : `c_intensite` (λ a posteriori), `c_embauche` (besoin attendu de l'établissement, proxy en attendant La Bonne Boîte), `c_dynamisme` (neutre 0,5 en attendant T22).
 - **Couche orange** : entreprises sans offre data (`n_offres_domaine_siren == 0`), hors `volume_suspect`, triées par la moyenne pondérée des composantes (intensité, besoin attendu, proximité, opportunité cachée, recruteur d'alternants LBA — D26, dynamisme) avec les poids de l'utilisateur (T42, D22) ; apports `apport_<c>` affichés ; tous les poids à 0 → √(c_intensite × c_embauche) (D13).
 - **Validation** : l'estimateur retrouve les paramètres sur données simulées (test) ; à faire pour les slides : stabilité du top-k par bootstrap, sensibilité aux poids.
+- **Validation (T34)** : `radar/validation.py` + `scripts/validate_scores.py` → stabilité (bootstrap), sensibilité aux poids, cohérence avec La Bonne Boîte et La bonne alternance ; résultats et graphiques dans `docs/VALIDATION.md` et `docs/figures/`.
 - **Code** : `radar/score/intensity.py` (modèle), `radar/score/embauche.py` (`c_embauche`, T28), `radar/score/build.py` (assemblage), `scripts/build_scores.py`.
 
 ## Explication des recommandations (T32, D29)

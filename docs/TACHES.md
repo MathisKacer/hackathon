@@ -67,11 +67,11 @@
 
 ## 🔵 En cours
 
-- [ ] T34 — **Validation sans vérité terrain** : stabilité du classement (bootstrap), sensibilité aux poids, cohérence avec La Bonne Boîte et la tension du marché → graphiques pour les slides — @emma
 - _…_
 
 ## ✅ Fait
 
+- [x] T34 — **Validation sans vérité terrain** (`docs/VALIDATION.md`, graphiques `docs/figures/validation_*.svg`) : top 20 conservé à ~80 % au bootstrap ; AUC 0,88 (La Bonne Boîte) et 0,81 (La bonne alternance) contre 0,67 / 0,54 pour la taille seule, sur les établissements sans offre data. Tension du marché non faite — @emma
 - [x] T27 — 🔗T21 **Revue des intermédiaires** (L8) : passer en revue les plus gros émetteurs + `volume_suspect`, compléter `INTERMEDIARIES` ; à refaire à chaque nouvelle source (LBA) — @mathis → après l'arrivée de LBA : organismes de formation (AGEPAC, KOANN, Chambre régionale de métiers) ajoutés aux intermédiaires ; SIRET source d'une agence de placement / d'intérim (NAF 78.1, 78.2) → intermédiaire (443 offres LBA au total)
 - [x] T53 — 🔗T36 `scripts/build_response.py` plante (« Singular matrix ») si les scores sont construits **sans les offres Adzuna** (LBA seules : `c_intensite` et `c_embauche` constantes) → message clair, ou retirer les variables constantes avant l'ajustement (vu par @maxence en T37) — @mathis → variables constantes écartées avant l'ajustement (avertissement, coefficient 0) ; + bug voisin corrigé : `match_offers` plantait quand toutes les offres ont un SIRET source
 - [x] T54 — **Favoris** : étoile dans la fiche (entreprises) et case ★ dans la liste des offres ; colonne ★ dans les candidatures spontanées ; « Mes favoris » dans Mon espace (voir la fiche, lien vers l'annonce, « n'est plus en ligne », case « Candidaté », note libre, retirer). Sans compte : favoris temporaires (rien sur le disque), enregistrés automatiquement à la connexion — @celia

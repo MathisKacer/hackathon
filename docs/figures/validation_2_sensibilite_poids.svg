@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="420" font-family="sans-serif">
+<rect width="760" height="420" fill="white"/>
+<text x="70" y="28" font-size="17" font-weight="bold" fill="#1f2328">Top 20 conservé si on change UN curseur (moyenne 4 villes × 2 contrats)</text>
+<line x1="70" x2="740" y1="350.0" y2="350.0" stroke="#d0d7de"/>
+<text x="62" y="354.0" font-size="11" text-anchor="end" fill="#57606a">0.0</text>
+<line x1="70" x2="740" y1="292.0" y2="292.0" stroke="#d0d7de"/>
+<text x="62" y="296.0" font-size="11" text-anchor="end" fill="#57606a">0.2</text>
+<line x1="70" x2="740" y1="234.0" y2="234.0" stroke="#d0d7de"/>
+<text x="62" y="238.0" font-size="11" text-anchor="end" fill="#57606a">0.4</text>
+<line x1="70" x2="740" y1="176.0" y2="176.0" stroke="#d0d7de"/>
+<text x="62" y="180.0" font-size="11" text-anchor="end" fill="#57606a">0.6</text>
+<line x1="70" x2="740" y1="118.0" y2="118.0" stroke="#d0d7de"/>
+<text x="62" y="122.0" font-size="11" text-anchor="end" fill="#57606a">0.8</text>
+<line x1="70" x2="740" y1="60.0" y2="60.0" stroke="#d0d7de"/>
+<text x="62" y="64.0" font-size="11" text-anchor="end" fill="#57606a">1.0</text>
+<rect x="81.2" y="174.2" width="41.7" height="175.8" fill="#8c959f"/>
+<text x="102.0" y="170.2" font-size="10" text-anchor="middle" fill="#1f2328">0.61</text>
+<rect x="125.8" y="60.0" width="41.7" height="290.0" fill="#e8590c"/>
+<text x="146.7" y="56.0" font-size="10" text-anchor="middle" fill="#1f2328">1.00</text>
+<text x="125.8" y="368" font-size="12" text-anchor="middle" fill="#1f2328">Opportunité cachée</text>
+<rect x="237.5" y="60.0" width="41.7" height="290.0" fill="#e8590c"/>
+<text x="258.3" y="56.0" font-size="10" text-anchor="middle" fill="#1f2328">1.00</text>
+<text x="237.5" y="368" font-size="12" text-anchor="middle" fill="#1f2328">Dynamisme</text>
+<rect x="304.5" y="92.6" width="41.7" height="257.4" fill="#8c959f"/>
+<text x="325.3" y="88.6" font-size="10" text-anchor="middle" fill="#1f2328">0.89</text>
+<rect x="349.2" y="76.3" width="41.7" height="273.7" fill="#e8590c"/>
+<text x="370.0" y="72.3" font-size="10" text-anchor="middle" fill="#1f2328">0.94</text>
+<text x="349.2" y="368" font-size="12" text-anchor="middle" fill="#1f2328">Potentiel d&#x27;embauche</text>
+<rect x="416.2" y="130.7" width="41.7" height="219.3" fill="#8c959f"/>
+<text x="437.0" y="126.7" font-size="10" text-anchor="middle" fill="#1f2328">0.76</text>
+<rect x="460.8" y="76.3" width="41.7" height="273.7" fill="#e8590c"/>
+<text x="481.7" y="72.3" font-size="10" text-anchor="middle" fill="#1f2328">0.94</text>
+<text x="460.8" y="368" font-size="12" text-anchor="middle" fill="#1f2328">Intensité dans le doma</text>
+<rect x="527.8" y="177.8" width="41.7" height="172.2" fill="#8c959f"/>
+<text x="548.7" y="173.8" font-size="10" text-anchor="middle" fill="#1f2328">0.59</text>
+<rect x="572.5" y="132.5" width="41.7" height="217.5" fill="#e8590c"/>
+<text x="593.3" y="128.5" font-size="10" text-anchor="middle" fill="#1f2328">0.75</text>
+<text x="572.5" y="368" font-size="12" text-anchor="middle" fill="#1f2328">Proximité</text>
+<rect x="639.5" y="166.9" width="41.7" height="183.1" fill="#8c959f"/>
+<text x="660.3" y="162.9" font-size="10" text-anchor="middle" fill="#1f2328">0.63</text>
+<rect x="684.2" y="60.0" width="41.7" height="290.0" fill="#e8590c"/>
+<text x="705.0" y="56.0" font-size="10" text-anchor="middle" fill="#1f2328">1.00</text>
+<text x="684.2" y="368" font-size="12" text-anchor="middle" fill="#1f2328">Recruteur d&#x27;alternants</text>
+<rect x="70" y="390" width="12" height="12" fill="#8c959f"/>
+<text x="86" y="400" font-size="12" fill="#1f2328">curseur à 0</text>
+<rect x="198" y="390" width="12" height="12" fill="#e8590c"/>
+<text x="214" y="400" font-size="12" fill="#1f2328">curseur à 5</text>
+<text x="16" y="205.0" font-size="11" fill="#57606a" transform="rotate(-90 16 205.0)" text-anchor="middle">part du top 20 conservée</text>
+<text x="70" y="46" font-size="11" fill="#57606a">poids au hasard (0 à 5) : 0.67 conservé en moyenne</text>
+</svg>

@@ -4,6 +4,35 @@
 
 ---
 
+## 2026-11-27 — T34 : validation du score sans vérité terrain ✅
+
+**Fait :**
+- `radar/validation.py` : recalcul du score (intensité D13 + potentiel d'embauche D27) pour d'autres comptes d'offres, **identique à la production** (écart ≤ 3 × 10⁻⁸) ; métriques `overlap_at_k`, `auc`, `roc_points` ; analyses stabilité, poids, cohérence.
+- `scripts/validate_scores.py` : lance les trois analyses sur le classement de la couche orange de l'app (`rank_spontaneous`, poids par défaut, top 20, 20 km, Rennes, Paris, Lyon, Toulouse, stage et alternance) → `data/processed/validation/` (JSON, CSV, 3 graphiques SVG générés sans dépendance).
+- `docs/VALIDATION.md` : méthode, résultats, lecture et limites, rédigés pour le pitch. Graphiques copiés dans `docs/figures/` : ils ne contiennent que des chiffres agrégés, ni offres ni noms d'entreprises.
+- `tests/test_validation.py` : 4 tests des métriques.
+- Docs : `ARCHITECTURE.md`, commande dans `CLAUDE.md`, T34 en « Fait ».
+
+**Fichiers touchés :**
+- `radar/validation.py`, `scripts/validate_scores.py`, `tests/test_validation.py`, `docs/VALIDATION.md`, `docs/figures/validation_*.svg`
+- `CLAUDE.md`, `docs/ARCHITECTURE.md`, `docs/TACHES.md`, `docs/journal/emma.md`
+
+**Résultats / chiffres clés :**
+- **Stabilité** (50 tirages bootstrap) : 76 à 87 % du top 20 conservé selon la ville et le contrat (~80 % en moyenne).
+- **Poids** : changer l'intensité ou le potentiel d'embauche garde 76 à 94 % du top 20 ; proximité, opportunité cachée et recruteur LBA changent vraiment la liste (voulu : préférences de l'étudiant). Poids tirés au hasard : 52 à 83 % conservé en moyenne.
+- **Cohérence externe** (établissements **sans offre data**) : AUC de notre intensité **0,88** pour retrouver La Bonne Boîte et **0,81** pour La bonne alternance, contre **0,67** et **0,54** pour la taille seule.
+- Relecture à la main du top 10 Rennes (stage) : ESN et conseil informatique, plausibles.
+- `pytest` : 302/302 ; ruff OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- **Pour le pitch (T60)** : les 3 graphiques sont dans `docs/figures/`, et le texte prêt à reprendre est dans `docs/VALIDATION.md`.
+- **Limite à assumer** : le haut de la liste est dominé par les ESN et le conseil (effet de l'a priori par secteur). Piste possible : un plafond par division NAF dans le top, ou un curseur « diversité ».
+- Je voulais ajouter matplotlib au groupe dev pour les graphiques, mais le système de permissions a refusé la modification de `pyproject.toml` : les graphiques sont donc écrits en SVG à la main, sans nouvelle dépendance.
+- Tension du marché (API Marché du travail) : non faite.
+- **Push impossible depuis ma session** (identifiants VS Code périmés) : Emma doit synchroniser depuis VS Code.
+
+---
+
 ## 2026-11-27 — T29 : La Bonne Boîte dans l'app ✅ (+ correction des dates factices)
 
 **Fait :**

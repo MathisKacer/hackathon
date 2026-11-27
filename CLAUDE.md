@@ -70,6 +70,7 @@ uv run python scripts/make_fake_data.py  # données FACTICES dans data/ (T5) pou
 uv run python scripts/classify_offres.py # offres brutes → offres.parquet (domaine, contrat) (T13)
 uv run python scripts/extract_sirene.py  # VRAI référentiel entreprises SIRENE (T20, ~2 min ; --dep 35 pour tester) → data/processed/entreprises.parquet
 uv run python scripts/collect_lbb.py     # La Bonne Boîte (métiers data, ~30 appels, cache) → data/raw/lbb.parquet → c_embauche (T28)
+uv run python scripts/validate_scores.py # validation du score (T34, ~15 min) → data/processed/validation/, voir docs/VALIDATION.md
 uv run python scripts/collect_bodacc.py  # procédures collectives BODACC → alertes dans entreprises.parquet (T23 ; --refresh pour retélécharger)
 uv run python scripts/build_all.py        # reconstruire entreprises → offres → scores (~1 min)
 uv run streamlit run app/streamlit_app.py # lancer l'app (port 8501)
