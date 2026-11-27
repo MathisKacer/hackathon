@@ -11,6 +11,7 @@ import streamlit as st
 from fiche_ui import open_fiche
 from style import LINK_STYLE, hero
 
+from radar.collect.sirene import tranche_display
 from radar.recherche import load_index, search_companies, with_companies
 
 SITUATION_COURTE = {
@@ -75,7 +76,10 @@ table = pd.DataFrame(
     {
         "Entreprise": names,
         "Lieu": lieu.where(~is_company, n_sites.map(lambda n: f"{n} sites en France")),
-        "Taille": rows_all["tranche_libelle"].where(~is_company, None),
+        # T73 : fourchette du site ; pour l'entreprise entière, sa tranche officielle
+        "Taille": rows_all["tranche_effectif"]
+        .map(tranche_display)
+        .where(~is_company, rows_all["tranche_entreprise_libelle"]),
         "Activité": rows_all["naf_libelle"],
         "Situation": rows_all["procedure_type"].map(SITUATION_COURTE),
     }

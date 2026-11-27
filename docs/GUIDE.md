@@ -23,6 +23,7 @@
 12. [Recherche d'entreprises (page Entreprises)](#12-recherche-dentreprises-page-entreprises)
 13. [Favoris (T54)](#13-favoris-t54)
 14. [Entreprise et sites (T57)](#14-entreprise-et-sites-t57)
+15 bis. [Effectifs : site et entreprise (T73)](#15-bis-effectifs--site-et-entreprise-t73)
 15. [Niveau d'études attendu (T67)](#15-niveau-détudes-attendu-t67-d34)
 
 ---
@@ -98,7 +99,7 @@ Principe commun : **la démo marche sans rien configurer**, en mode anonyme, et 
 - Le nom affiché est celui de l'entreprise (unité légale), sinon celui de l'établissement, sinon prénom + nom pour un entrepreneur individuel.
 - Respect de la vie privée : position et adresse **masquées** pour les établissements en diffusion partielle (`diffusion_partielle`).
 
-**Colonnes utiles en plus du contrat :** `effectif_min`, `effectif_max`, `effectif_estime` (utilisé par le rapprochement T21), `tranche_libelle` (« 20 à 49 salariés »), `adresse`, `departement`, `naf_section`, `naf_division`, `siege`…
+**Colonnes utiles en plus du contrat :** `effectif_min`, `effectif_max`, `effectif_estime` (utilisé par le rapprochement T21), `tranche_libelle` (« 20 à 49 salariés »), `tranche_entreprise` / `tranche_entreprise_libelle` / `annee_effectif_entreprise` (T73 : tranche officielle de l'entreprise entière), `adresse`, `departement`, `naf_section`, `naf_division`, `siege`…
 
 **Utiliser.**
 ```bash
@@ -378,7 +379,7 @@ Temps de réponse : 0,05 à 0,4 s.
 | Où | Ce qui change |
 |---|---|
 | **Fiche d'un site** | sous le nom : « Fait partie de ORANGE · 524 sites en France » + bouton **« Voir toute l'entreprise »** |
-| **Fiche entreprise** (même fenêtre) | identité (catégorie, activité, nombre de sites, effectif total estimé, ville du siège), alerte BODACC, ☆ favori pour **toute l'entreprise**, **offres de tous ses sites**, **liste des sites** (les plus proches de ta ville d'abord ; clic sur le nom du site → sa fiche), situation BODACC, lien Annuaire des entreprises (page entreprise) |
+| **Fiche entreprise** (même fenêtre) | identité (catégorie, activité, nombre de sites, ville du siège) ; **effectif** (T73) : tranche officielle SIRENE de l'entreprise (« 10 000 salariés et plus ») + total estimé à partir des sites (« environ 62 690 salariés sur ses 524 sites d'au moins 10 salariés »), alerte BODACC, ☆ favori pour **toute l'entreprise**, **offres de tous ses sites**, **liste des sites** (les plus proches de ta ville d'abord ; clic sur le nom du site → sa fiche), situation BODACC, lien Annuaire des entreprises (page entreprise) |
 | **Navigation** | « ← Retour au site » depuis l'entreprise ; « ← Toute l'entreprise » depuis un autre site ouvert dans la liste |
 | **Recherche (page Entreprises)** | d'abord une ligne **« ORANGE — toute l'entreprise · 524 sites en France »** par entreprise qui a plusieurs sites, puis les sites un par un ; clic → fiche entreprise ou fiche site |
 | **Candidatures spontanées** | colonne **« Autres sites »** (« +4 » = 4 autres sites de la même entreprise dans le rayon) ; option **« Une ligne par entreprise »** dans « Filtres » (garde le site le mieux classé) ; la phrase de résultat donne les deux chiffres : « 3755 entreprises (4438 sites) » |
@@ -405,4 +406,22 @@ Temps de réponse : 0,05 à 0,4 s.
 **Réglages.** Mots reconnus : `_BAC_PLUS` et `_KEYWORDS` dans `radar/niveau.py` ; tests dans `tests/test_niveau.py` (ajouter un cas avant d'ajouter un mot). Le filtre est enregistré dans le profil (clés `niveaux`, `niveau_inconnu`).
 
 **Limites et suites.** Adzuna tronque les annonces : seules ~2 % ont un niveau détecté (L27). Suite possible : lire l'annonce complète, ou un modèle de langage (T68).
+
+---
+
+## 15 bis. Effectifs : site et entreprise (T73)
+
+**Le constat (remarque de Celia).** SIRENE ne publie **jamais de nombre exact de salariés**, seulement une **tranche** : une par site (« 2 000 à 4 999 salariés » pour Orange à Lyon) et une pour l'entreprise entière. « 2 000 à 4 999 » se lisait comme « jusqu'à 5 000 », et la ligne « toute l'entreprise » de la recherche n'affichait rien.
+
+**Ce qui est affiché maintenant.**
+
+| Où | Affichage |
+|---|---|
+| Site (listes, fiche, liste des sites d'une entreprise) | « **entre 2 000 et 4 999 salariés** » (`tranche_display`, `radar/collect/sirene.py`) |
+| Entreprise entière (fiche entreprise, ligne « toute l'entreprise » de la recherche, « Fait partie de … » dans la fiche d'un site) | **tranche officielle** de l'unité légale (« 10 000 salariés et plus », année SIRENE) |
+| Fiche entreprise, en plus | **total estimé** : « environ 62 690 salariés sur ses 524 sites d'au moins 10 salariés » (somme des estimations par site ; sites de moins de 10 salariés non comptés), avec une info-bulle |
+
+**Données.** `trancheEffectifsUniteLegale` et `anneeEffectifsUniteLegale` ajoutés à l'extraction SIRENE (colonnes `tranche_entreprise`, `tranche_entreprise_libelle`, `annee_effectif_entreprise` de `entreprises.parquet`). **Il faut relancer** `uv run python scripts/extract_sirene.py` puis `collect_bodacc.py` (ou `build_all.py --sirene`) pour avoir ces colonnes ; sans elles, l'app affiche simplement moins d'informations.
+
+**Pourquoi `TRANCHE_LIBELLES` ne change pas.** Il sert aussi à construire des phrases (« établissement de 20 à 49 salariés », `radar/explain.py`) ; le libellé « entre … » est réservé à l'affichage.
 

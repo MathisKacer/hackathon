@@ -45,7 +45,7 @@ from fiche_ui import open_fiche
 from streamlit_folium import st_folium
 from style import GREEN, LINK_STYLE, RED, Tile, fmt_int, hero, kpi_tiles, pill
 
-from radar.collect.sirene import TRANCHE_LIBELLES
+from radar.collect.sirene import tranche_display
 from radar.familles import mark_family_offers
 from radar.filters import SECTIONS, TAILLES, filter_companies
 from radar.niveau import levels_label
@@ -331,7 +331,7 @@ if place is not None and not spontaneous.empty:
             sub_bits = [
                 str(r.get("commune") or "").title(),
                 f"{r['distance_km']:.1f} km",
-                TRANCHE_LIBELLES.get(r.get("tranche_effectif")),
+                tranche_display(r.get("tranche_effectif")),
             ]
             sub_txt = " · ".join(b for b in sub_bits if b)
             st.markdown(
@@ -379,7 +379,7 @@ with tab_spont:
                 "Distance": shown["distance_km"],
                 "Autres sites": shown["_autres_sites"].map(lambda n: f"+{n}" if n > 0 else ""),
                 "Taille": shown.get("tranche_effectif", pd.Series(index=shown.index)).map(
-                    TRANCHE_LIBELLES
+                    tranche_display  # T73 : « entre 20 et 49 salariés » (fourchette SIRENE)
                 ),
                 "Situation": shown.get("procedure_type", pd.Series(index=shown.index)).map(
                     SITUATION_COURTE

@@ -228,6 +228,9 @@ SITE_COLS = [
     "code_postal",
     "commune",
     "tranche_libelle",
+    "tranche_effectif",
+    "tranche_entreprise_libelle",
+    "annee_effectif_entreprise",
     "effectif_estime",
     "siege",
     "diffusion_partielle",
@@ -285,7 +288,14 @@ def company_summary(sites: pd.DataFrame, siren: str) -> dict:
         "categorie": ref.get("categorie") if pd.notna(ref.get("categorie")) else None,
         "activite": ref.get("naf_libelle") if pd.notna(ref.get("naf_libelle")) else None,
         "n_sites": len(sites),
-        "effectif_total": int(eff.sum()) if not eff.empty else None,
+        "effectif_total": int(eff.sum()) if not eff.empty else None,  # estimation (T73)
+        # Tranche officielle de l'entreprise entière (SIRENE, unité légale), T73
+        "tranche_entreprise": ref.get("tranche_entreprise_libelle")
+        if pd.notna(ref.get("tranche_entreprise_libelle"))
+        else None,
+        "annee_effectif_entreprise": int(ref["annee_effectif_entreprise"])
+        if pd.notna(ref.get("annee_effectif_entreprise"))
+        else None,
         "siege_commune": ref.get("commune") if not siege.empty else None,
         "procedure_type": ref.get("procedure_type")
         if pd.notna(ref.get("procedure_type"))

@@ -30,6 +30,8 @@ INDEX_COLS = [
     "code_postal",
     "naf_libelle",
     "tranche_libelle",
+    "tranche_effectif",
+    "tranche_entreprise_libelle",
     "effectif_estime",
     "siege",
     "procedure_type",

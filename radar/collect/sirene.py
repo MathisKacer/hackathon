@@ -59,6 +59,29 @@ TRANCHE_LIBELLES = {
     "53": "10 000 salariés et plus",
 }
 
+# Tranches de l'entreprise entière (unité légale, T73) : peuvent être inférieures à 10.
+TRANCHES_PETITES = {"00": (0, 0), "01": (1, 2), "02": (3, 5), "03": (6, 9)}
+
+
+def tranche_display(code) -> str | None:
+    """Libellé d'affichage d'une tranche INSEE (T73) : « entre 2 000 et 4 999 salariés ».
+
+    SIRENE ne donne qu'une fourchette, jamais un nombre exact : le mot « entre » évite de lire
+    « 2 000 à 4 999 » comme « jusqu'à 5 000 ». (TRANCHE_LIBELLES reste inchangé : il sert aussi
+    à construire des phrases, radar/explain.py.)
+    """
+    code = None if code is None else str(code)
+    if code == "53":
+        return "10 000 salariés et plus"
+    if code == "00":
+        return "aucun salarié"
+    bounds = TRANCHES.get(code) or TRANCHES_PETITES.get(code)
+    if bounds is None:
+        return None
+    lo, hi = (f"{b:,}".replace(",", " ") for b in bounds)
+    return f"entre {lo} et {hi} salariés"
+
+
 # Tranches d'effectif INSEE (≥ 10 salariés) : bornes et valeur centrale (pour l'exposition du
 # modèle gamma-Poisson). La borne haute de la dernière tranche est arbitraire.
 TRANCHES = {
@@ -111,7 +134,10 @@ ul AS (
                    coalesce(nomUsageUniteLegale, nomUniteLegale))), '')
            ) AS nom_ul,
            categorieEntreprise AS categorie,
-           sigleUniteLegale AS sigle
+           sigleUniteLegale AS sigle,
+           -- T73 : tranche d'effectif officielle de l'ENTREPRISE (tous ses établissements)
+           trancheEffectifsUniteLegale AS tranche_entreprise,
+           TRY_CAST(anneeEffectifsUniteLegale AS INTEGER) AS annee_effectif_entreprise
     FROM read_parquet('{ul}')
     WHERE siren IN (SELECT siren FROM etab)
 ),
@@ -125,6 +151,7 @@ SELECT
     coalesce(ul.nom_ul, e.nom_etablissement) AS nom,
     e.naf, naf.naf_libelle,
     e.tranche_effectif, ul.categorie, ul.sigle,
+    ul.tranche_entreprise, ul.annee_effectif_entreprise,
     -- RGPD : pas de position pour les établissements à diffusion partielle
     CASE WHEN e.diffusion_partielle THEN NULL ELSE geo.lat END AS lat,
     CASE WHEN e.diffusion_partielle THEN NULL ELSE geo.lon END AS lon,
@@ -177,6 +204,8 @@ def enrich(df: pd.DataFrame) -> pd.DataFrame:
     df["effectif_min"] = bornes.map(lambda b: b[0] if isinstance(b, tuple) else pd.NA)
     df["effectif_max"] = bornes.map(lambda b: b[1] if isinstance(b, tuple) else pd.NA)
     df["tranche_libelle"] = df["tranche_effectif"].map(TRANCHE_LIBELLES)
+    if "tranche_entreprise" in df:  # T73 : tranche officielle de l'entreprise entière
+        df["tranche_entreprise_libelle"] = df["tranche_entreprise"].map(tranche_display)
     # Valeur centrale géométrique : mieux adaptée qu'une moyenne aux tranches très larges.
     df["effectif_estime"] = (
         (df["effectif_min"].astype("Float64") * df["effectif_max"].astype("Float64")) ** 0.5

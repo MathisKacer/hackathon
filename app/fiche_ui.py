@@ -22,6 +22,7 @@ from favoris import star_button
 from style import LINK_STYLE
 
 from radar import fiche
+from radar.collect.sirene import tranche_display
 from radar.domains import load_domains
 from radar.familles import family_signal
 from radar.paliers import rule_text, tier_text
@@ -81,7 +82,7 @@ def _identity(r: pd.Series, c: pd.Series) -> None:
     st.markdown(f"### {name}" + (f" · {etab}" if etab and etab != name else ""))
     bits = [
         _value(c.get("naf_libelle"), r.get("naf_libelle")),
-        _value(c.get("tranche_libelle"), r.get("tranche_effectif")),
+        tranche_display(_value(c.get("tranche_effectif"), r.get("tranche_effectif"))),
         {
             "PME": "PME",
             "ETI": "ETI (entreprise de taille intermédiaire)",
@@ -322,7 +323,10 @@ def _parent_company(siren: str) -> None:
         return
     summary = fiche.company_summary(sites, siren)
     left, right = st.columns([3, 1], vertical_alignment="center")
-    left.markdown(f"Fait partie de **{summary['nom']}** · {summary['n_sites']} sites en France")
+    eff = f" · {summary['tranche_entreprise']}" if summary.get("tranche_entreprise") else ""
+    left.markdown(
+        f"Fait partie de **{summary['nom']}** · {summary['n_sites']} sites en France{eff}"
+    )
     right.button(
         "Voir toute l'entreprise",
         key=f"vers_entreprise_{siren}",
@@ -341,6 +345,30 @@ def _on_site_click(siren: str, key: str) -> None:
         _go(("site", sirets[cells[0][0]]))
 
 
+def _company_headcount(s: dict) -> None:
+    """Effectif de l'entreprise entière (T73) : tranche officielle + total estimé des sites."""
+    parts = []
+    if s.get("tranche_entreprise"):
+        an = (
+            f" (SIRENE {s['annee_effectif_entreprise']})"
+            if s.get("annee_effectif_entreprise")
+            else ""
+        )
+        parts.append(f"**Effectif de l'entreprise : {s['tranche_entreprise']}**{an}")
+    if s.get("effectif_total"):
+        total = f"{s['effectif_total']:,}".replace(",", " ")
+        parts.append(
+            f"environ {total} salariés sur ses {s['n_sites']} sites d'au moins 10 salariés"
+        )
+    if parts:
+        st.markdown(
+            " · ".join(parts),
+            help="SIRENE ne publie pas de nombre exact, seulement des fourchettes : une tranche "
+            "officielle pour l'entreprise entière, et une par site. Le total additionne une "
+            "estimation par site (sites de moins de 10 salariés non comptés).",
+        )
+
+
 def company_content(siren: str, domaine: str | None = None) -> None:
     """Fiche d'une entreprise entière : identité, offres de tous les sites, sites, BODACC."""
     place = get_place(st.session_state.get("ville"))
@@ -350,11 +378,6 @@ def company_content(siren: str, domaine: str | None = None) -> None:
         return
     s = fiche.company_summary(sites, siren)
     st.markdown(f"### {s['nom']}")
-    eff = (
-        f"environ {s['effectif_total']:,} salariés".replace(",", " ")
-        if s["effectif_total"]
-        else None
-    )
     cat = {
         "PME": "PME",
         "ETI": "ETI (entreprise de taille intermédiaire)",
@@ -364,10 +387,10 @@ def company_content(siren: str, domaine: str | None = None) -> None:
         cat.get(s["categorie"]),
         s["activite"],
         f"{s['n_sites']} site{'s' if s['n_sites'] > 1 else ''} en France",
-        eff,
         f"siège à {s['siege_commune'].title()}" if s["siege_commune"] else None,
     ]
     st.caption(" · ".join(b for b in bits if b))
+    _company_headcount(s)
     if s["procedure_type"]:
         from radar.procedures import alert_text
 
@@ -418,7 +441,7 @@ def company_content(siren: str, domaine: str | None = None) -> None:
         {
             "Site": site_name,
             "Lieu": sites["commune"].fillna("") + " " + sites["code_postal"].fillna("").astype(str),
-            "Taille": sites["tranche_libelle"],
+            "Taille": sites["tranche_effectif"].map(tranche_display),
             "Siège": sites["siege"].fillna(False).astype(bool).map({True: "Siège", False: ""}),
         }
     )
