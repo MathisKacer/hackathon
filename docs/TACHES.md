@@ -37,7 +37,8 @@
 - [ ] T31 — 🔗T30 **Rétrécissement bêta-binomial** : a priori par secteur NAF, a posteriori, intervalle crédible
 
 **App**
-- [ ] T40 — 🔗T4,T5 **Page de recherche** : adresse → géocodage (Géoplateforme) → rayon → carte folium + liste triée
+- [ ] T39 — 🔗T4 **Carte couche 1 « Offres réelles » (bleu)** : afficher les offres de `data/raw/offres_raw/*.parquet` (Adzuna maintenant, La bonne alternance ensuite), avec popup titre / entreprise / lien vers l'annonce ; filtre v0 par mots-clés dans le titre en attendant T13
+- [ ] T40 — 🔗T4,T5 **Page de recherche + couche 2 « Candidature spontanée » (orange)** : adresse → géocodage (Géoplateforme) → rayon → même carte folium, entreprises **sans offre correspondante** classées par score ; légende des deux couches + deux listes triées
 - [ ] T41 — 🔗T40 **Filtres** : domaine, type de contrat visé (stage / alternance / emploi), taille, secteur
 - [ ] T42 — 🔗T40 **Curseurs de poids** → recalcul du score en direct
 

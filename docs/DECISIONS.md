@@ -14,6 +14,11 @@
 
 ---
 
+### D8 — Carte à deux couches : offres réelles / candidature spontanée (2026-11-27, @mathis)
+**Contexte :** l'équipe veut que la démo repose sur une carte montrant à la fois les vraies offres et les entreprises susceptibles d'accepter une candidature spontanée.
+**Décision :** une carte folium, deux couches activables. 🔵 Offres réelles (filtrées domaine × contrat visé, lien vers l'annonce). 🟠 Candidature spontanée : entreprises **sans offre correspondante**, classées par score ou P(réponse). Les deux couches sont exclusives (une entreprise avec une offre correspondante est en bleu).
+**Conséquences :** l'appli a besoin de `offres.parquet` (avec SIRET quand il est connu, pour l'exclusion) et de `scores.parquet` / `p_reponse.parquet`. La couche 1 peut être faite dès maintenant (T39).
+
 ### D7 — Contrat de données vérifiable en code + données factices (2026-11-27, @emma)
 **Contexte :** T5 doit produire des données qui respectent les schémas de `ARCHITECTURE.md`, et chaque module doit pouvoir vérifier qu'il les respecte aussi.
 **Décision :** `radar/schemas.py` recopie en code les colonnes minimales du tableau de `ARCHITECTURE.md`, avec `check_columns(df, nom)` (les colonnes en plus sont permises). Les offres brutes vont dans `data/raw/offres_raw/<source>.parquet`, comme le prévoit T12. Le générateur factice (`radar/fake_data.py`) est reproductible (graine fixe) et ne décrit que des entreprises inventées : SIRET aléatoires mais valides (clé de Luhn), URL en `example.org`, descriptions marquées `[DONNÉE FACTICE]`.

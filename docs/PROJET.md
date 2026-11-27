@@ -30,7 +30,10 @@ Trouver les entreprises proches de l'étudiant qui ont un **besoin dans son doma
 
 ### Parcours utilisateur
 1. L'étudiant saisit une ville ou une adresse, un rayon, son domaine, le contrat visé (stage ou alternance), et éventuellement des secteurs et une taille d'entreprise (et, en option, il dépose son CV).
-2. Il obtient une carte et une liste d'entreprises classées par score.
+2. Il obtient **une carte à deux couches** (le cœur de la démo) :
+   - 🔵 **Offres réelles** : les offres actuelles (Adzuna, La bonne alternance) filtrées sur son domaine et le contrat visé, avec un lien vers l'annonce ;
+   - 🟠 **Candidature spontanée** : les entreprises **sans offre correspondante** mais susceptibles de répondre, classées par score ou par probabilité de réponse. Une entreprise qui a déjà une offre correspondante apparaît en bleu, pas en orange.
+   Plus une liste triée pour chaque couche.
 3. Chaque entreprise a une fiche : décomposition du score (pourquoi elle est recommandée), offres data récentes, effectif, croissance, liens.
 4. Bonus : génération d'une lettre de candidature spontanée personnalisée (LLM).
 
