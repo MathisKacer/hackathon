@@ -14,6 +14,14 @@
 
 ---
 
+### D35 — Suppression du filtre « Régions » (2026-11-27, @maxence)
+**Contexte :** T66 : depuis le suggesteur de ville (T55), on choisit sa ville et un rayon ; le filtre « Régions » (offres 🔵 seulement) devenait redondant, voire contradictoire (Rennes + « Île-de-France » → zéro offre sans explication).
+**Décision :** le filtre est **supprimé** (et non seulement masqué quand une ville est choisie, comme le proposait la tâche) : retiré de la fenêtre « Filtres », de `WIDGET_KEYS`, de `profile_keys()` (qui ne prend plus d'argument), de `PROFILE_LABELS` et de `filter_offers`. Sans ville, la carte montre les offres de toute la France.
+**Alternatives écartées :** masquer le champ quand une ville est choisie (il aurait fallu aussi l'ignorer pour qu'une région cochée ne filtre pas en cachette, pour un usage marginal) ; le laisser grisé avec une explication (champ inutile qui encombre).
+**Conséquences :** une valeur `regions` d'un profil enregistré est ignorée ; d'anciennes recherches de l'historique peuvent encore l'afficher dans leur résumé. La colonne `region_requete` des offres reste calculée (pied de page, collecte).
+
+---
+
 ### D34 — Niveau d'études attendu : champ de La bonne alternance, sinon lu dans le texte de l'offre (2026-11-27, @emma)
 **Contexte :** T67 — afficher le niveau d'études demandé et pouvoir filtrer dessus. La bonne alternance le donne (`niveau_diplome` = `target_diploma.european`, « 3 » CAP … « 7 » Bac+5) ; Adzuna ne le donne pas, et tronque la description à ~500 caractères.
 **Décision :** `radar/niveau.py`. Niveaux du **cadre européen**, comme LBA (« 3 » CAP, « 4 » Bac, « 5 » Bac+2, « 6 » Bac+3/4, « 7 » Bac+5, « 8 » Doctorat). Le champ LBA prime ; sinon, expressions simples sur le titre + la description (« Bac+5 », « Bac5 », « Master 2 », « M1 », « MSc », « Licence », « Bachelor », « BTS », « DUT », « école d'ingénieurs », « Doctorat », « PhD »…). Une offre peut citer plusieurs niveaux (« Bac+3 à Bac+5 ») → `niveaux_etudes` = « 6,7 ». **Calculé au chargement** (`get_offers` dans l'app, `company_offers` pour la fiche), pas stocké dans `offres.parquet` : pas de changement de schéma. Mots écartés volontairement : « Master Data », « Scrum Master » (métiers fréquents en data), « BUT » (le mot « but »), « CAP » (Capgemini), « ingénieur » seul (souvent le métier). Filtre « Niveau d'études » (libellés, lisibles dans « Mes recherches ») + case « Garder les offres sans niveau précisé » (cochée par défaut).

@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-11-27 — T66 : filtre « Régions » supprimé
+
+**Fait :**
+- Discussion : la tâche proposait de masquer le filtre quand une ville est choisie ; comme la ville est déjà demandée, on a décidé de le **supprimer complètement**.
+- Retiré de la fenêtre « Filtres » (`app/vues/explorer.py`), de `WIDGET_KEYS`, `profile_keys()` (sans argument maintenant), `PROFILE_LABELS` et `filter_offers` (`app/commun.py`), et de `app/vues/mon_espace.py` ; exemples mis à jour dans `app/compte.py` et `docs/GUIDE.md`.
+- Décision **D35**.
+- Note de Celia lue : elle a corrigé un plantage de mon code de T65 sur les grandes villes (limite de pandas pour la mise en couleur, T71) ; la liste affiche désormais les 500 premières lignes.
+
+**Résultats :** AppTest : plus de champ « Régions » (filtres restants : niveau d'études, taille, secteur) ; Explorer avec Rennes et Mon espace s'affichent sans erreur. 344 tests OK, ruff OK.
+
+**Points d'attention :** un profil enregistré avec des régions les perd sans erreur ; d'anciennes recherches de l'historique peuvent encore afficher « regions : … » dans leur résumé.
+
+---
+
 ## 2026-11-27 — T65 (suite) : dégradé d'orange selon le score
 
 **Fait :**

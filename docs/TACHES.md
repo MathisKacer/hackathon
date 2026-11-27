@@ -76,11 +76,11 @@
 ## 🔵 En cours
 
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
-- [ ] T66 — **Masquer le filtre « Régions »** quand une ville est choisie dans « Où ? » (le rayon autour de la ville le rend redondant, voire contradictoire). Penser à `WIDGET_KEYS` / `profile_keys()` (`app/commun.py`) : ne pas perdre la valeur enregistrée dans un profil — @maxence
 - _…_
 
 ## ✅ Fait
 
+- [x] T66 — **Filtre « Régions »** — @maxence → **supprimé** plutôt que masqué (la ville et le rayon le rendent inutile) : fenêtre « Filtres », `WIDGET_KEYS`, `profile_keys()`, `PROFILE_LABELS`, `filter_offers` ; anciennes valeurs de profil ignorées ; D35
 - [x] T71 — 🐞 **Liste qui plantait sur une grande ville** — @celia : la liste « Candidatures spontanées » n'affiche (et ne colore) que les **500 premières** lignes du classement (`MAX_LIST_ROWS`, `app/vues/explorer.py`), avec la mention « Les 500 premières sur N : réduis le rayon ou utilise les filtres » ; tuiles et carte comptent toujours tout. Vérifié sur Paris 20 km (~59 000 entreprises) : l'ancienne version plantait (472 440 cellules > 262 144), la nouvelle non. ℹ️ @maxence : correction faite dans ton code de T65 (couleurs « Priorité » / « Score »), rien d'autre ne change
 - [x] T70 — **Apparence plus vivante** (hors fiche) : bandeau d'en-tête coloré sur les 3 pages, recherche posée dessus, cartes « Comment ça marche », tuiles de chiffres colorées, « Les meilleures cibles » en cartes, icônes Material, finitions CSS (`app/style.py`). Reste : la fiche, après T67 — @celia
 - [x] T67 — **Niveau d'études attendu** (D34) — @emma : `radar/niveau.py` (champ LBA, sinon lu dans le titre et le début de l'annonce) ; filtre « Niveau d'études » + « Garder les offres sans niveau précisé », colonne « Niveau » (liste des offres, fiche), niveau dans la fenêtre des offres de la carte. Adzuna : 2,1 % des offres avec un niveau détecté (L27)

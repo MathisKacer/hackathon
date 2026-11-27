@@ -182,7 +182,7 @@ Sinon le réglage n'est pas enregistré dans le profil.
 
 ## 5. Historique des recherches (T49)
 
-**Ce que voit l'utilisateur (connecté seulement).** Page **Mon espace**, partie « Mes recherches » : pour chaque recherche, la date, un résumé lisible (« Contrat : Stage · Régions : Bretagne »), le nombre de résultats et les premières entreprises. Bouton « Relancer » (remet tous les réglages **et ramène sur Explorer**) et « Effacer mon historique ». En anonyme, rien n'est enregistré.
+**Ce que voit l'utilisateur (connecté seulement).** Page **Mon espace**, partie « Mes recherches » : pour chaque recherche, la date, un résumé lisible (« Ville : Rennes (35000, 35200, 35700) · Contrat : Stage »), le nombre de résultats et les premières entreprises. Bouton « Relancer » (remet tous les réglages **et ramène sur Explorer**) et « Effacer mon historique ». En anonyme, rien n'est enregistré.
 
 **Comment ça marche.**
 - `record_search(...)` est appelée par Explorer **après** le calcul des résultats ; Mon espace affiche la liste.
