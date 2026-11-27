@@ -60,8 +60,12 @@
 
 
 
+- [ ] T89 — **Fiche plus claire** : en-tête avec l'essentiel (nom, pastilles taille / ville / priorité, étoile, boutons de contact de T88) puis onglets **Résumé, Offres, Sites, Situation** ; présentation seulement. Proposer un croquis avant de coder — @celia
+- [ ] T90 — **Rappels de relance** : dans « Mes candidatures », date d'envoi et alerte **« À relancer »** après 15 jours sans réponse — @celia
+
 ## 🟢 P3 — Bonus (seulement si le P2 est fini)
 
+- [ ] T91 — _(facultatif)_ **Télécharger ses candidatures** : export d'un tableau (entreprise, statut, note) depuis « Mes candidatures »
 - [ ] T46 — Lettre de candidature spontanée générée par LLM (si on trouve une clé ; sinon, modèle à trous)
 - [ ] T15 — Collecteur ATS (Greenhouse, Lever, SmartRecruiters) pour le top des entreprises
 - [ ] T47 — Temps de trajet en transports en commun (GTFS) au lieu de la distance à vol d'oiseau
@@ -83,6 +87,7 @@
 
 ## 🔵 En cours
 
+- [ ] T88 — **« Comment la contacter ? » dans la fiche** : boutons « Site web » (quand il est connu, ex. La bonne alternance `site_web`), « Chercher sa page recrutement » et « Chercher sur LinkedIn » (recherches pré-remplies avec le nom de l'entreprise) — @celia
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
 - _…_
 
