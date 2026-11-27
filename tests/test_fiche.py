@@ -218,3 +218,42 @@ def test_render_fiche(monkeypatch):
     assert not at.exception
     assert any("redressement" in w.value for w in at.warning)
     st.cache_data.clear()
+
+
+def test_hiring_signal():
+    from radar.fiche import hiring_signal
+
+    lbb = hiring_signal(pd.Series({"c_embauche_source": "la_bonne_boite", "lbb_potentiel": 5.2}))
+    assert lbb == {"lbb": True, "potentiel": 5.2}
+    assert hiring_signal(pd.Series({"c_embauche_source": "proxy"})) == {"lbb": False}
+    assert hiring_signal(pd.Series({"siret": "1"})) is None  # pas de score
+
+
+def test_fiche_shows_la_bonne_boite(monkeypatch):
+    import streamlit as st
+    from streamlit.testing.v1 import AppTest
+
+    from radar import fiche
+
+    monkeypatch.setattr(fiche, "load_company", lambda siret: pd.Series({"siret": siret}))
+    monkeypatch.setattr(fiche, "company_offers", lambda siren, siret: pd.DataFrame())
+    monkeypatch.setattr(fiche, "bodacc_history", lambda siren: pd.DataFrame())
+    st.cache_data.clear()
+    script = """
+import sys
+from pathlib import Path
+import pandas as pd
+sys.path.insert(0, str(Path.cwd() / "app"))
+from fiche_ui import fiche_content
+src = st.session_state.get("src", "la_bonne_boite")
+fiche_content("1", pd.Series({"siret": "1", "score": 0.7, "c_embauche_source": src,
+                              "lbb_potentiel": 5.2}), "data")
+"""
+    at = AppTest.from_string("import streamlit as st\n" + script, default_timeout=30)
+    at.run()
+    assert not at.exception
+    assert any("La Bonne Boîte" in s.value and "5.2" in s.value for s in at.success)
+    at.session_state["src"] = "proxy"
+    at.run()
+    assert not at.success and any("estimé" in c.value for c in at.caption)
+    st.cache_data.clear()

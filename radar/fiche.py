@@ -172,3 +172,40 @@ def links(row: pd.Series) -> dict[str, str]:
     if isinstance(url, str) and url:
         out["Annonce BODACC"] = url
     return out
+
+
+def load_scores(siret: str, domaine: str, path: Path = FILES["scores"]) -> pd.Series | None:
+    """Indicateurs du score pour un établissement et un domaine (None si non noté).
+
+    Sert à la fiche ouverte depuis la recherche d'entreprises (pas de distance ni de poids :
+    pas de score final, mais le besoin dans le domaine et le niveau de preuve).
+    """
+    path = Path(path)
+    if not path.exists():
+        return None
+    df = (
+        duckdb.connect()
+        .execute(f"SELECT * FROM '{path}' WHERE siret = ? AND domaine = ?", [str(siret), domaine])
+        .df()
+    )
+    return None if df.empty else df.iloc[0]
+
+
+LBB_MEDIAN_POTENTIEL = 2.8  # médiane de `lbb_potentiel` des établissements signalés (D27)
+
+
+def hiring_signal(row: pd.Series) -> dict | None:
+    """Source du potentiel d'embauche (T38, D27).
+
+    {"lbb": True, "potentiel": 5.2} si La Bonne Boîte (France Travail) signale l'établissement ;
+    {"lbb": False} si c'est une estimation (offres du secteur × effectif) ; None si pas de score.
+    """
+    from radar.spontaneous import LBB_SOURCE  # import local : évite un cycle d'imports
+
+    src = row.get("c_embauche_source")
+    if src is None or (isinstance(src, float) and pd.isna(src)):
+        return None
+    if src == LBB_SOURCE:
+        pot = row.get("lbb_potentiel")
+        return {"lbb": True, "potentiel": float(pot) if pot is not None and pd.notna(pot) else None}
+    return {"lbb": False}

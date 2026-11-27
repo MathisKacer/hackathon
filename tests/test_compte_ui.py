@@ -223,20 +223,28 @@ def test_full_app_runs_with_account_box(tmp_path, monkeypatch):
     st.cache_data.clear()
     st.cache_resource.clear()
 
-    at = AppTest.from_file("../app/streamlit_app.py", default_timeout=60)
+    from pathlib import Path
+
+    app_dir = Path(__file__).resolve().parents[1] / "app"
+    at = AppTest.from_file(str(app_dir / "streamlit_app.py"), default_timeout=60)
     at.run()
     assert not at.exception, at.exception
-    assert any("Mode démo anonyme" in c.value for c in at.sidebar.caption)
-    assert at.sidebar.radio(key="contrat").value == "Tous"
-    assert at.sidebar.slider(key="max_age").value == 60
+    # Page Explorer par défaut, recherche en haut (plus de barre latérale)
+    assert [t.value for t in at.title] == ["Où candidater ?"]
+    assert at.segmented_control(key="contrat").value == "Tous"
+    assert at.slider(key="max_age").value == 60  # dans le panneau « Filtres »
     assert not at.warning  # pas d'avertissement « valeur par défaut + session_state »
 
-    # Connecté : la recherche est enregistrée et « Mes recherches » apparaît (T49).
+    # Connecté : la recherche est enregistrée (T49) et visible dans « Mon espace »
     uid = accounts.create_user(accounts.connect(), "celia", "Radar-Demo-2026")
     at.session_state["compte_user"] = {"id": uid, "username": "celia"}
     at.run()
     assert not at.exception, at.exception
-    assert any("Mes recherches (1)" in e.label for e in at.sidebar.expander)
     assert accounts.list_searches(accounts.connect(), uid)[0]["params"]["contrat"] == "Tous"
+    at.switch_page(str(app_dir / "vues" / "mon_espace.py"))
+    at.run()
+    assert not at.exception, at.exception
+    assert [t.value for t in at.title] == ["Bonjour celia"]
+    assert any(b.label == "Enregistrer mes réglages" for b in at.button)
     st.cache_data.clear()
     st.cache_resource.clear()

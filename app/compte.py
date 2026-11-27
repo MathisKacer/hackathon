@@ -73,44 +73,49 @@ def _log_in(user_id: int, username: str, profile_keys: dict) -> None:
 def _anonymous_box(profile_keys: dict) -> None:
     st.caption("🕶️ **Mode démo anonyme** : rien n'est enregistré.")
     with st.expander("Se connecter ou créer un compte"):
-        tab_in, tab_up = st.tabs(["Connexion", "Créer un compte"])
+        login_forms(profile_keys)
 
-        with tab_in, st.form("compte_connexion", clear_on_submit=True, border=False):
-            username = st.text_input("Identifiant")
-            password = st.text_input("Mot de passe", type="password")
-            if st.form_submit_button("Se connecter", width="stretch"):
+
+def login_forms(profile_keys: dict) -> None:
+    """Onglets « Connexion » et « Créer un compte » (barre latérale ou page Mon espace)."""
+    tab_in, tab_up = st.tabs(["Connexion", "Créer un compte"])
+
+    with tab_in, st.form("compte_connexion", clear_on_submit=True, border=False):
+        username = st.text_input("Identifiant")
+        password = st.text_input("Mot de passe", type="password")
+        if st.form_submit_button("Se connecter", width="stretch"):
+            try:
+                user_id = accounts.authenticate(_con(), username, password)
+            except accounts.AccountLocked as e:
+                until = e.until.astimezone(TZ).strftime("%H:%M")
+                st.error(f"Trop de tentatives : compte bloqué jusqu'à {until}.")
+            else:
+                if user_id is None:
+                    st.error("Identifiant ou mot de passe incorrect.")
+                else:
+                    _log_in(user_id, accounts.normalize_username(username), profile_keys)
+
+    with tab_up, st.form("compte_creation", clear_on_submit=True, border=False):
+        username = st.text_input("Identifiant", help="3 à 30 caractères : a-z, 0-9, . _ -")
+        password = st.text_input("Mot de passe", type="password", help=accounts.PASSWORD_RULES)
+        confirm = st.text_input("Confirmer le mot de passe", type="password")
+        st.caption(
+            f"Au moins {accounts.PASSWORD_MIN} caractères, avec 3 types parmi "
+            "minuscules, majuscules, chiffres et caractères spéciaux. "
+            "Une phrase marche bien : « velo rouge 2026 Rennes »."
+        )
+        st.caption("Tes réglages actuels deviennent ton profil.")
+        if st.form_submit_button("Créer mon compte", width="stretch"):
+            if password != confirm:
+                st.error("Les deux mots de passe ne correspondent pas.")
+            else:
                 try:
-                    user_id = accounts.authenticate(_con(), username, password)
-                except accounts.AccountLocked as e:
-                    until = e.until.astimezone(TZ).strftime("%H:%M")
-                    st.error(f"Trop de tentatives : compte bloqué jusqu'à {until}.")
+                    user_id = accounts.create_user(_con(), username, password)
+                except accounts.AccountError as e:
+                    st.error(str(e))
                 else:
-                    if user_id is None:
-                        st.error("Identifiant ou mot de passe incorrect.")
-                    else:
-                        _log_in(user_id, accounts.normalize_username(username), profile_keys)
-
-        with tab_up, st.form("compte_creation", clear_on_submit=True, border=False):
-            username = st.text_input("Identifiant", help="3 à 30 caractères : a-z, 0-9, . _ -")
-            password = st.text_input("Mot de passe", type="password", help=accounts.PASSWORD_RULES)
-            confirm = st.text_input("Confirmer le mot de passe", type="password")
-            st.caption(
-                f"🔒 {accounts.PASSWORD_MIN} caractères min., 3 types parmi "
-                "minuscules / majuscules / chiffres / spéciaux. "
-                "Ex. de phrase de passe : « velo rouge 2026 Rennes »."
-            )
-            st.caption("Tes réglages actuels deviennent ton profil.")
-            if st.form_submit_button("Créer mon compte", width="stretch"):
-                if password != confirm:
-                    st.error("Les deux mots de passe ne correspondent pas.")
-                else:
-                    try:
-                        user_id = accounts.create_user(_con(), username, password)
-                    except accounts.AccountError as e:
-                        st.error(str(e))
-                    else:
-                        accounts.save_profile(_con(), user_id, _current_settings(profile_keys))
-                        _log_in(user_id, accounts.normalize_username(username), profile_keys)
+                    accounts.save_profile(_con(), user_id, _current_settings(profile_keys))
+                    _log_in(user_id, accounts.normalize_username(username), profile_keys)
 
 
 def _connected_box(user: dict, profile_keys: dict) -> None:
@@ -216,3 +221,106 @@ def search_history(
             args=(user["id"],),
             disabled=not searches,
         )
+
+
+# --- Version « pages » (Explorer enregistre, Mon espace affiche) ----------------------------
+
+GO_EXPLORER_KEY = "_compte_aller_explorer"
+
+
+def _validated_user() -> dict | None:
+    user = current_user()
+    if user is not None and accounts.get_username(_con(), user["id"]) is None:
+        st.session_state.pop(USER_KEY, None)  # compte supprimé ailleurs ou base réinitialisée
+        return None
+    return user
+
+
+def record_search(
+    profile_keys: dict[str, list | None], n_results: int, top: list[str] | None = None
+) -> int | None:
+    """Connecté : enregistre la recherche en cours (page Explorer). Anonyme : ne fait rien."""
+    user = _validated_user()
+    if user is None:
+        return None
+    return accounts.log_search(_con(), user["id"], _current_settings(profile_keys), n_results, top)
+
+
+def _relaunch_and_go(params: dict, profile_keys: dict) -> None:
+    _apply_profile(params, profile_keys)
+    st.session_state[GO_EXPLORER_KEY] = True
+
+
+def account_page(
+    profile_keys: dict[str, list | None],
+    labels: dict[str, str] | None = None,
+    explorer_page=None,
+) -> None:
+    """Page « Mon espace » : connexion, ou profil + historique + suppression du compte."""
+    if st.session_state.pop(GO_EXPLORER_KEY, False) and explorer_page is not None:
+        st.switch_page(st.Page(explorer_page))
+    user = _validated_user()
+    if user is None:
+        st.title("Mon espace")
+        st.write(
+            "Radar marche sans compte : rien n'est enregistré. Avec un compte, tes réglages "
+            "et l'historique de tes recherches sont gardés d'une visite à l'autre."
+        )
+        left, _ = st.columns([1, 1])
+        with left, st.container(border=True):
+            login_forms(profile_keys)
+        return
+
+    st.title(f"Bonjour {user['username']}")
+    con = _con()
+    c1, c2, _ = st.columns([1, 1, 2])
+    if c1.button(
+        "Enregistrer mes réglages",
+        type="primary",
+        width="stretch",
+        help="Ta recherche actuelle devient ton profil.",
+    ):
+        accounts.save_profile(con, user["id"], _current_settings(profile_keys))
+        st.toast("Réglages enregistrés.")
+    if c2.button("Se déconnecter", width="stretch"):
+        st.session_state.pop(USER_KEY, None)
+        st.rerun()
+    profile = accounts.load_profile(con, user["id"])
+    st.caption(
+        "Profil enregistré : " + summarize(profile, labels)
+        if profile
+        else "Aucun profil enregistré pour l'instant."
+    )
+
+    st.subheader("Mes recherches")
+    searches = accounts.list_searches(con, user["id"], limit=HISTORY_SHOWN)
+    if not searches:
+        st.write("Tes recherches apparaîtront ici.")
+    for s in searches:
+        with st.container(border=True):
+            left, right = st.columns([5, 1], vertical_alignment="center")
+            date = s["created_at"].astimezone(TZ).strftime("%d/%m à %H:%M")
+            left.markdown(
+                f"**{date}** · {s['n_resultats']} résultat(s)  \n"
+                f"{summarize(s['params'], labels)}"
+                + (f"  \n*{', '.join(s['top_resultats'][:3])}*" if s["top_resultats"] else "")
+            )
+            right.button(
+                "Relancer",
+                key=f"page_relancer_{s['id']}",
+                on_click=_relaunch_and_go,
+                args=(s["params"], profile_keys),
+                width="stretch",
+            )
+    if searches:
+        st.button("Effacer mon historique", on_click=_clear_history, args=(user["id"],))
+
+    with st.expander("Supprimer mon compte"):
+        st.caption("Efface définitivement ton compte, ton profil et ton historique.")
+        ok = st.checkbox("Je confirme la suppression", key="page_confirm_suppr")
+        if st.button("Supprimer mon compte", type="primary", disabled=not ok):
+            accounts.delete_user(con, user["id"])
+            st.session_state.pop(USER_KEY, None)
+            st.session_state.pop("page_confirm_suppr", None)
+            st.toast("Compte supprimé.")
+            st.rerun()

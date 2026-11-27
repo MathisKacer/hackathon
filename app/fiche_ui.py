@@ -1,4 +1,4 @@
-"""Panneau « Fiche entreprise » sous la liste orange (T43).
+"""Fiche entreprise (T43) : en fenêtre par-dessus la page (Explorer, Entreprises) ou en panneau.
 
 On choisit une entreprise de la couche orange et on voit tout ce qu'on sait d'elle :
 identité, pourquoi elle est recommandée (explication T32 si disponible + décomposition du
@@ -7,7 +7,8 @@ coordonnées et liens. Données : radar/fiche.py.
 
 Coordination : le popup de la carte appartient à T32 (@mathis) ; ce panneau à T43 (@celia).
 
-    render_fiche(spontaneous)      # dans app/streamlit_app.py, après la liste orange
+    open_fiche(siret, row)         # fenêtre ; row = ligne classée (score, distance) ou None
+    render_fiche(spontaneous)      # ancien panneau avec sélecteur (gardé pour compatibilité)
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ import pandas as pd
 import streamlit as st
 
 from radar import fiche
+from radar.domains import load_domains
 from radar.spontaneous import COMPONENTS
 
 MAX_CHOICES = 5000  # entreprises proposées (le sélecteur permet de taper pour chercher)
@@ -79,13 +81,20 @@ def _identity(r: pd.Series, c: pd.Series) -> None:
     st.caption(" · ".join(b for b in bits if b))
     alerte = _value(r.get("alerte"))
     if alerte:
+        coef = r.get("coef_procedure")
+        reduit = (
+            f" Score réduit (×{float(coef):.2f})."
+            if coef is not None and pd.notna(coef) and float(coef) < 1
+            else ""
+        )
         (st.error if alerte.startswith("🔴") else st.warning)(
-            f"{alerte}. Score réduit (×{float(r.get('coef_procedure', 1)):.2f}), "
-            "voir « Situation »."
+            f"{alerte}.{reduit} Détail dans « Situation »."
         )
 
 
 def _why(r: pd.Series) -> None:
+    if r.get("score") is None or pd.isna(r.get("score")):
+        return  # entreprise ouverte depuis la recherche : pas de score final (ni distance)
     st.markdown("#### Pourquoi elle est recommandée")
     explication = _value(r.get("explication"))  # T32 (@mathis), si disponible
     if explication:
@@ -113,7 +122,32 @@ def _why(r: pd.Series) -> None:
             )
 
 
-def _need(r: pd.Series) -> None:
+def _hiring(r: pd.Series, domaine: str | None) -> None:
+    """T38 (D27) : La Bonne Boîte signale-t-elle l'établissement, ou est-ce une estimation ?"""
+    sig = fiche.hiring_signal(r)
+    if sig is None:
+        return
+    label = load_domains()[domaine].label.lower() if domaine in load_domains() else "ce domaine"
+    if sig["lbb"]:
+        pot = sig["potentiel"]
+        detail = (
+            f" Potentiel d'embauche : **{pot:.1f}** (médiane des établissements signalés : "
+            f"{fiche.LBB_MEDIAN_POTENTIEL:.1f})."
+            if pot is not None
+            else ""
+        )
+        st.success(
+            f"✔ Signalée par **La Bonne Boîte** (France Travail) comme susceptible d'embaucher "
+            f"en {label}.{detail}"
+        )
+    else:
+        st.caption(
+            "Potentiel d'embauche estimé d'après les offres du secteur et la taille de "
+            "l'établissement : La Bonne Boîte ne le signale pas."
+        )
+
+
+def _need(r: pd.Series, domaine: str | None = None) -> None:
     st.markdown("#### Besoin dans le domaine")
     e = fiche.evidence(r)
     icon = {"élevé": "🟢", "moyen": "🟡", "faible": "⚪", "non collecté": "⚪"}[e["niveau"]]
@@ -129,6 +163,7 @@ def _need(r: pd.Series) -> None:
         if e["moyenne_secteur"] is not None:
             txt += f" ; moyenne du secteur : {e['moyenne_secteur']:.2f}"
         st.markdown(txt + ".")
+    _hiring(r, domaine)
 
 
 def _offers_block(siren: str | None, siret: str | None) -> None:
@@ -200,6 +235,42 @@ def _contact(r: pd.Series, c: pd.Series) -> None:
     st.markdown(" · ".join(f"[{name}]({url})" for name, url in fiche.links(row).items()))
 
 
+def fiche_content(siret: str, row: pd.Series | None = None, domaine: str | None = None) -> None:
+    """Contenu complet de la fiche d'un établissement.
+
+    `row` : ligne de la liste des candidatures spontanées (score, distance, alerte…) ; sans
+    elle (recherche d'entreprises), on lit les indicateurs du domaine dans scores.parquet.
+    """
+    c = _company(siret)
+    c = c if c is not None else pd.Series(dtype=object)
+    if row is None:
+        s = fiche.load_scores(siret, domaine) if domaine else None
+        parts = [x for x in (c, s) if x is not None and not x.empty]
+        row = pd.concat(parts) if parts else pd.Series({"siret": siret})
+        row = row[~row.index.duplicated(keep="last")]
+        if "alerte" not in row and "procedure_type" in row:
+            from radar.procedures import alert_text
+
+            row["alerte"] = alert_text(row.get("procedure_type"), row.get("procedure_date"))
+    siren = _value(c.get("siren"), row.get("siren"))
+    _identity(row, c)
+    _why(row)
+    _need(row, domaine)
+    _offers_block(siren, siret)
+    _situation(siren)
+    _contact(row, c)
+
+
+def _close_fiche() -> None:
+    # Fenêtre fermée : on vide la sélection de la liste pour pouvoir rouvrir la même fiche.
+    st.session_state["_liste_version"] = st.session_state.get("_liste_version", 0) + 1
+
+
+@st.dialog("Fiche entreprise", width="large", on_dismiss=_close_fiche)
+def open_fiche(siret: str, row: pd.Series | None = None, domaine: str | None = None) -> None:
+    fiche_content(siret, row, domaine)
+
+
 def render_fiche(spontaneous: pd.DataFrame) -> None:
     """Affiche le sélecteur et la fiche de l'entreprise choisie (rien si la liste est vide)."""
     if spontaneous is None or spontaneous.empty:
@@ -217,13 +288,5 @@ def render_fiche(spontaneous: pd.DataFrame) -> None:
     if siret is None:
         return
     r = top[top["siret"] == siret].iloc[0]
-    c = _company(siret)
-    c = c if c is not None else pd.Series(dtype=object)
-    siren = _value(c.get("siren"), r.get("siren"))
     with st.container(border=True):
-        _identity(r, c)
-        _why(r)
-        _need(r)
-        _offers_block(siren, siret)
-        _situation(siren)
-        _contact(r, c)
+        fiche_content(siret, r)
