@@ -416,8 +416,10 @@ def make_offres(
         {
             "source": source,
             "offre_id": offre_id,
-            "date_collecte": pd.Timestamp(collect_date),
-            "date_publication": pd.to_datetime(pub),
+            # Dates en texte ISO, comme les vrais collecteurs (adzuna.py, lba.py) : un mélange
+            # factice/réel dans data/raw/ ne doit pas casser les comparaisons de dates.
+            "date_collecte": f"{collect_date.isoformat()}T00:00:00+00:00",
+            "date_publication": [f"{d.isoformat()}T00:00:00Z" for d in pub],
             "titre": titre,
             "description": [
                 f"{FAKE_TAG} {t}. Compétences : {SKILLS[d]}."

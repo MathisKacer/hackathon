@@ -1,5 +1,6 @@
 """T5 — Le générateur factice respecte le contrat de données (docs/ARCHITECTURE.md)."""
 
+import pandas as pd
 import pytest
 
 from radar.fake_data import DOMAINS, generate, luhn_ok
@@ -74,3 +75,11 @@ def test_recruiters_do_not_change_other_tables():
     assert a.scores["c_intensite"].round(6).sum() > 0
     b = generate(n_entreprises=200, seed=11)
     assert a.offres.equals(b.offres) and a.recruteurs_lba.equals(b.recruteurs_lba)
+
+
+def test_dates_are_iso_strings_like_real_collectors(data):
+    """Les collecteurs réels écrivent des dates en texte : un mélange factice/réel ne casse rien."""
+    for df in data.offres_raw.values():
+        for col in ("date_collecte", "date_publication"):
+            assert df[col].map(type).eq(str).all(), col
+            assert pd.to_datetime(df[col], utc=True).notna().all()
