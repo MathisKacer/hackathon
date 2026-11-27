@@ -14,6 +14,21 @@
 
 ---
 
+### D32 — Score en paliers de priorité, règle mixte (rang dans la recherche + score minimal) (2026-11-27, @maxence)
+**Contexte :** T65 : afficher le score en mots et en couleurs. Le score est une moyenne pondérée de **rangs centiles** (D13, D22) : il n'est pas une probabilité, il dépend des curseurs, et il est plus bas en alternance (composante LBA souvent nulle) et en zone rurale.
+**Décision :** `radar/paliers.py`, 4 paliers. Une entreprise atteint un palier si elle est **à la fois** parmi les meilleures **de la recherche affichée** (part des résultats classés devant elle, ex æquo traités ensemble et prudemment) **et** au-dessus d'un score minimal :
+| Palier | Repère | Condition |
+|---|---|---|
+| Cible prioritaire | ●●● orange foncé | 10 % meilleures et score ≥ 0,60 |
+| Bonne cible | ●●○ orange | 30 % meilleures et score ≥ 0,45 |
+| À considérer | ●○○ orange clair | 60 % meilleures et score ≥ 0,30 |
+| Moins indiquée | ○○○ gris | les autres |
+Seuils calibrés sur Rennes, Lyon et Guéret (5 et 20 km, stage et alternance, poids par défaut) : le palier 1 ≈ les 10 % meilleures ; le minimum ne bloque que dans les recherches faibles (Guéret alternance). Libellés de **priorité**, jamais de probabilité (« probable » écarté : confusion avec la chance de réponse simulée, D23/D31). Les points (●●○) servent de repère sans couleur (daltonisme). Le **score reste affiché** : colonne à côté de la priorité, info-bulle et fiche de la carte, sous la priorité dans la fiche.
+**Alternatives écartées :** seuils fixes seuls (presque jamais de palier haut en alternance ou en zone rurale) ; quantiles seuls (une entreprise moyenne de Guéret annoncée « prioritaire ») ; libellés « Possible / Probable / Fortement probable » proposés dans la tâche.
+**Conséquences :** le palier d'une entreprise dépend de la recherche (zone, filtres, poids) : c'est voulu, il dit « par où commencer ici ». Si T69 change la distribution du score, revoir les seuils minimaux (constantes `TIERS`).
+
+---
+
 ### D31 — « Chance de réponse » : libellé clair, mention « simulée » en info-bulle (2026-11-27, @celia)
 **Contexte :** T64. L'app affichait « P(réponse) simulée », peu clair pour un étudiant, avec un bandeau « Démonstration » et « (démo) » dans les libellés ; la colonne n'apparaissait que si l'on classait par chance de réponse.
 **Décision :** libellé **« Chance de réponse »** partout (liste, fenêtre de la carte, fiche, classement dans « Filtres ») ; colonne toujours affichée quand le modèle couvre le contrat et le domaine. **Précise D6 / D23 sur l'affichage** : plus de bandeau ni de « (démo) » à l'écran ; la mention « modèle entraîné sur des réponses simulées » reste dans les **info-bulles** de la colonne et de la fiche (`CHANCE_HELP`, `app/commun.py`) et sera **dite au pitch**.

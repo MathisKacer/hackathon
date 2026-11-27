@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-11-27 — T65 : score en mots et en couleurs
+
+**Fait :**
+- Discussion des options (seuils fixes, quantiles de la recherche, mixte) sur les vraies distributions du score ; choix **mixte** : un palier = être parmi les meilleures de la recherche **et** au-dessus d'un score minimal.
+- `radar/paliers.py` : 4 paliers ●●● Cible prioritaire (10 %, ≥ 0,60) / ●●○ Bonne cible (30 %, ≥ 0,45) / ●○○ À considérer (60 %, ≥ 0,30) / ○○○ Moins indiquée ; couleurs de l'orange foncé au gris ; ex æquo traités prudemment.
+- App : colonne « Priorité » colorée dans la liste (règle en info-bulle, score à côté), points de la carte colorés et dimensionnés par palier (score dans l'info-bulle et la fiche de la carte), « Priorité » dans la fiche avec le score en dessous.
+- Libellés de priorité plutôt que « probable » (le score n'est pas une probabilité ; la chance de réponse simulée est affichée à part).
+- Décision **D32**.
+
+**Fichiers touchés :**
+- `radar/paliers.py` (nouveau), `tests/test_paliers.py` (nouveau, 6 tests), `app/vues/explorer.py` et `app/fiche_ui.py` (Celia), `app/carte.py` (Mathis), `docs/DECISIONS.md`, `docs/ARCHITECTURE.md`, `docs/TACHES.md`
+
+**Résultats / chiffres clés :**
+- Rennes 20 km (stage) : 435 cibles prioritaires, 869 bonnes, 1 304 à considérer, 1 738 moins indiquées ; en tête Hellowork, Ouest-France, Treezor, Beetween. Guéret alternance : 20 / 37 / 60 / 146 (le minimum joue).
+- 311 tests OK, ruff OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- **@celia** (T64) et **@mathis** : j'ai touché la liste (`explorer.py`), la fiche (`fiche_ui.py`) et les points de la carte (`carte.py`), quelques lignes chacun ; toute la logique est dans `radar/paliers.py`.
+- **@mathis** (T69) : si le score v1 change de distribution, revoir les minima dans `TIERS`.
+
+---
+
 ## 2026-11-27 — T55 (suite) : effacer la ville, codes postaux regroupés
 
 **Fait :**
