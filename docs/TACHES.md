@@ -31,7 +31,6 @@
 **Score**
 
 **App**
-- [ ] T53 — 🔗T36 `scripts/build_response.py` plante (« Singular matrix ») si les scores sont construits **sans les offres Adzuna** (LBA seules : `c_intensite` et `c_embauche` constantes) → message clair, ou retirer les variables constantes avant l'ajustement (vu par @maxence en T37)
 
 **Intégration**
 
@@ -39,7 +38,6 @@
 
 **Lever les limites connues (voir `docs/LIMITES.md`)**
 - [ ] T26 — 🔗T21 **Familles de marque** (L7) : une entreprise ETI/GE dont une entité a des offres du domaine → ses autres entités (même début de nom) sont exclues de la couche orange (`a_offre_groupe`)
-- [ ] T27 — 🔗T21 **Revue des intermédiaires** (L8) : passer en revue les plus gros émetteurs + `volume_suspect`, compléter `INTERMEDIARIES` ; à refaire à chaque nouvelle source (LBA)
 - [ ] T18 — 🔗T16 **Autres domaines** (L1) : collecter Adzuna sur d'autres requêtes (finance, marketing…) avec le quota des jours suivants, Bretagne + grandes villes d'abord ; puis noter ces domaines (`SCORED_DOMAINS`)
 
 **Modèle de réponse (démonstrateur, réponses simulées)**
@@ -70,6 +68,8 @@
 
 ## 🔵 En cours
 
+- [ ] T27 — 🔗T21 **Revue des intermédiaires** (L8) : passer en revue les plus gros émetteurs + `volume_suspect`, compléter `INTERMEDIARIES` ; à refaire à chaque nouvelle source (LBA) — @mathis
+- [ ] T53 — 🔗T36 `scripts/build_response.py` plante (« Singular matrix ») si les scores sont construits **sans les offres Adzuna** (LBA seules : `c_intensite` et `c_embauche` constantes) → message clair, ou retirer les variables constantes avant l'ajustement (vu par @maxence en T37) — @mathis
 - [ ] T54 — 🔗T48,T40 **Mettre des offres en favoris** (connecté seulement, D14) : bouton ☆/★ sur chaque offre de la couche bleue (popup ou liste) et sur chaque entreprise de la couche orange ; table `favoris` dans la base des comptes (`radar/accounts.py` : utilisateur, type offre/entreprise, `offre_id` ou `siret`, date, note libre facultative) ; section « Mes favoris » dans la barre latérale (lien vers l'annonce, statut « candidaté » à cocher) ; en mode anonyme, favoris gardés dans `st.session_state` pour la session seulement. Une offre expirée reste en favori avec la mention « n'est plus en ligne ». « Supprimer mon compte » efface aussi les favoris. Tests dans `tests/test_accounts.py`. Bonus pour le pitch : le statut « candidaté » / « réponse reçue » est le début des **vrais retours** qui permettront de réentraîner le modèle de réponse (D6, L15) — @celia
   Choix (avec Celia) : en anonyme, favoris **temporaires** (gardés le temps de la visite, rien sur le disque) et repris automatiquement à la création du compte ou à la connexion ; étoile dans la fiche et sur les offres ; « Mes favoris » dans Mon espace.
 - _…_
