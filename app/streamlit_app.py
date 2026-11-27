@@ -26,6 +26,7 @@ from radar.filters import SECTIONS, TAILLES, filter_companies
 from radar.geo import region_of
 from radar.geocode import Place, geocode
 from radar.process.quick_filter import load_raw_offers, prepare_offers
+from radar.response.predict import add_p_reponse, contracts_for, load_coefficients
 from radar.spontaneous import (
     COMPONENTS,
     DEFAULT_WEIGHTS,
@@ -43,6 +44,15 @@ RAYONS = [5, 10, 20, 30, 50, 75, 100]
 # Curseurs de poids du score orange (T42) : composante → clé du widget (enregistrée au profil).
 WEIGHT_KEYS = {c: "poids_" + c.removeprefix("c_") for c in COMPONENTS}
 WEIGHT_MAX = 5
+# Classement de la couche orange (T37) : score explicable ou P(réponse) du démonstrateur (D18).
+TRI_SCORE, TRI_P = "Score", "P(réponse) simulée"
+TRIS = [TRI_SCORE, TRI_P]
+SIMULATED_BANNER = (
+    "🧪 **Démonstrateur — réponses simulées.** P(réponse) vient d'un modèle entraîné sur des "
+    "réponses **simulées** (aucune donnée ouverte ne dit qui répond aux candidatures "
+    "spontanées) : les entreprises sont réelles, les probabilités ne le sont pas. "
+    "Détails : `docs/MODELE_REPONSE.md`."
+)
 
 st.set_page_config(page_title="Radar", page_icon="📡", layout="wide")
 
@@ -68,6 +78,11 @@ def get_offers() -> pd.DataFrame:
 @st.cache_data(show_spinner="Recherche de l'adresse…", ttl=3600)
 def get_place(address: str) -> Place | None:
     return geocode(address)
+
+
+@st.cache_data
+def get_coefficients() -> dict[str, float] | None:
+    return load_coefficients()
 
 
 @st.cache_data(show_spinner="Recherche des entreprises proches…")
@@ -153,9 +168,18 @@ def _company_popup(r: pd.Series) -> str:
         f"<div style='font-family:sans-serif;font-size:13px'>"
         f"<b>{title}</b><br><span style='color:#555'>{'<br>'.join(lines)}</span><br>"
         f"<b style='color:{ORANGE}'>Score {r['score']:.2f}</b> · {signal}<br>"
+        f"{_p_reponse_html(r)}"
         f"{_score_breakdown_html(r)}"
         f'<a href="{url}" target="_blank" rel="noopener">Annuaire des entreprises</a></div>'
     )
+
+
+def _p_reponse_html(r: pd.Series) -> str:
+    """P(réponse) du démonstrateur (T37), toujours marquée comme simulée."""
+    p = r.get("p_reponse")
+    if p is None or pd.isna(p):
+        return ""
+    return f"P(réponse) <i>simulée</i> : <b>{100 * float(p):.0f} %</b><br>"
 
 
 def _score_breakdown_html(r: pd.Series) -> str:
@@ -279,6 +303,7 @@ PROFILE_KEYS = {
     "tailles": list(TAILLES),
     "secteurs": list(SECTIONS),
     **{key: list(range(WEIGHT_MAX + 1)) for key in WEIGHT_KEYS.values()},
+    "tri": TRIS,
 }
 # Libellés affichés dans « Mes recherches » (T49).
 PROFILE_LABELS = {
@@ -293,12 +318,14 @@ PROFILE_LABELS = {
     "tailles": "Taille",
     "secteurs": "Secteur",
     **{key: f"Poids {COMPONENTS[c][0].lower()}" for c, key in WEIGHT_KEYS.items()},
+    "tri": "Classement",
 }
 # Valeurs par défaut posées dans session_state (et non via value=) pour qu'un profil chargé
 # puisse les remplacer sans avertissement de Streamlit.
 st.session_state.setdefault("max_age", 60)
 st.session_state.setdefault("only_data", True)
 st.session_state.setdefault("rayon", 20)
+st.session_state.setdefault("tri", TRI_SCORE)
 for _c, _key in WEIGHT_KEYS.items():
     st.session_state.setdefault(_key, DEFAULT_WEIGHTS[_c])
 
@@ -356,6 +383,14 @@ with st.sidebar:
         placeholder="Tous les secteurs",
         help="Section NAF de l'établissement (Insee).",
     )
+    tri = st.radio(
+        "Classer les entreprises 🟠 par",
+        TRIS,
+        key="tri",
+        horizontal=True,
+        help="Score : moyenne pondérée explicable (curseurs ci-dessous). P(réponse) : "
+        "démonstrateur entraîné sur des réponses simulées (stage et alternance seulement).",
+    )
     with st.expander("⚖️ Poids du score 🟠", expanded=True):
         st.caption("0 = ignoré. Le score est la moyenne pondérée des composantes (0 à 1).")
         weights = {
@@ -391,6 +426,12 @@ if place is not None:
             "(ou `scripts/make_fake_data.py` pour des données factices)."
         )
     spontaneous = rank_spontaneous(nearby, place.lat, place.lon, rayon, contrat, weights)
+    # P(réponse) du démonstrateur (T37, D18) : à distance nulle + effet de la distance.
+    spontaneous = add_p_reponse(spontaneous, domaine, contrat, get_coefficients())
+    if tri == TRI_P and spontaneous["p_reponse"].notna().any():
+        spontaneous = spontaneous.sort_values(
+            ["p_reponse", "score"], ascending=False, na_position="last"
+        ).reset_index(drop=True)
 # Connecté : enregistre la recherche et affiche « Mes recherches » ; anonyme : ne fait rien (T49).
 # Avec une adresse : SIRET des premières entreprises de la couche orange (consigne CLAUDE.md).
 search_history(
@@ -415,6 +456,17 @@ c4.metric(
 )
 if place is not None:
     st.caption(f"📍 {place.label} · rayon {rayon} km")
+    has_p = "p_reponse" in spontaneous and spontaneous["p_reponse"].notna().any()
+    if tri == TRI_P or has_p:
+        st.warning(SIMULATED_BANNER)
+    if tri == TRI_P and not has_p and not spontaneous.empty:
+        if get_coefficients() is None or not FILES["p_reponse"].exists():
+            why = "le modèle n'est pas construit (`uv run python scripts/build_response.py`)"
+        elif not contracts_for(contrat):
+            why = "le modèle ne couvre que le stage et l'alternance"
+        else:
+            why = f"le modèle ne couvre pas encore le domaine « {DOMAINS[domaine].label} »"
+        st.info(f"P(réponse) indisponible : {why}. Classement par score.")
 else:
     st.info("Saisis ton adresse dans la barre latérale pour voir les entreprises 🟠 à démarcher.")
 
@@ -474,6 +526,7 @@ with tab_spont:
             "naf_libelle": "Secteur",
             "tranche_effectif": "Effectif",
             "score": "Score",
+            "p_reponse": "P(réponse) simulée",
             # Apport de chaque composante active au score (T42) : la somme des apports = score.
             **{
                 f"apport_{c}": f"+ {label}"
@@ -483,12 +536,18 @@ with tab_spont:
             n_col: "Offres du domaine (autre contrat)",
             "url_annuaire": "Fiche",
         }
-        table = spontaneous[[c for c in cols if c in spontaneous]].rename(columns=cols)
+        shown = [c for c in cols if c in spontaneous and spontaneous[c].notna().any()]
+        table = spontaneous[shown].rename(columns=cols)
         st.dataframe(
             table,
             hide_index=True,
             width="stretch",
             column_config={
+                "P(réponse) simulée": st.column_config.NumberColumn(
+                    format="percent",
+                    help="Démonstrateur entraîné sur des réponses SIMULÉES (D18), "
+                    "ajustée de la distance.",
+                ),
                 "Score": st.column_config.ProgressColumn(
                     "Score", min_value=0.0, max_value=1.0, format="%.2f"
                 ),
