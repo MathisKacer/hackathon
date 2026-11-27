@@ -87,10 +87,10 @@ uv run ruff format . && uv run ruff check --fix .   # formatage + lint, avant ch
 
 L'app a **3 pages** (barre de navigation en haut, plus de barre latérale) : `app/streamlit_app.py` (point d'entrée, navigation) ; `app/vues/explorer.py` (recherche, carte, listes « Candidatures spontanées » / « Offres ») ; `app/vues/entreprises.py` (recherche d'entreprises) ; `app/vues/mon_espace.py` (compte, profil, historique). Code partagé : `app/commun.py` (constantes, chargements, réglages du profil), **`app/carte.py` (carte folium et popup)**, `app/fiche_ui.py` (fiche entreprise, ouverte en fenêtre `st.dialog`), `app/compte.py` (comptes). Pas de numéros de tâche, de noms de fichiers ni de commandes dans les textes affichés à l'utilisateur.
 
-**Mode démo anonyme** par défaut ; la **connexion facultative** enregistre le profil (= les réglages de recherche) et l'historique. Tout **nouveau réglage de recherche** doit :
+**Mode démo anonyme** par défaut ; la **connexion facultative** enregistre l'historique des recherches (tous les réglages) et le profil, qui ne garde que les **compétences du CV** (D41 : `SAVED_PROFILE_KEYS` dans `app/commun.py`). Tout **nouveau réglage de recherche** doit :
 1. être un widget de `app/vues/explorer.py` avec une `key` (dans la barre de recherche ou le panneau « Filtres ») ;
 2. être ajouté à `WIDGET_KEYS` dans `app/commun.py` (sinon il est perdu quand on change de page) ;
-3. être ajouté à `profile_keys()` avec ses options permises (`None` = libre) et à `PROFILE_LABELS` (`app/commun.py`) ;
+3. être ajouté à `profile_keys()` avec ses options permises (`None` = libre) et à `PROFILE_LABELS` (`app/commun.py`) : il est alors gardé dans l'historique ; il n'entre dans le profil que s'il est aussi dans `SAVED_PROFILE_KEYS` (D41) ;
 4. prendre sa valeur par défaut dans `init_defaults()` (`st.session_state.setdefault`), **pas** avec `value=`.
 
 **Favoris** (T54) : `app/favoris.py` ; en anonyme ils restent dans `st.session_state` (rien sur le disque) et sont repris à la connexion (`compte._flush_temp_favorites`). `record_search(..., top=...)` : passer les **noms** des premières entreprises, pas les SIRET. Code : `radar/accounts.py` (SQLite `data/app/radar.db`, hors Git), `app/compte.py` ; tests : `tests/test_accounts.py`, `tests/test_compte_ui.py`. **Sécurité des mots de passe** : `docs/SECURITE.md`.

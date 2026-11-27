@@ -72,7 +72,7 @@ Conséquence pour la démo : créer les comptes de démonstration **sur le pod q
 
 ## Données personnelles
 
-- Données stockées : identifiant, empreinte du mot de passe, profil (réglages de recherche, dont l'adresse saisie), historique des recherches (50 max). **Pas d'e-mail, pas de nom.**
+- Données stockées : identifiant, empreinte du mot de passe, profil (compétences tirées du CV seulement, D41 ; le CV n'est jamais conservé), historique des recherches (50 max, avec tous les réglages, dont la ville saisie). **Pas d'e-mail, pas de nom.**
 - « Supprimer mon compte » efface le compte, le profil et l'historique (suppression en cascade).
 - En mode anonyme, rien n'est écrit sur le disque.
 

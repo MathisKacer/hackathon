@@ -245,6 +245,70 @@ def test_full_app_runs_with_account_box(tmp_path, monkeypatch):
     at.run()
     assert not at.exception, at.exception
     assert any("<h1>Bonjour celia</h1>" in m.value for m in at.markdown)
-    assert any(b.label == "Enregistrer mes réglages" for b in at.button)
+    assert any(s.value == "Mes compétences" for s in at.subheader)  # T81 : profil = compétences
     st.cache_data.clear()
+    st.cache_resource.clear()
+
+
+# --- T81 : le profil ne garde que les compétences (page Mon espace) ----------------------------
+
+
+def _page_app():
+    import sys
+    from pathlib import Path
+
+    import streamlit as st
+
+    sys.path.insert(0, str(Path.cwd() / "app"))
+    from compte import account_page
+
+    keys = {"contrat": ["Tous", "Stage"], "competences": ["Python", "SQL", "R"]}
+    st.session_state.setdefault("contrat", "Tous")
+    st.session_state.setdefault("competences", [])
+    account_page(keys, {"contrat": "Contrat", "competences": "Compétences"},
+                 saved_keys={"competences": keys["competences"]})  # fmt: skip
+
+
+@pytest.fixture
+def page(tmp_path, monkeypatch):
+    monkeypatch.setattr(accounts, "DB_PATH", tmp_path / "radar.db")
+    st.cache_resource.clear()
+    uid = accounts.create_user(accounts.connect(), "emma", "Radar-Demo-2026")
+    accounts.save_profile(accounts.connect(), uid, {"contrat": "Stage", "rayon": 20})  # ancien
+    at = AppTest.from_function(_page_app, default_timeout=30)
+    at.session_state["compte_user"] = {"id": uid, "username": "emma"}
+    at.session_state["contrat"] = "Tous"
+    at.session_state["competences"] = ["Python", "R"]
+    at.run()
+    yield at, uid
+    st.cache_resource.clear()
+
+
+def test_profile_shows_and_saves_only_skills(page):
+    at, uid = page
+    assert not at.exception
+    assert any(s.value == "Mes compétences" for s in at.subheader)
+    texts = [m.value for m in at.markdown] + [c.value for c in at.caption]
+    assert not any("Contrat" in x for x in texts)  # pas d'autre réglage affiché
+    next(b for b in at.button if b.label == "Enregistrer mes compétences").click()
+    at.run()
+    assert accounts.load_profile(accounts.connect(), uid) == {"competences": ["Python", "R"]}
+    assert any(":blue-badge[Python] :blue-badge[R]" in m.value for m in at.markdown)
+    assert not any(b.label == "Enregistrer mes compétences" for b in at.button)  # à jour
+
+
+def test_login_restores_only_skills(tmp_path, monkeypatch):
+    monkeypatch.setattr(accounts, "DB_PATH", tmp_path / "radar.db")
+    st.cache_resource.clear()
+    con = accounts.connect()
+    uid = accounts.create_user(con, "emma", "Radar-Demo-2026")
+    accounts.save_profile(con, uid, {"contrat": "Stage", "competences": ["SQL"]})
+    at = AppTest.from_function(_page_app, default_timeout=30)
+    at.run()
+    at.text_input[0].input("emma")
+    at.text_input[1].input("Radar-Demo-2026")
+    next(b for b in at.button if b.label == "Se connecter").click()
+    at.run()
+    assert at.session_state["competences"] == ["SQL"]
+    assert at.session_state["contrat"] == "Tous"  # l'ancien réglage du profil est ignoré
     st.cache_resource.clear()

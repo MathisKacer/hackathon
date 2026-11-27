@@ -81,7 +81,7 @@
 |---|---|---|---|---|
 | Référentiel des entreprises | T20 | Les entreprises de la couche orange : nom, secteur, taille, adresse, position | `radar/collect/sirene.py`, `scripts/extract_sirene.py` | D12 |
 | Entreprises en difficulté | T23 | Drapeau 🟡/🟠/🔴, score réduit, liquidations masquées | `radar/collect/bodacc.py`, `radar/procedures.py` | D24 |
-| Comptes facultatifs + profil | T48 | « Se connecter / Créer un compte » ; réglages retrouvés à la connexion | `radar/accounts.py`, `app/compte.py` | D14 |
+| Comptes facultatifs + profil | T48, T81 | « Se connecter / Créer un compte » ; compétences retrouvées à la connexion | `radar/accounts.py`, `app/compte.py` | D14 |
 | Historique des recherches | T49 | « 🕘 Mes recherches » avec « ↻ Relancer » | `radar/accounts.py`, `app/compte.py` | D14 |
 | Sécurité des mots de passe | — | Règles affichées, blocage après 5 échecs | `radar/accounts.py`, `docs/SECURITE.md` | D16 |
 | Fiche entreprise | T43 | « 🔎 Fiche entreprise » sous la liste orange : tout sur une entreprise | `radar/fiche.py`, `app/fiche_ui.py` | — |
@@ -164,22 +164,22 @@ uv run python scripts/build_all.py                 # le pipeline complet l'inclu
 
 ## 4. Comptes facultatifs et profil (T48)
 
-**À quoi ça sert.** Retrouver ses réglages de recherche d'une visite à l'autre, sans rendre la connexion obligatoire.
+**À quoi ça sert.** Retrouver ses compétences (tirées du CV) et ses recherches d'une visite à l'autre, sans rendre la connexion obligatoire.
 
 **Ce que voit l'utilisateur.**
 - Par défaut : mode anonyme, rien n'est enregistré ; la page s'appelle « **Se connecter** ».
-- Page **Se connecter** : onglets **Connexion** et **Créer un compte**. À la création, les réglages actuels deviennent le profil.
-- Connecté, la page devient « **Mon espace (prénom)** » : « Enregistrer mes réglages », « Se déconnecter », le profil enregistré, l'historique (section 5) et « Supprimer mon compte » (case à cocher de confirmation ; efface compte, profil et historique).
-- À la connexion, tous les réglages reviennent : ville, rayon, domaine, contrat, régions, mot-clé, taille, secteur, poids du score, classement, « afficher les liquidations »…
+- Page **Se connecter** : onglets **Connexion** et **Créer un compte**. À la création, les compétences de la recherche en cours deviennent le profil.
+- Connecté, la page devient « **Mon espace (prénom)** » : « Se déconnecter », **« Mes compétences »** en étiquettes (avec « Enregistrer mes compétences » quand celles de la recherche en cours sont différentes), l'historique (section 5) et « Supprimer mon compte » (case à cocher de confirmation ; efface compte, profil et historique).
+- À la connexion, seules **les compétences** reviennent (T81, D41). Les autres réglages (ville, rayon, contrat, filtres, poids…) ne sont pas gardés dans le profil ; on les retrouve dans l'historique, avec « Relancer ».
 
 **Comment ça marche.**
 - `radar/accounts.py` : la partie serveur (comptes, mots de passe, profils, historique) dans une base SQLite. Testable sans Streamlit.
 - `app/compte.py` : formulaires (`login_forms`), enregistrement des recherches (`record_search`), page Mon espace (`account_page`). Les anciennes fonctions de barre latérale (`account_sidebar`, `search_history`) restent pour les tests.
-- **Le profil = les valeurs des widgets de recherche** listés dans `profile_keys()` (`app/commun.py`). Chaque widget a une `key` ; à la connexion, le profil est recopié dans `st.session_state`. Une valeur devenue invalide (région disparue des données…) est ignorée.
+- **Le profil = les widgets listés dans `SAVED_PROFILE_KEYS`** (`app/commun.py`, aujourd'hui seulement `competences`) ; l'historique, lui, garde tous ceux de `profile_keys()`. Chaque widget a une `key` ; à la connexion, le profil est recopié dans `st.session_state`. Une valeur devenue invalide est ignorée, de même que les autres réglages d'un ancien profil.
 
 **⚠️ Règle pour ajouter un réglage à l'app** : voir `CLAUDE.md` et la section 0.
 
-Sinon le réglage n'est pas enregistré dans le profil.
+Sinon le réglage n'est pas enregistré dans l'historique. Pour qu'il entre aussi dans le profil : l'ajouter à `SAVED_PROFILE_KEYS`.
 
 ---
 
@@ -411,7 +411,7 @@ Temps de réponse : 0,05 à 0,4 s.
 
 **Fonctionnement** (`radar/niveau.py`). La bonne alternance donne le diplôme visé : il est repris tel quel. Pour Adzuna, le niveau est lu dans le titre et le début de l'annonce (« Bac+5 », « Master 2 », « M1 », « Licence », « Bachelor », « BTS », « Doctorat »…). Une offre « Bac+3 à Bac+5 » correspond aux deux niveaux. Les candidatures spontanées n'ont pas de niveau (il n'y a pas d'offre).
 
-**Réglages.** Mots reconnus : `_BAC_PLUS` et `_KEYWORDS` dans `radar/niveau.py` ; tests dans `tests/test_niveau.py` (ajouter un cas avant d'ajouter un mot). Le filtre est enregistré dans le profil (clés `niveaux`, `niveau_inconnu`).
+**Réglages.** Mots reconnus : `_BAC_PLUS` et `_KEYWORDS` dans `radar/niveau.py` ; tests dans `tests/test_niveau.py` (ajouter un cas avant d'ajouter un mot). Le filtre est gardé dans l'historique des recherches (clés `niveaux`, `niveau_inconnu`).
 
 **Limites et suites.** Adzuna tronque les annonces : seules ~2 % ont un niveau détecté (L27). Suite possible : lire l'annonce complète, ou un modèle de langage (T68).
 
@@ -453,4 +453,4 @@ Case vide quand SIRENE n'a pas l'information. **Pas de total calculé** : additi
 
 **Réglages.** Liste et expressions : `SKILLS` (choix prudents : pas « C » ni « Go », « R » seulement en majuscule isolée, « recrutement » de présentation écarté) ; lissage : `M_SECTOR`, `M_COMPANY` ; paliers : `MATCH_TIERS`, couleurs `MATCH_COLORS`. Tests : `tests/test_competences.py` (ajouter un cas avant de modifier une expression).
 
-**Limites et suites.** Correspondance surtout au niveau du secteur, descriptions tronquées, PDF scannés illisibles (L29). Suites : profil = compétences seulement (T81) ; proposer le domaine et le niveau d'études à partir du CV ; lettre de candidature (T46).
+**Limites et suites.** Correspondance surtout au niveau du secteur, descriptions tronquées, PDF scannés illisibles (L29). Suites : proposer le domaine et le niveau d'études à partir du CV ; lettre de candidature (T46).

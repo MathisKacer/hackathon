@@ -1,7 +1,8 @@
 """Ce que les pages de l'app partagent : constantes, chargement des données, réglages du profil.
 
-Les réglages de recherche (widgets de la page Explorer) sont enregistrés dans le profil quand
-on est connecté (T48) : voir PROFILE_KEYS. Règle pour ajouter un réglage : CLAUDE.md.
+Les réglages de recherche (widgets de la page Explorer) sont enregistrés dans l'historique
+« Mes recherches » quand on est connecté (T49) : voir profile_keys(). Le profil, lui, ne garde
+que les compétences du CV (T81, SAVED_PROFILE_KEYS). Règle pour ajouter un réglage : CLAUDE.md.
 """
 
 from __future__ import annotations
@@ -213,6 +214,16 @@ def profile_keys() -> dict[str, list | None]:
         "niveau_inconnu": [True, False],
         "competences": SKILL_LABELS,  # T45 : compétences du CV (le CV lui-même n'est pas gardé)
     }
+
+
+# T81 : seuls ces réglages sont gardés dans le **profil** (restaurés à la connexion) ; les autres
+# (ville, filtres, poids…) ne vont que dans l'historique « Mes recherches » (T49, bouton Relancer).
+SAVED_PROFILE_KEYS = ("competences",)
+
+
+def saved_profile_keys() -> dict[str, list | None]:
+    """Sous-ensemble de `profile_keys()` enregistré dans le profil (T81) : les compétences."""
+    return {k: v for k, v in profile_keys().items() if k in SAVED_PROFILE_KEYS}
 
 
 # Libellés affichés dans « Mes recherches » (T49).

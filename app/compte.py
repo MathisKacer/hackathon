@@ -271,56 +271,93 @@ def _relaunch_and_go(params: dict, profile_keys: dict) -> None:
     st.session_state[GO_EXPLORER_KEY] = True
 
 
+def _badges(values: list) -> str:
+    """« Python », « SQL » → étiquettes Streamlit (markdown `:blue-badge[…]`)."""
+    clean = (str(v).replace("[", "(").replace("]", ")") for v in values)
+    return " ".join(f":blue-badge[{v}]" for v in clean)
+
+
+def _profile_section(con, user: dict, saved_keys: dict, labels: dict) -> None:
+    """T81 : le profil = les réglages de `saved_keys` seulement (les compétences du CV).
+
+    Affiche ce qui est enregistré, en étiquettes ; un bouton enregistre les valeurs de la
+    recherche en cours si elles diffèrent."""
+    profile = {k: v for k, v in accounts.load_profile(con, user["id"]).items() if k in saved_keys}
+    current = _current_settings(saved_keys)
+    for key in saved_keys:
+        label = labels.get(key, key)
+        st.subheader(f"Mes {label.lower()}" if key == "competences" else label)
+        saved = profile.get(key)
+        if saved:
+            st.markdown(_badges(saved) if isinstance(saved, list) else str(saved))
+        else:
+            st.caption(
+                "Aucune compétence enregistrée. Dépose ton CV dans Explorer › Filtres › Ton CV."
+                if key == "competences"
+                else "Rien d'enregistré."
+            )
+        now = current.get(key)
+        if now and now != saved:
+            st.caption(
+                "Trouvées dans ta recherche en cours : "
+                + (", ".join(map(str, now)) if isinstance(now, list) else str(now))
+            )
+    if any(current.get(k) and current.get(k) != profile.get(k) for k in saved_keys):
+        if st.button(
+            "Enregistrer mes compétences" if "competences" in saved_keys else "Enregistrer",
+            icon=":material/save:",
+            type="primary",
+            help="Seules tes compétences sont gardées dans ton profil.",
+        ):
+            accounts.save_profile(con, user["id"], current)
+            st.toast("Compétences enregistrées.")
+            st.rerun()
+
+
 def account_page(
     profile_keys: dict[str, list | None],
     labels: dict[str, str] | None = None,
     explorer_page=None,
     favorites_section=None,
+    saved_keys: dict[str, list | None] | None = None,
 ) -> None:
     """Page « Mon espace » : connexion, ou profil + favoris + historique + suppression.
 
+    `profile_keys` : réglages d'une recherche (historique « Mes recherches », bouton Relancer).
+    `saved_keys` (T81) : réglages gardés dans le **profil** (par défaut : tous) ; Radar n'y met
+    que les compétences du CV. Ils sont restaurés à la connexion.
     `favorites_section` : fonction qui affiche « Mes favoris » (app/vues/mon_espace.py, T54).
     """
+    saved_keys = profile_keys if saved_keys is None else saved_keys
+    labels = labels or {}
     if st.session_state.pop(GO_EXPLORER_KEY, False) and explorer_page is not None:
         st.switch_page(st.Page(explorer_page))
     user = _validated_user()
     if user is None:
         hero("Mon espace", "Ton compte, tes favoris et tes recherches.", compact=True)
         st.write(
-            "Radar marche sans compte : rien n'est enregistré. Avec un compte, tes réglages "
-            "et l'historique de tes recherches sont gardés d'une visite à l'autre."
+            "Radar marche sans compte : rien n'est enregistré. Avec un compte, tes compétences "
+            "(tirées de ton CV) et l'historique de tes recherches sont gardés d'une visite à "
+            "l'autre."
         )
         left, _ = st.columns([1, 1])
         with left, st.container(border=True):
-            login_forms(profile_keys)
+            login_forms(saved_keys)
         if favorites_section is not None:
             favorites_section()
         return
 
     hero(
-        f"Bonjour {user['username']}", "Tes réglages, tes favoris et tes recherches.", compact=True
+        f"Bonjour {user['username']}",
+        "Tes compétences, tes favoris et tes recherches.",
+        compact=True,
     )
     con = _con()
     must_change_banner(con, user)  # T79 : mot de passe provisoire donné par un administrateur
-    c1, c2, _ = st.columns([1, 1, 2])
-    if c1.button(
-        "Enregistrer mes réglages",
-        icon=":material/save:",
-        type="primary",
-        width="stretch",
-        help="Ta recherche actuelle devient ton profil.",
-    ):
-        accounts.save_profile(con, user["id"], _current_settings(profile_keys))
-        st.toast("Réglages enregistrés.")
-    if c2.button("Se déconnecter", width="stretch", icon=":material/logout:"):
+    if st.button("Se déconnecter", icon=":material/logout:"):
         st.session_state.pop(USER_KEY, None)
         st.rerun()
-    profile = accounts.load_profile(con, user["id"])
-    st.caption(
-        "Profil enregistré : " + summarize(profile, labels)
-        if profile
-        else "Aucun profil enregistré pour l'instant."
-    )
+    _profile_section(con, user, saved_keys, labels)
 
     if favorites_section is not None:
         favorites_section()

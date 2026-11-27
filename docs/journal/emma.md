@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-11-27 — T81 : profil = compétences du CV seulement ✅
+
+**Fait :**
+- Choix d'Emma : historique « Mes recherches » gardé tel quel ; compétences enregistrées avec un bouton.
+- `app/commun.py` : `SAVED_PROFILE_KEYS = ("competences",)`, `saved_profile_keys()`. `app/compte.py` : `account_page(..., saved_keys=)` (création de compte et connexion avec les seules compétences), `_profile_section` (« Mes compétences » en étiquettes `:blue-badge[…]`, bouton « Enregistrer mes compétences » seulement si la recherche en cours en a d'autres), plus de bouton « Enregistrer mes réglages » ni de ligne « Profil enregistré : … ». `app/vues/mon_espace.py` passe `saved_keys`.
+- D41 ; D14 annotée ; règle de CLAUDE.md mise à jour ; GUIDE § 4 ; SECURITE (données stockées).
+
+**Fichiers touchés :**
+- `app/commun.py`, `app/compte.py`, `app/vues/mon_espace.py`, `tests/test_compte_ui.py`, `CLAUDE.md`, docs (DECISIONS, GUIDE, SECURITE, TACHES)
+
+**Résultats / chiffres clés :**
+- Tests : profil affiché et enregistré avec les seules compétences ; connexion avec un ancien profil (contrat « Stage ») → seules les compétences reviennent. Toute la suite passe.
+
+**Problèmes / points d'attention pour l'équipe :**
+- **Change le travail de @celia (T48, D14)** et une règle de `CLAUDE.md` : décidé par Emma, à lui signaler. `compte.py` reste générique (sans `saved_keys`, tout est gardé : ses tests de T48 passent sans changement).
+- `account_sidebar` (ancienne barre latérale, utilisée seulement par les tests) garde tous les réglages.
+
+**Prochaine étape :**
+- Proposer le domaine et le niveau d'études à partir du CV ; T46 (lettre).
+
+---
+
 ## 2026-11-27 — T80 : correspondance CV ↔ entreprise, à part du score ✅
 
 **Fait :**
