@@ -14,6 +14,14 @@
 
 ---
 
+### D36 — Familles de marque : sociétés d'un même groupe signalées, case « Masquer » décochée (2026-11-27, @maxence)
+**Contexte :** T26, L7, L24 : une offre est rattachée à **une** société d'un groupe (Thales Six GTS) ; ses sœurs (Thales Simulation, Thales International…) paraissaient en orange « sans offre ». Aucune donnée ouverte ne relie un groupe à ses filiales.
+**Décision :** `radar/familles.py`. Parmi les **ETI et grandes entreprises**, clé de marque = premier mot du nom normalisé, ou les deux premiers si le premier est générique (« crédit mutuel », « saint gobain », « pierre fabre » ; liste `GENERIC_WORDS` revue sur les plus grosses familles : société, caisse, institut, ministère, casino…). Famille = au moins 2 SIREN de même clé. Pour chaque société, `famille_offres` = offres du domaine **pour le contrat visé** publiées par **ses sœurs**. Les sociétés concernées **restent** dans la couche orange avec la mention « Groupe Thales : 3 offres déjà publiées » (colonne « Groupe » de la liste, fiche de la carte, fiche) ; case **« Masquer les sociétés dont le groupe publie déjà des offres »**, **décochée par défaut**, enregistrée au profil (`masquer_groupe`). Calcul au chargement de l'app (≈ 3 s, mis en cache).
+**Alternatives écartées :** exclure d'office (proposé par la tâche) : on perdrait des cibles légitimes (une société sœur sans offre reste une bonne candidature spontanée) et une erreur de regroupement ferait disparaître une entreprise sans le dire ; baisser le score (moins lisible) ; regrouper aussi les PME (homonymes trop fréquents : « Thales Boulangerie »).
+**Conséquences :** 5 583 familles, 200 qui publient des offres data, 1 214 sociétés sœurs signalées (Geodis, Spie, Vinci, Safran, Airbus, Thales, BNP, Axa…). Toulouse 20 km : 22 des 500 premières entreprises signalées. Reste approximatif : marques au nom générique non reliées (Société Générale), homonymes possibles entre grandes sociétés.
+
+---
+
 ### D35 — Suppression du filtre « Régions » (2026-11-27, @maxence)
 **Contexte :** T66 : depuis le suggesteur de ville (T55), on choisit sa ville et un rayon ; le filtre « Régions » (offres 🔵 seulement) devenait redondant, voire contradictoire (Rennes + « Île-de-France » → zéro offre sans explication).
 **Décision :** le filtre est **supprimé** (et non seulement masqué quand une ville est choisie, comme le proposait la tâche) : retiré de la fenêtre « Filtres », de `WIDGET_KEYS`, de `profile_keys()` (qui ne prend plus d'argument), de `PROFILE_LABELS` et de `filter_offers`. Sans ville, la carte montre les offres de toute la France.

@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-11-27 — T26 : familles de marque
+
+**Fait :**
+- Explication et choix ensemble : la tâche proposait d'**exclure** les sociétés d'un groupe qui publie déjà ; on a choisi de les **garder en les signalant** (B), avec une case « Masquer » **décochée par défaut**.
+- `radar/familles.py` : clé de marque (premier mot du nom normalisé, deux mots si le premier est générique), familles d'ETI/GE d'au moins 2 sociétés ; offres des sœurs comptées selon le contrat visé ; phrase « Groupe Thales : 3 offres déjà publiées ». Liste de mots génériques revue sur les plus grosses familles (société, caisse, institut, ministère, casino…).
+- App : colonne « Groupe » dans la liste, ligne 🏢 dans la fiche de la carte et dans la fiche, case « Masquer les sociétés dont le groupe publie déjà des offres » (clé de profil `masquer_groupe`), familles calculées au chargement (≈ 3 s, en cache).
+- Décision **D36**, L7 mise à jour.
+
+**Fichiers touchés :**
+- `radar/familles.py` (nouveau), `tests/test_familles.py` (nouveau, 4 tests), `app/commun.py`, `app/vues/explorer.py`, `app/fiche_ui.py` (Celia), `app/carte.py` (Mathis), `docs/DECISIONS.md`, `docs/LIMITES.md`, `docs/ARCHITECTURE.md`, `docs/TACHES.md`
+
+**Résultats / chiffres clés :**
+- 5 583 familles ; 200 publient des offres data ; 1 214 sociétés sœurs signalées.
+- Toulouse 20 km : 22 des 500 premières entreprises signalées (Airbus · 27 offres, Axa · 21, Talan · 10, Pierre Fabre · 4…) ; case cochée → elles disparaissent.
+- 348 tests OK, ruff OK.
+
+**Points d'attention :**
+- Regroupement par le nom : approximatif (Société Générale non reliée, homonymes possibles entre grandes sociétés). Compléter `GENERIC_WORDS` si un faux groupe apparaît.
+
+---
+
 ## 2026-11-27 — T66 : filtre « Régions » supprimé
 
 **Fait :**
