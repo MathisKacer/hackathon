@@ -4,6 +4,47 @@
 
 ---
 
+## 2026-11-27 — T8 : titres anglais mal classés ✅
+
+**Fait :**
+- Récupération des **vraies offres Adzuna** de Mathis (lien S3 privé, `curl`) : 10 776 offres dans `data/raw/offres_raw/adzuna.parquet` sur mon pod. `lba.parquet` est encore factice chez moi, donc seules les offres Adzuna ont été analysées.
+- Mesure de la situation de départ, puis ajout de mots-clés anglais (et de quelques oublis) dans `radar/domains.yaml`, marqués `# T8`. J'ai vérifié **chaque bascule** de domaine sur les vraies offres, pas seulement les sorties de « autre ».
+- Correction d'un bug : « Talent Acquisition » était classé marketing (mot-clé `acquisition` trop large).
+- 27 tests de plus dans `tests/test_domains.py` (titres réels relevés, et pièges qui doivent rester « autre »).
+- Docs : D17 dans `DECISIONS.md`, T8 en « Fait ».
+
+**Fichiers touchés :**
+- `radar/domains.yaml`, `tests/test_domains.py`
+- `docs/DECISIONS.md`, `docs/TACHES.md`, `docs/journal/emma.md`
+
+**Résultats / chiffres clés (10 776 offres Adzuna réelles, toutes issues de la recherche « data ») :**
+
+| Domaine | Avant | Après |
+|---|---|---|
+| autre | 4 488 (41,6 %) | 3 939 (36,6 %) |
+| data | 3 128 | 3 209 |
+| informatique | 1 972 | 2 533 |
+| finance | 616 | 549 |
+| marketing | 416 | 371 |
+| rh | 156 | 175 |
+
+- Titres anglais classés « autre » : 941 → 746. Ceux qui restent sont surtout hors de nos 5 domaines (commerce, recherche clinique, « Project Manager » générique) : c'est voulu.
+- Principales bascules : autre → informatique 462 (Business Analyst, architectes de solutions, Product Manager, consultants SAP, SRE…), autre → data 64 (Analytics Engineer, MLOps, Decision Scientist, Pricing Analyst, RWE), autre → finance 22 (Accountant, Capital Markets, Controlling), autre → rh 11 (People Partner, Recruitment), marketing → rh 13 (Talent Acquisition).
+- Échantillon de 45 bascules autre → informatique relu à la main : aucune erreur.
+- Rappel : 36,6 % de « autre » n'est pas un échec. La recherche Adzuna « data » ramène aussi des offres qui ne citent « data » que dans la description (ex. 142 « Négociateurs immobilier »).
+- `pytest` : 190/190 ; ruff OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- **Pour @mathis :** relancer `uv run python scripts/build_all.py` pour que `offres.parquet` et les scores (T30/T31) prennent en compte les nouveaux classements, puis repartager les fichiers.
+- Effet de bord assumé : 87 « Business Analyst Crédit/Assurance – Services financiers » passent de finance à informatique (au sens du ROME, ce sont des postes de consultant fonctionnel SI). À revoir si l'équipe préfère les laisser en finance.
+- Erreurs connues restantes, rares : « Partnership Manager - Accountant Sector » → finance ; « Finaxys recrute un Project Management Office » → rh (le mot-clé `recrut` attrape le verbe « recrute » : 1 seule offre concernée sur les vraies données, je n'ai pas compliqué la règle pour ça).
+- Pas encore vérifié sur les vraies offres La bonne alternance : il faut que Maxence les partage (T17). Elles ont des codes ROME, donc dépendent beaucoup moins des titres.
+
+**Prochaine étape :**
+- Selon les besoins de l'équipe : voir les tâches libres dans `TACHES.md`.
+
+---
+
 ## 2026-11-27 — T7 : recruteurs La bonne alternance factices ✅
 
 **Fait :**

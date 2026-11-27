@@ -14,6 +14,16 @@
 
 ---
 
+### D17 — Titres anglais : mots-clés ajoutés d'après les vraies offres (2026-11-27, @emma)
+**Contexte :** T8. Sur les 10 776 offres Adzuna réelles, 41,6 % étaient classées `autre`, dont ~940 titres en anglais (« Analytics Engineer », « Business Analyst », « Talent Acquisition »…).
+**Décision :** ajout dans `radar/domains.yaml` de motifs anglais **complets** (marqués `# T8`), retenus un par un après avoir regardé **toutes** les bascules d'un domaine à l'autre, pas seulement les sorties de `autre`. Choix à connaître :
+- « Business Analyst », « Product Manager », « Tech Lead », « Solution Architect », consultants SAP/ERP/Salesforce → **informatique** (ROME : consultant fonctionnel SI). Effet de bord assumé : 87 « Business Analyst Crédit/Assurance – Services financiers » passent de finance à informatique.
+- `acquisition` seul (marketing) attrapait « Talent Acquisition » → remplacé par « paid/user acquisition », « acquisition manager »…, et `talent acquisition` exclu du marketing → **rh**.
+- « GenAI » seul ne suffit pas pour data (« GenAI Sales Specialist ») : il faut « GenAI/AI/ML engineer » ou « generative AI ».
+- Les métiers hors des 5 domaines restent `autre` : commerce (Account Executive, SDR), recherche clinique (CRA), « Project Manager » générique.
+**Alternatives écartées :** les embeddings multilingues ou un LLM (dépendances lourdes, coût, pas reproductible) ; la catégorie Adzuna (`Unknown` pour 43 % des offres).
+**Conséquences :** `autre` passe de 41,6 % à 36,6 % ; data passe de 3 128 à 3 209 offres, informatique de 1 972 à 2 533. Il faut relancer `scripts/build_all.py` pour que `offres.parquet` et les scores en tiennent compte.
+
 ### D16 — Sécurité des mots de passe : règles CNIL simplifiées et blocage par compte (2026-11-27, @celia)
 **Contexte :** T48 acceptait tout mot de passe de 8 caractères (`12345678` passait) et ne bloquait qu'à l'échelle d'un onglet (recharger la page suffisait à réessayer).
 **Décision :** à la création, au moins **12 caractères et 3 types** parmi minuscules, majuscules, chiffres, caractères spéciaux (version simplifiée de la recommandation CNIL de 2022, qui laisse passer les phrases de passe) ; **liste noire** de mots de passe très répandus ; identifiant interdit dans le mot de passe ; message qui liste les règles non respectées. À la connexion, **blocage par compte enregistré en base** : 5 échecs d'affilée → 15 min de blocage, même avec le bon mot de passe. Les bases existantes sont mises à jour automatiquement (colonnes `failed_logins`, `locked_until`). Détails et manques : `docs/SECURITE.md`.

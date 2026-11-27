@@ -75,13 +75,13 @@
 
 ## 🔵 En cours
 
-- [ ] T8 — 🔗T6 **Titres anglais mal classés** : mesurer les titres `autre` sur les vraies offres Adzuna, ajouter les mots-clés anglais utiles dans `radar/domains.yaml` + tests — @emma
 - [ ] T36 — 🔗T35 **Modèle de réponse** : logistique (puis arbres boostés si on a le temps) → `p_reponse.parquet` ; slides : calibration, AUC, paramètres retrouvés vs vrais — @mathis
 - [ ] T35 — 🔗T20 **Simulateur** : règle paramétrique P(réponse | besoin, taille, secteur, distance, historique d'embauche…) dans `radar/response/params.yaml`, tirage des réponses sur les entreprises réelles → `candidatures_simulees.parquet` — @mathis
 - [ ] T17 — 🔗T11 **Partager les données LBA sur S3** (`offres_raw/lba.parquet`, `lba_recruteurs.parquet`) : relancer `scripts/collect_lba.py` sur Onyxia puis `scripts/share_s3.py` — @maxence
 
 ## ✅ Fait
 
+- [x] T8 — **Titres anglais** : mots-clés anglais ajoutés dans `domains.yaml` après mesure sur les 10 776 vraies offres Adzuna ; offres « autre » 41,6 % → 36,6 % (D17) — @emma
 - [x] T48 (suite) — **Sécurité des mots de passe** (D16, `docs/SECURITE.md`) : 12 caractères min. et 3 types de caractères, liste noire, identifiant interdit, blocage du compte 15 min après 5 échecs (en base, résiste au rechargement) — @celia
 - [x] T49 — **Historique des recherches** (connecté seulement, D14) : chaque recherche enregistrée (paramètres, nombre de résultats, 5 premières entreprises) ; « 🕘 Mes recherches » en bas de la barre latérale avec « ↻ Relancer » et « Effacer mon historique » ; ajustements à moins de 2 min fusionnés, 50 max par compte. Quand T40 sera là : passer les SIRET des premières entreprises dans `top=` (`search_history` dans `app/streamlit_app.py`) — @celia
 - [x] T25 — 🔗T21 **Rattrapage du rapprochement** (L6, L9) : pour les noms non rapprochés (~1 200), API Recherche d'entreprises (`/search?q=<nom>` + proximité ; gère sigles et noms commerciaux, ~7 req/s) + table d'alias manuelle pour les 30 plus gros émetteurs (SFR, EY, Pennylane…) ; objectif : SFR & co ne sortent plus en orange — @mathis → local (cascade, alias, enseigne, sigles à points, préférence ETI/GE) : 63,4 % → 65,1 %, SFR/Atos/LCL/GMF/Geodis retrouvés ; API écartée (voir L6)
