@@ -43,7 +43,8 @@
 3. **Une phrase de résultat** : « Autour de Rennes (35000) (20 km) : 42 entreprises pourraient t'accueillir en alternance sans avoir publié d'offre, et 18 offres sont publiées. » Sans ville : un « Comment ça marche » en 3 étapes.
 4. **La carte** : offres en bleu, candidatures spontanées en orange (`app/carte.py`, inchangé).
 5. **Deux onglets** : « Candidatures spontanées » (Entreprise, Lieu, Distance, Autres sites, Taille, Situation, La Bonne Boîte ✔, Score, **Chance de réponse** — estimation issue de réponses simulées, expliquée en info-bulle, D31) et « Offres » (niveau d'études, lien vers chaque annonce).
-6. **Un clic sur une ligne** de « Candidatures spontanées » ouvre la **fiche dans une fenêtre** par-dessus la page (section 10). Fermer la fenêtre permet d'en ouvrir une autre.
+6. **La liste n'affiche que les 500 premières entreprises** du classement (T71 : au-delà, la mise en couleur plantait sur les grandes villes) ; une mention le signale.
+7. **Un clic sur une ligne** de « Candidatures spontanées » ouvre la **fiche dans une fenêtre** par-dessus la page (section 10). Fermer la fenêtre permet d'en ouvrir une autre.
 
 **Principes.**
 - Textes courts, en français simple : pas de numéros de tâches, de noms de fichiers ni de commandes à l'écran (ils restent dans les commentaires du code).

@@ -59,6 +59,7 @@ from radar.paliers import (
 from radar.response.predict import add_p_reponse
 from radar.spontaneous import COMPONENTS, haversine_km, rank_spontaneous, signaled_by_lbb
 
+MAX_LIST_ROWS = 500  # lignes affichées dans la liste des candidatures spontanées (T71)
 SITUATION_COURTE = {
     "sauvegarde": "🟡 Sauvegarde",
     "plan": "🟡 Plan",
@@ -351,37 +352,39 @@ with tab_spont:
     elif spontaneous.empty:
         st.write("Aucune entreprise trouvée : élargis le rayon ou retire des filtres.")
     else:
+        # T71 : on n'affiche (et ne colore) que les premières lignes du classement. La mise en
+        # couleur passe par le Styler de pandas, limité à 262 144 cellules : à Paris (20 km,
+        # ~57 000 entreprises), la liste entière plantait. Les tuiles et la carte comptent tout.
+        shown = spontaneous.head(MAX_LIST_ROWS).reset_index(drop=True)
         # « Établissement (Entreprise) » quand les deux noms diffèrent, sinon le nom seul.
-        etab = spontaneous.get("nom_etablissement", pd.Series(index=spontaneous.index))
+        etab = shown.get("nom_etablissement", pd.Series(index=shown.index))
         nom = [
             f"{e} ({n})" if isinstance(e, str) and e and e != n else n
-            for e, n in zip(etab, spontaneous["nom"].astype(str), strict=True)
+            for e, n in zip(etab, shown["nom"].astype(str), strict=True)
         ]
         fav = favorite_refs("entreprise")
         table = pd.DataFrame(
             {
-                "★": spontaneous["siret"].astype(str).isin(fav).map({True: "★", False: ""}),
+                "★": shown["siret"].astype(str).isin(fav).map({True: "★", False: ""}),
                 "Entreprise": nom,
-                "Lieu": spontaneous.get("commune"),
-                "Distance": spontaneous["distance_km"],
-                "Autres sites": spontaneous["_autres_sites"].map(
-                    lambda n: f"+{n}" if n > 0 else ""
+                "Lieu": shown.get("commune"),
+                "Distance": shown["distance_km"],
+                "Autres sites": shown["_autres_sites"].map(lambda n: f"+{n}" if n > 0 else ""),
+                "Taille": shown.get("tranche_effectif", pd.Series(index=shown.index)).map(
+                    TRANCHE_LIBELLES
                 ),
-                "Taille": spontaneous.get(
-                    "tranche_effectif", pd.Series(index=spontaneous.index)
-                ).map(TRANCHE_LIBELLES),
-                "Situation": spontaneous.get(
-                    "procedure_type", pd.Series(index=spontaneous.index)
-                ).map(SITUATION_COURTE),
+                "Situation": shown.get("procedure_type", pd.Series(index=shown.index)).map(
+                    SITUATION_COURTE
+                ),
                 # T29 (D27) : ✔ si La Bonne Boîte signale l'établissement comme recruteur
-                "La Bonne Boîte": signaled_by_lbb(spontaneous).map({True: "✔", False: ""}),
-                "Priorité": spontaneous["palier_libelle"],
-                "Score": spontaneous["score"],
+                "La Bonne Boîte": signaled_by_lbb(shown).map({True: "✔", False: ""}),
+                "Priorité": shown["palier_libelle"],
+                "Score": shown["score"],
             }
         )
         # T64 : toujours affichée quand le modèle couvre le contrat et le domaine
-        if "p_reponse" in spontaneous and spontaneous["p_reponse"].notna().any():
-            table["Chance de réponse"] = spontaneous["p_reponse"]
+        if "p_reponse" in shown and shown["p_reponse"].notna().any():
+            table["Chance de réponse"] = shown["p_reponse"]
         if not table["Autres sites"].astype(bool).any():
             table = table.drop(columns="Autres sites")
         if not table["★"].astype(bool).any():
@@ -392,7 +395,7 @@ with tab_spont:
             table = table.drop(columns="La Bonne Boîte")
         version = st.session_state.get("_liste_version", 0)
         # T65 : couleur du palier sur la colonne « Priorité » (du plus foncé au gris).
-        tier_colors = dict(zip(spontaneous["palier_libelle"], spontaneous["palier"], strict=True))
+        tier_colors = dict(zip(shown["palier_libelle"], shown["palier"], strict=True))
         styled = table.style.map(
             lambda v: f"color: {tier_color(tier_colors.get(v))}; font-weight: 600",
             subset=["Priorité"],
@@ -426,10 +429,19 @@ with tab_spont:
                 ),
             },
         )
-        st.caption("Clique sur une ligne pour ouvrir la fiche de l'entreprise.")
+        more = len(spontaneous) - len(shown)
+        st.caption(
+            "Clique sur une ligne pour ouvrir la fiche de l'entreprise."
+            + (
+                f" Les {fmt_int(len(shown))} premières sur {fmt_int(len(spontaneous))} : "
+                "réduis le rayon ou utilise les filtres pour affiner."
+                if more > 0
+                else ""
+            )
+        )
         rows = event.selection.rows if event is not None else []
         if rows:
-            r = spontaneous.iloc[rows[0]]
+            r = shown.iloc[rows[0]]
             open_fiche(r["siret"], r, domaine)
 
 with tab_offers:

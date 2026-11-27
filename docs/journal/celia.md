@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-11-27 — Tâche T71 : liste qui plantait sur une grande ville
+
+**Fait :**
+- Liste « Candidatures spontanées » limitée aux 500 premières lignes affichées et colorées (`MAX_LIST_ROWS`), avec une mention ; la sélection d'une ligne ouvre toujours la bonne fiche.
+- Reproduit avec des scores factices autour de Paris (60 666 établissements, 20 km) : l'ancienne version plantait (Styler pandas : 472 440 cellules > 262 144), la nouvelle affiche 500 lignes sans erreur.
+- Maxence prévenu dans `TACHES.md` (son code de T65).
+
+**Fichiers touchés :**
+- `app/vues/explorer.py`, `docs/TACHES.md`, `docs/GUIDE.md`
+
+**Résultats / chiffres clés :**
+- 343 tests OK.
+
+---
+
 ## 2026-11-27 — Tâche T70 : apparence plus vivante (hors fiche)
 
 **Fait :**
