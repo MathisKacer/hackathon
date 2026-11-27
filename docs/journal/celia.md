@@ -9,13 +9,13 @@
 **Fait :**
 - Extraction SIRENE : tranche officielle de l'entreprise (`trancheEffectifsUniteLegale`, année) → `tranche_entreprise`, `tranche_entreprise_libelle`, `annee_effectif_entreprise` ; réextraction + BODACC réappliqué.
 - `tranche_display` : « entre 2 000 et 4 999 salariés » pour l'affichage (TRANCHE_LIBELLES inchangé car utilisé par l'explication de Mathis).
-- Fiche entreprise : tranche officielle + total estimé des sites ; fiche site : fourchette claire + effectif de l'entreprise dans « Fait partie de » ; recherche : effectif sur la ligne « toute l'entreprise » ; listes : nouveau libellé.
+- Deux colonnes « Taille entreprise » (officielle) et « Taille site » dans la recherche et la liste des candidatures (vide sur la ligne « toute l'entreprise » et quand l'info manque) ; fiche entreprise : taille officielle ; total estimé abandonné à la demande de Celia (fausse précision : 44 000 à 89 000 pour Orange).
 
 **Fichiers touchés :**
 - `radar/collect/sirene.py`, `radar/fiche.py`, `radar/recherche.py`, `app/fiche_ui.py`, `app/vues/explorer.py`, `app/vues/entreprises.py`, `docs/*`
 
 **Résultats / chiffres clés :**
-- Orange : « 10 000 salariés et plus » (SIRENE 2024), ≈ 62 690 salariés estimés sur 524 sites ; Orange Lyon « entre 1 000 et 1 999 salariés ». Tranche entreprise remplie à 100 %. 348 tests OK.
+- Orange : « 10 000 salariés et plus » (SIRENE 2024), 524 sites ; Orange Lyon « entre 1 000 et 1 999 salariés ». Tranche entreprise remplie à 100 %. 348 tests OK.
 
 **Problèmes / points d'attention pour l'équipe :**
 - Relancer `extract_sirene.py` puis `collect_bodacc.py` (ou `build_all.py --sirene`).

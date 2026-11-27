@@ -76,10 +76,10 @@ table = pd.DataFrame(
     {
         "Entreprise": names,
         "Lieu": lieu.where(~is_company, n_sites.map(lambda n: f"{n} sites en France")),
-        # T73 : fourchette du site ; pour l'entreprise entière, sa tranche officielle
-        "Taille": rows_all["tranche_effectif"]
-        .map(tranche_display)
-        .where(~is_company, rows_all["tranche_entreprise_libelle"]),
+        # T73 : taille de toute l'entreprise (officielle) et du site ; site vide sur la ligne
+        # « toute l'entreprise » et quand la fourchette manque
+        "Taille entreprise": rows_all["tranche_entreprise_libelle"],
+        "Taille site": rows_all["tranche_effectif"].map(tranche_display).where(~is_company, None),
         "Activité": rows_all["naf_libelle"],
         "Situation": rows_all["procedure_type"].map(SITUATION_COURTE),
     }

@@ -33,6 +33,7 @@ ENTREPRISE_COLS = (
     "naf_section",
     "naf_libelle",
     "tranche_effectif",
+    "tranche_entreprise_libelle",  # T73 : taille officielle de l'entreprise entière
     "lat",
     "lon",
     # Situation BODACC (T23, D24) : alerte et pénalité, voir radar/procedures.py

@@ -346,26 +346,17 @@ def _on_site_click(siren: str, key: str) -> None:
 
 
 def _company_headcount(s: dict) -> None:
-    """Effectif de l'entreprise entière (T73) : tranche officielle + total estimé des sites."""
-    parts = []
+    """Taille de l'entreprise entière (T73) : fourchette officielle SIRENE, tous sites."""
     if s.get("tranche_entreprise"):
         an = (
             f" (SIRENE {s['annee_effectif_entreprise']})"
             if s.get("annee_effectif_entreprise")
             else ""
         )
-        parts.append(f"**Effectif de l'entreprise : {s['tranche_entreprise']}**{an}")
-    if s.get("effectif_total"):
-        total = f"{s['effectif_total']:,}".replace(",", " ")
-        parts.append(
-            f"environ {total} salariés sur ses {s['n_sites']} sites d'au moins 10 salariés"
-        )
-    if parts:
         st.markdown(
-            " · ".join(parts),
-            help="SIRENE ne publie pas de nombre exact, seulement des fourchettes : une tranche "
-            "officielle pour l'entreprise entière, et une par site. Le total additionne une "
-            "estimation par site (sites de moins de 10 salariés non comptés).",
+            f"**Taille de l'entreprise : {s['tranche_entreprise']}**{an}",
+            help="Fourchette officielle de salariés de toute l'entreprise, tous sites confondus. "
+            "La taille de chaque site est dans la liste « Ses sites ».",
         )
 
 
@@ -441,7 +432,7 @@ def company_content(siren: str, domaine: str | None = None) -> None:
         {
             "Site": site_name,
             "Lieu": sites["commune"].fillna("") + " " + sites["code_postal"].fillna("").astype(str),
-            "Taille": sites["tranche_effectif"].map(tranche_display),
+            "Taille site": sites["tranche_effectif"].map(tranche_display),
             "Siège": sites["siege"].fillna(False).astype(bool).map({True: "Siège", False: ""}),
         }
     )

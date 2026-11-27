@@ -413,13 +413,16 @@ Temps de réponse : 0,05 à 0,4 s.
 
 **Le constat (remarque de Celia).** SIRENE ne publie **jamais de nombre exact de salariés**, seulement une **tranche** : une par site (« 2 000 à 4 999 salariés » pour Orange à Lyon) et une pour l'entreprise entière. « 2 000 à 4 999 » se lisait comme « jusqu'à 5 000 », et la ligne « toute l'entreprise » de la recherche n'affichait rien.
 
-**Ce qui est affiché maintenant.**
+**Ce qui est affiché maintenant** (choix de Celia).
 
-| Où | Affichage |
-|---|---|
-| Site (listes, fiche, liste des sites d'une entreprise) | « **entre 2 000 et 4 999 salariés** » (`tranche_display`, `radar/collect/sirene.py`) |
-| Entreprise entière (fiche entreprise, ligne « toute l'entreprise » de la recherche, « Fait partie de … » dans la fiche d'un site) | **tranche officielle** de l'unité légale (« 10 000 salariés et plus », année SIRENE) |
-| Fiche entreprise, en plus | **total estimé** : « environ 62 690 salariés sur ses 524 sites d'au moins 10 salariés » (somme des estimations par site ; sites de moins de 10 salariés non comptés), avec une info-bulle |
+| Où | « Taille entreprise » | « Taille site » |
+|---|---|---|
+| Recherche, ligne « toute l'entreprise » | fourchette officielle de l'entreprise (« 10 000 salariés et plus ») | vide |
+| Recherche, ligne d'un site ; liste des candidatures spontanées | fourchette officielle de l'entreprise | fourchette du site (« entre 2 000 et 4 999 salariés ») |
+| Fiche entreprise | « Taille de l'entreprise : 10 000 salariés et plus (SIRENE 2024) » | colonne « Taille site » dans « Ses sites » |
+| Fiche d'un site | dans « Fait partie de … » | sous le nom |
+
+Case vide quand SIRENE n'a pas l'information. **Pas de total calculé** : additionner les fourchettes des sites (44 000 à 89 000 pour Orange) donnait une fausse précision ; la fourchette officielle de l'entreprise est la vraie donnée.
 
 **Données.** `trancheEffectifsUniteLegale` et `anneeEffectifsUniteLegale` ajoutés à l'extraction SIRENE (colonnes `tranche_entreprise`, `tranche_entreprise_libelle`, `annee_effectif_entreprise` de `entreprises.parquet`). **Il faut relancer** `uv run python scripts/extract_sirene.py` puis `collect_bodacc.py` (ou `build_all.py --sirene`) pour avoir ces colonnes ; sans elles, l'app affiche simplement moins d'informations.
 

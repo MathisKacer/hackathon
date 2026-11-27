@@ -378,8 +378,13 @@ with tab_spont:
                 "Lieu": shown.get("commune"),
                 "Distance": shown["distance_km"],
                 "Autres sites": shown["_autres_sites"].map(lambda n: f"+{n}" if n > 0 else ""),
-                "Taille": shown.get("tranche_effectif", pd.Series(index=shown.index)).map(
-                    tranche_display  # T73 : « entre 20 et 49 salariés » (fourchette SIRENE)
+                # T73 : taille de l'entreprise entière (officielle) et taille du site (fourchettes
+                # SIRENE) ; vide quand l'information manque
+                "Taille entreprise": shown.get(
+                    "tranche_entreprise_libelle", pd.Series(index=shown.index)
+                ),
+                "Taille site": shown.get("tranche_effectif", pd.Series(index=shown.index)).map(
+                    tranche_display
                 ),
                 "Situation": shown.get("procedure_type", pd.Series(index=shown.index)).map(
                     SITUATION_COURTE
@@ -444,6 +449,12 @@ with tab_spont:
                     help="Clique sur le nom pour ouvrir la fiche."
                 ),
                 "Distance": st.column_config.NumberColumn(format="%.1f km"),
+                "Taille entreprise": st.column_config.TextColumn(
+                    help="Salariés de toute l'entreprise, tous sites (fourchette SIRENE)."
+                ),
+                "Taille site": st.column_config.TextColumn(
+                    help="Salariés de ce site (fourchette SIRENE, pas de nombre exact)."
+                ),
                 "Groupe": st.column_config.TextColumn(
                     help="Le groupe (même marque) publie déjà des offres pour ton contrat : "
                     "regarde-les aussi. Groupes reconnus par le nom (D36)."
