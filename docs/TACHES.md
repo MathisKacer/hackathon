@@ -40,7 +40,7 @@
 **Lever les limites connues (voir `docs/LIMITES.md`)**
 - [ ] T26 — 🔗T21 **Familles de marque** (L7) : une entreprise ETI/GE dont une entité a des offres du domaine → ses autres entités (même début de nom) sont exclues de la couche orange (`a_offre_groupe`)
 - [ ] T27 — 🔗T21 **Revue des intermédiaires** (L8) : passer en revue les plus gros émetteurs + `volume_suspect`, compléter `INTERMEDIARIES` ; à refaire à chaque nouvelle source (LBA)
-- [ ] T28 — 🔗T30 **`c_embauche` réel** (L11) : La Bonne Boîte v2 (codes ROME data × départements, ≤ 1 req/s, SIRET fourni) + recruteurs potentiels LBA (T17) ; remplace le proxy — réservée @emma, **démarre après T51 (@maxence)**
+- [ ] T28 — 🔗T30 **`c_embauche` réel** (L11) : La Bonne Boîte v2 (codes ROME data × départements, ≤ 1 req/s, SIRET fourni) + recruteurs potentiels LBA (T17) ; remplace le proxy — réservée @emma, **démarre après T51 (@maxence)** — T51 faite : `radar/recruteurs.py` (`lba_recruiter_sirets`) est réutilisable
 - [ ] T18 — 🔗T16 **Autres domaines** (L1) : collecter Adzuna sur d'autres requêtes (finance, marketing…) avec le quota des jours suivants, Bretagne + grandes villes d'abord ; puis noter ces domaines (`SCORED_DOMAINS`)
 
 **Modèle de réponse (démonstrateur, réponses simulées)**
@@ -73,10 +73,10 @@
 
 - [ ] T43 — **Fiche entreprise** : décomposition du score, intervalle crédible, offres récentes, effectif, CA, lien vers l'Annuaire des entreprises — @celia
   ⚠️ **Coordination T32 / T43** (pour travailler en parallèle sans conflit) : **T32 (@mathis)** = fonction `explain(ligne) -> str` dans `radar/explain.py`, qui ajoute une colonne **`explication`** au classement de la couche orange ; Mathis garde le **popup de la carte** (`_company_popup`) et la liste. **T43 (@celia)** = module `radar/fiche.py` + **panneau « Fiche entreprise » sous la liste** (on choisit une entreprise, on voit tout) ; ne touche pas au popup ; **affiche `explication` si la colonne existe**. Dans `app/streamlit_app.py` : popup = Mathis, panneau du bas = Celia.
-- [ ] T51 — 🔗T40,T17 **Recruteurs LBA dans la couche orange** : quand le contrat visé est l'alternance, marquer (ou bonifier) les entreprises présentes dans `lba_recruteurs.parquet` avec un ROME du domaine (signal « recrute des alternants sans offre publiée ») — @maxence
 
 ## ✅ Fait
 
+- [x] T51 — 🔗T40,T17 **Recruteurs LBA dans la couche orange** — @maxence → `radar/recruteurs.py` (ROME non ambigus du domaine) + composante `c_recruteur_lba` (curseur, poids 2, alternance et « Tous » seulement) ; Rennes 20 km alternance : 206 entreprises marquées ; D26
 - [x] T14 — **Test de l'API ROMEO** sur 200 vrais titres Adzuna : **non retenue**, moins fiable que les mots-clés et instable (D25) — @emma
 - [x] T23 — **BODACC : entreprises en difficulté** (D24) : `scripts/collect_bodacc.py` (aussi dans `build_all.py`) → situation par SIREN (sauvegarde / redressement / liquidation / plan) dans `entreprises.parquet` ; dans la couche orange, score pénalisé selon la situation **et le contrat visé**, drapeau 🟡/🟠/🔴 + lien BODACC (liste et fiche), liquidations masquées par défaut (case pour les afficher). 11 124 établissements en alerte (2,7 %). Aucune entreprise supprimée — @celia
 - [x] T37 — 🔗T36,T40 Intégration dans l'app : tri par P(réponse) + bandeau « démonstrateur : réponses simulées » — @maxence → `radar/response/predict.py` (SIRET affichés, + distance au logit), réglage « Classer par Score / P(réponse) simulée », colonne et fiche, bandeau ; emploi non couvert, « Tous » = moyenne stage/alternance ; D23

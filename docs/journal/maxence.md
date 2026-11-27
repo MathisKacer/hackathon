@@ -4,6 +4,32 @@
 
 ---
 
+## 2026-11-27 — T51 : recruteurs LBA dans la couche orange
+
+**Fait :**
+- `radar/recruteurs.py` : une entreprise du rayon est marquée `recruteur_lba` si La bonne alternance la signale comme recruteur potentiel d'alternants sur un code ROME **non ambigu** du domaine (lecture DuckDB des seuls SIRET affichés).
+- Nouvelle composante du score pondéré **« Recruteur d'alternants (LBA) »** (`c_recruteur_lba`, curseur, poids 2 par défaut), qui ne compte qu'en **alternance** et « Tous ». Dans les autres cas son poids est ignoré (et l'opportunité cachée est ignorée en « Tous », où elle valait toujours 0).
+- Une composante sans poids n'apparaît plus dans la liste ni dans la fiche (apport vide au lieu de +0,00).
+- Dans `app/streamlit_app.py`, une seule ligne changée (`get_nearby`) pour ne pas gêner T32 (Mathis, fiche de la carte et liste) ni T43 (Celia, panneau du bas) : le curseur, la colonne et la ligne de la fiche viennent tout seuls de `COMPONENTS`.
+- Décision **D26**.
+
+**Fichiers touchés :**
+- `radar/recruteurs.py` (nouveau), `tests/test_recruteurs.py` (nouveau, 6 tests), `radar/spontaneous.py`, `tests/test_weights.py`, `app/streamlit_app.py`, `docs/DECISIONS.md`, `docs/ARCHITECTURE.md`, `docs/TACHES.md`
+
+**Résultats / chiffres clés :**
+- France : 28 733 recruteurs LBA sur un ROME data ; 12 378 dans le référentiel, dont 11 171 sans offre data (couche orange).
+- Rennes, 20 km, alternance : 206 entreprises marquées sur 4 447 ; en tête Infotel Conseil, Riot Security, Open, Celad, Coexya. En stage : critère ignoré, classement inchangé.
+- 255 tests OK, ruff OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- **@emma (T28)** : `radar/recruteurs.py` (`lba_recruiter_sirets`, `domain_rome_codes`) est réutilisable pour `c_embauche`.
+- Il faut `data/raw/lba_recruteurs.parquet` (T17) ; sans lui, la composante vaut 0 et rien ne casse.
+
+**Prochaine étape :**
+- À choisir avec l'équipe (pitch : T60 / T61 scénario de démo ?).
+
+---
+
 ## 2026-11-27 — T37 : P(réponse) dans l'app
 
 **Fait :**

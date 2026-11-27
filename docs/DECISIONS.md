@@ -14,6 +14,14 @@
 
 ---
 
+### D26 — Recruteurs LBA : composante « Recruteur d'alternants » du score orange, alternance seulement (2026-11-27, @maxence)
+**Contexte :** T51 : les 382 180 « recruteurs potentiels » de La bonne alternance (T11) sont des entreprises susceptibles d'embaucher des alternants **sans offre publiée** : exactement l'opportunité cachée.
+**Décision :** `radar/recruteurs.py` marque `recruteur_lba` = l'entreprise est dans `data/raw/lba_recruteurs.parquet` avec au moins un code ROME **non ambigu** du domaine (`rome` de `domains.yaml`, pas `rome_partiel`) ; lecture DuckDB des seuls SIRET du rayon. Nouvelle composante **`c_recruteur_lba`** (0/1) du score pondéré (D22), curseur « Recruteur d'alternants (LBA) », **poids 2 par défaut**. Elle ne compte qu'en **alternance et « Tous »** : pour un autre contrat son poids est ignoré (`applicable_weights`), sinon elle vaudrait 0 partout et ferait baisser tous les scores sans rien classer ; même règle pour l'opportunité cachée, qui ne compte plus en « Tous » (elle y valait toujours 0). Une composante sans poids a un apport `NaN` : la liste et la fiche n'affichent que les composantes actives.
+**Alternatives écartées :** un simple badge sans effet sur le classement (le signal mérite d'être pondérable) ; ajouter les recruteurs LBA absents du référentiel comme nouveaux points (souvent < 10 salariés, hors SIRENE T20, pas de score) ; utiliser aussi les codes `rome_partiel` (faux positifs : analyste financier, chef de projet informatique…).
+**Conséquences :** France : 28 733 recruteurs LBA sur un ROME data, dont 12 378 dans le référentiel et 11 171 sans offre data (donc en orange). Rennes 20 km, alternance : 206 entreprises marquées sur 4 447. T28 (`c_embauche` réel, @emma) peut réutiliser `radar/recruteurs.py`.
+
+---
+
 ### D25 — API ROMEO testée et non retenue pour classer les offres (2026-11-27, @emma)
 **Contexte :** T14. Les offres Adzuna n'ont pas de code ROME, donc `classify` ne s'appuie que sur des mots-clés dans le titre. ROMEO (France Travail) prédit des codes ROME à partir d'un intitulé : on espérait un classement plus robuste et une T9 plus simple.
 **Test :** 200 titres distincts tirés des vraies offres Adzuna : 50 titres anglais et 50 titres français classés `autre`, plus 20 titres classés par domaine. Code ROME n°1 de ROMEO → domaine via `domains.yaml` ; chaque désaccord avec les mots-clés a été relu à la main. Deuxième passe avec la description (500 car.) en `contexte`.
