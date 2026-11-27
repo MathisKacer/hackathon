@@ -1,55 +1,76 @@
-# Tâches
+# Tâches — 24 h
 
-> Avant de commencer une tâche : la déplacer dans « En cours » avec ton prénom, committer et pousser **immédiatement** pour éviter que deux personnes fassent la même chose.
-> Format : `- [ ] T<num> — description courte — @prenom (si assignée)`
+> **Avant de commencer une tâche** : ajoute `— @prenom` au bout de la ligne, déplace-la dans « En cours », puis commit + push **immédiatement**. Une tâche déjà prise ne se prend pas ; si tu veux aider, demande à la personne qui l'a.
+> Équipe : Mathis, Celia, Maxence, Emma. Les tâches ne sont pas encore attribuées : chacun pioche par ordre de priorité.
+> 🔗 = dépend d'une autre tâche. Sans 🔗 = démarrable tout de suite.
 
-## Découpage en 4 rôles (proposition)
+## Jalons
 
-| Rôle | Périmètre | Fichiers produits |
+| Heure | Jalon | Critère |
 |---|---|---|
-| **A — Collecte des offres** | Adzuna, La bonne alternance, ATS ; collecte quotidienne ; classification data/stage ; rapprochement SIRET | `offres_raw/`, `offres.parquet` |
-| **B — Référentiel entreprises** | SIRENE Bretagne, finances, BODACC, La Bonne Boîte, Egapro | `entreprises.parquet` |
-| **C — Modèle de score** | Bayésien empirique, composantes, validation, explications ; méthodo des slides | `scores.parquet` |
-| **D — Application et pitch** | Streamlit, carte, fiche, poids, CV, lettre LLM ; slides et démo | `app/` |
+| **H+2** | Accès obtenus + squelette du dépôt + données factices | `uv run streamlit run app/streamlit_app.py` affiche une carte avec des entreprises factices |
+| **H+8** | **V1 de bout en bout** | Vraies données (même partielles) → vrai score → app. Rien d'élégant, mais tout marche |
+| **H+16** | V2 | Score bayésien complet, fiche entreprise, filtres, France entière |
+| **H+18** | 🧊 **Gel des fonctionnalités** | Après ça : corrections de bugs, cache de démo, slides. Pas de nouvelle fonctionnalité |
+| **H+22** | Répétition de la démo | Démo enregistrée en vidéo, en secours si le réseau tombe |
 
-Les rôles C et D commencent sur des **données factices** qui respectent le schéma de `ARCHITECTURE.md`. Ils n'attendent pas A et B.
+## 🔴 P0 — Tout de suite (H+0 → H+2)
 
-## 🔴 Priorité haute — à faire (heure 0)
+- [ ] T1 — Créer la **clé Adzuna** (developer.adzuna.com) → l'ajouter au `.env`
+- [ ] T2 — Créer le **jeton La bonne alternance** (espace développeurs) → `.env`
+- [ ] T3 — Compte **francetravail.io** : souscrire à La Bonne Boîte, Marché du travail et ROME 4.0, et envoyer la demande d'accès à Offres d'emploi via le formulaire de contact
+- [ ] T4 — **Squelette du dépôt** : `pyproject.toml` (uv), package `radar/`, `radar/config.py`, `.env.example`, ruff, `app/streamlit_app.py` vide
+- [ ] T5 — **Générateur de données factices** qui respecte les schémas de `ARCHITECTURE.md` (pour que le score et l'app démarrent sans attendre la collecte)
+- [ ] T6 — **Dictionnaire « domaines »** : pour chaque domaine (data en premier, puis 3 ou 4 autres : finance, marketing, informatique, RH…), ses codes ROME et ses mots-clés → `radar/domains.yaml`
 
-- [ ] T1 — **Demandes d'accès** (prennent du temps, à faire en premier) : clé Adzuna, jeton La bonne alternance, compte francetravail.io (La Bonne Boîte, Marché du travail, ROME ; demande Offres d'emploi via le formulaire) — rôle A
-- [ ] T2 — Demander l'export anonymisé des stages au service des stages de l'ENSAI — rôle C
-- [ ] T3 — Squelette du dépôt : `pyproject.toml` (uv), package `radar/`, `config.py`, `.env.example`, ruff — rôle D
-- [ ] T4 — Générateur de données factices aux schémas du contrat — rôle C
+## 🟠 P1 — Chemin critique vers la V1 (H+2 → H+8)
 
-## 🟡 À faire
+**Offres**
+- [ ] T10 — 🔗T1 **Test Adzuna** : volume d'offres data en France et dans le 35, champs réellement renvoyés, nombre d'entreprises que renvoie `top_companies` → noter les résultats dans `SOURCES.md`
+- [ ] T11 — 🔗T2 **Collecteur La bonne alternance**, France entière : offres + recruteurs potentiels, avec SIRET → `offres_raw/lba/`
+- [ ] T12 — 🔗T10 **Collecteur Adzuna** France entière dans la limite du quota (stratégie : `top_companies` par département, requête domaine vs toutes offres) + cache disque → `offres_raw/adzuna/`
+- [ ] T13 — 🔗T6 **Classifieur d'offres** : `domaine` (data ou autre), `contrat` (stage / alternance / emploi), à partir du ROME, des mots-clés et du type de contrat
 
-**A — Offres**
-- [ ] T10 — Collecteur Adzuna (Bretagne, requêtes data) + cache, et test du volume réel en Ille-et-Vilaine
-- [ ] T11 — Collecteur La bonne alternance (offres + recruteurs potentiels, avec SIRET)
-- [ ] T12 — Collecte quotidienne planifiée → S3 (historique)
-- [ ] T13 — Classifieur `is_data` / `is_stage` (codes ROME + mots-clés), évalué sur ~100 offres annotées à la main
-- [ ] T14 — Rapprochement nom + commune → SIRET (rapidfuzz + Recherche d'entreprises), taux de rapprochement mesuré
-- [ ] T15 — Collecteur ATS pour le top des entreprises (slugs Greenhouse, Lever, SmartRecruiters…)
+**Entreprises**
+- [ ] T20 — **Référentiel SIRENE France** : stock parquet géolocalisé (data.gouv) → établissements actifs et employeurs, avec NAF, tranche d'effectif et lat/lon → `entreprises.parquet` (DuckDB)
+- [ ] T21 — 🔗T11,T12 **Rapprochement nom + commune → SIRET** pour les offres Adzuna (rapidfuzz sur le référentiel T20) ; mesurer le taux de rapprochement et le noter dans `SOURCES.md`
 
-**B — Entreprises**
-- [ ] T20 — Extraction SIRENE géolocalisée Bretagne (établissements actifs, employeurs) → `entreprises.parquet`
-- [ ] T21 — Enrichissement finances (CA N, N-1) et croissance
-- [ ] T22 — Signal BODACC (procédures collectives)
-- [ ] T23 — La Bonne Boîte (si l'accès est obtenu)
+**Score**
+- [ ] T30 — 🔗T5 **Score v0** sur données factices : composantes simples (part brute des offres du domaine, opportunité cachée, distance, taille) → `scores.parquet`
+- [ ] T31 — 🔗T30 **Rétrécissement bêta-binomial** : a priori par secteur NAF, a posteriori, intervalle crédible
 
-**C — Score**
-- [ ] T30 — Estimation des a priori bêta par secteur + a posteriori + intervalles crédibles
-- [ ] T31 — Composantes normalisées et `scores.parquet`
-- [ ] T32 — Validation sur les stages ENSAI (AUC, precision@k, références naïves)
-- [ ] T33 — Texte d'explication automatique par entreprise (« recommandée car… »)
+**App**
+- [ ] T40 — 🔗T4,T5 **Page de recherche** : adresse → géocodage (Géoplateforme) → rayon → carte folium + liste triée
+- [ ] T41 — 🔗T40 **Filtres** : domaine, type de contrat visé (stage / alternance / emploi), taille, secteur
+- [ ] T42 — 🔗T40 **Curseurs de poids** → recalcul du score en direct
 
-**D — App et pitch**
-- [ ] T40 — Page de recherche : adresse → géocodage → rayon → carte + liste
-- [ ] T41 — Curseurs de poids + recalcul du score en direct
-- [ ] T42 — Fiche entreprise (décomposition du score, offres, finances, niveau de preuve)
-- [ ] T43 — Dépôt du CV → compétences → adéquation (bonus)
-- [ ] T44 — Lettre de candidature générée par LLM (bonus)
-- [ ] T45 — Slides et scénario de démo
+**Intégration**
+- [ ] T50 — 🔗T11/T12,T20,T30 **Pipeline `scripts/build_all.py`** : brut → `offres.parquet` → `scores.parquet` ; brancher l'app sur les vraies données (**jalon V1**)
+
+## 🟡 P2 — Valeur ajoutée (H+8 → H+16)
+
+- [ ] T32 — Explication automatique par entreprise (« recommandée car… ») à partir des contributions au score
+- [ ] T33 — Modèle gamma-Poisson (nombre d'offres du domaine, avec l'effectif comme exposition) ; comparer au bêta-binomial
+- [ ] T34 — **Validation sans vérité terrain** : stabilité du classement (bootstrap), sensibilité aux poids, cohérence avec La Bonne Boîte et la tension du marché → graphiques pour les slides
+- [ ] T22 — Enrichissement finances (CA N et N-1, via Recherche d'entreprises ou les ratios INPI) → composante dynamisme
+- [ ] T23 — BODACC : écarter ou pénaliser les entreprises en procédure collective
+- [ ] T24 — La Bonne Boîte (si l'accès est obtenu) → composante probabilité d'embauche
+- [ ] T43 — **Fiche entreprise** : décomposition du score, intervalle crédible, offres récentes, effectif, CA, lien vers l'Annuaire des entreprises
+- [ ] T44 — Affichage du **niveau de preuve** (nombre d'offres observées) et du taux de rapprochement global
+
+## 🟢 P3 — Bonus (seulement si le P2 est fini)
+
+- [ ] T45 — Dépôt du CV (PDF) → compétences → composante d'adéquation
+- [ ] T46 — Lettre de candidature spontanée générée par LLM (si on trouve une clé ; sinon, modèle à trous)
+- [ ] T15 — Collecteur ATS (Greenhouse, Lever, SmartRecruiters) pour le top des entreprises
+- [ ] T47 — Temps de trajet en transports en commun (GTFS) au lieu de la distance à vol d'oiseau
+
+## 🎤 Pitch (en continu, une personne référente)
+
+- [ ] T60 — Plan des slides : problème → démo → méthodo du score → limites assumées → suite
+- [ ] T61 — Scénario de démo (2 ou 3 recherches qui montrent de bons résultats, dont une hors Bretagne)
+- [ ] T62 — 🔗H+18 Cache de démo figé + vidéo de secours
+- [ ] T63 — Répétition chronométrée
 
 ## 🔵 En cours
 
@@ -57,8 +78,8 @@ Les rôles C et D commencent sur des **données factices** qui respectent le sch
 
 ## ✅ Fait
 
-- [x] T0 — Mise en place de la structure de coordination (`CLAUDE.md`, `docs/`) — @mathis
-- [x] T5 — Inventaire et test des sources (`docs/SOURCES.md`) — @mathis
+- [x] T0 — Structure de coordination (`CLAUDE.md`, `docs/`) — @mathis
+- [x] T00 — Inventaire et test des sources (`docs/SOURCES.md`), architecture proposée — @mathis
 
 ## 🧊 Bloqué / en attente
 

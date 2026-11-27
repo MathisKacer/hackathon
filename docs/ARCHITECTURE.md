@@ -4,13 +4,13 @@
 
 ## Vue d'ensemble
 
-Toute la donnée lourde est **pré-calculée** (batch) sur la Bretagne. L'application ne fait que lire des fichiers parquet : la démo ne dépend d'aucune API au moment où on la présente, sauf pour le géocodage et le LLM, qui ont un repli.
+Échelle : **France entière**. Hackathon de 24 h → **une seule collecte** (instantané), pas d'historique ni de collecte quotidienne. Toute la donnée lourde est **pré-calculée** (batch). L'application ne fait que lire des fichiers parquet : la démo ne dépend d'aucune API au moment où on la présente, sauf pour le géocodage et le LLM, qui ont un repli.
 
 ```
             COLLECTE (batch, quotidien)                       TRAITEMENT                     APP
  ┌──────────────────────────────────────────┐
- │ Adzuna · La bonne alternance · ATS       │──► offres_raw/ ──► classification data ─┐
- │ (France Travail si l'accès revient)      │    (parquet daté)  + rapprochement SIRET │
+ │ Adzuna · La bonne alternance · ATS       │──► offres_raw/ ──► domaine × contrat ───┐
+ │ (France Travail si l'accès revient)      │    (instantané)    + rapprochement SIRET │
  └──────────────────────────────────────────┘                                          ▼
  ┌──────────────────────────────────────────┐                                    offres.parquet
  │ SIRENE géoloc · Recherche d'entreprises  │──► entreprises.parquet ─────────────────┤
@@ -31,18 +31,19 @@ hackathon/
 ├── pyproject.toml              # dépendances (uv)
 ├── .env.example                # noms des variables d'environnement (sans valeurs)
 ├── radar/                      # package Python
-│   ├── config.py               # chemins, zone (Bretagne), lecture du .env
+│   ├── config.py               # chemins, lecture du .env
+│   ├── domains.yaml            # domaines (data, finance…) → codes ROME + mots-clés
 │   ├── collect/                # un module par source : adzuna.py, lba.py, ats.py, sirene.py, bodacc.py…
 │   ├── process/
-│   │   ├── classify.py         # offre data ? stage ? (ROME + mots-clés)
+│   │   ├── classify.py         # domaine de l'offre + type de contrat (stage / alternance / emploi)
 │   │   └── match_siret.py      # rapprochement nom + commune → SIRET
 │   ├── score/
 │   │   ├── components.py       # intensité data, opportunité cachée, dynamisme, adéquation
 │   │   ├── shrinkage.py        # bêta-binomial bayésien empirique
-│   │   └── validate.py         # validation sur l'historique des stages ENSAI
+│   │   └── validate.py         # stabilité (bootstrap), sensibilité aux poids, cohérence externe
 │   └── llm/letter.py           # génération de lettre (bonus)
 ├── app/streamlit_app.py
-├── scripts/                    # points d'entrée : collect_daily.py, build_all.py
+├── scripts/                    # points d'entrée : collect_all.py, build_all.py
 ├── notebooks/                  # exploration (sorties vidées avant commit)
 ├── tests/
 └── data/                       # ignoré par Git : raw/, processed/ (ou S3 Onyxia)
@@ -54,19 +55,19 @@ Tous les fichiers sont en parquet dans `data/processed/` (copie sur S3). **Ne pa
 
 | Fichier | Produit par | Utilisé par | Colonnes clés |
 |---|---|---|---|
-| `offres_raw/<source>/<date>.parquet` | collect/* | process | `source, offre_id, date_collecte, titre, description, entreprise_nom, commune, lat, lon, contrat, url, siret (si fourni)` |
-| `offres.parquet` | process | score, app | ci-dessus + `is_data: bool, is_stage: bool, siret_match, match_score, match_methode` |
+| `offres_raw/<source>.parquet` | collect/* | process | `source, offre_id, date_collecte, date_publication, titre, description, entreprise_nom, commune, code_postal, lat, lon, contrat_brut, code_rome, url, siret (si fourni)` |
+| `offres.parquet` | process | score, app | ci-dessus + `domaine: str` (clé de `domains.yaml` ou `autre`), `contrat: stage/alternance/emploi`, `siret_match, match_score, match_methode` |
 | `entreprises.parquet` | collect/sirene… | process, score, app | `siret, siren, nom, naf, naf_libelle, tranche_effectif, categorie, lat, lon, commune, ca_n, ca_n_1, procedure_collective: bool, lbb_proba` |
-| `scores.parquet` | score | app | `siret` + une colonne par composante normalisée dans [0, 1] (`c_intensite, c_cachee, c_dynamisme, c_taille…`) + `n_offres, n_offres_data, intensite_post, intensite_ic_bas, intensite_ic_haut` |
+| `scores.parquet` | score | app | **une ligne par (`siret`, `domaine`)** : composantes dans [0, 1] (`c_intensite, c_dynamisme, c_embauche…`) + `n_offres, n_offres_domaine, n_stage_domaine, n_alternance_domaine, intensite_post, intensite_ic_bas, intensite_ic_haut` |
 
-Le score final **n'est pas stocké** : l'app le calcule à la volée, `score = Σ wⱼ · cⱼ`, avec les poids choisis par l'utilisateur. L'adéquation (distance, CV) dépend de l'utilisateur et est aussi calculée dans l'app.
+Le score final **n'est pas stocké** : l'app le calcule à la volée, `score = Σ wⱼ · cⱼ`, avec les poids choisis par l'utilisateur. L'adéquation (distance, CV) et l'**opportunité cachée** dépendent de l'utilisateur (contrat visé) et sont calculées dans l'app : opportunité cachée = besoin dans le domaine (offres d'emploi) mais 0 offre du contrat visé (stage ou alternance).
 
 ## Modèle de score (détail)
 
-- **Intensité data** de l'entreprise *i* dans le secteur *s* : kᵢ offres data sur nᵢ offres. A priori Beta(αₛ, βₛ) estimé par secteur NAF (méthode des moments ou maximum de vraisemblance bêta-binomial sur les entreprises avec nᵢ ≥ 1). A posteriori : (kᵢ + αₛ) / (nᵢ + αₛ + βₛ), avec un intervalle crédible affiché sur la fiche.
+- **Intensité dans le domaine** *d* (data par défaut) de l'entreprise *i* du secteur *s* : kᵢ offres du domaine sur nᵢ offres, **tous contrats confondus** (une offre d'emploi data est un signal de besoin data). A priori Beta(αₛ, βₛ) estimé par secteur NAF (méthode des moments ou maximum de vraisemblance bêta-binomial sur les entreprises avec nᵢ ≥ 1). A posteriori : (kᵢ + αₛ) / (nᵢ + αₛ + βₛ), avec un intervalle crédible affiché sur la fiche.
 - **Piste à étudier** : modèle gamma-Poisson du *nombre* d'offres data avec l'effectif comme exposition. La part seule ignore le volume, et la plupart des entreprises ont nᵢ = 0.
 - **Composantes** ramenées dans [0, 1] par rangs centiles. Le **niveau de preuve** (nᵢ) est affiché pour que l'étudiant voie quand une recommandation repose sur peu d'offres.
-- **Validation** (si l'export des stages ENSAI est obtenu) : les entreprises qui ont accueilli des ENSAI sont-elles bien classées ? Mesures : AUC, precision@k, comparaison à des références naïves (tri par effectif, tri par distance).
+- **Validation sans vérité terrain** : stabilité du top-k par bootstrap sur les offres, sensibilité aux poids, cohérence externe (corrélation avec La Bonne Boîte, avec la tension du marché du travail, et vérification à la main d'un échantillon). Un export de stages d'école permettrait plus tard une vraie validation (AUC, precision@k) : on le cite comme perspective.
 
 ## Stack technique
 
@@ -75,7 +76,7 @@ Le score final **n'est pas stocké** : l'app le calcule à la volée, `score = �
 - `requests` / `httpx` + cache disque (`requests-cache`) pour économiser les quotas
 - `rapidfuzz` pour le rapprochement de noms
 - **Streamlit + streamlit-folium** pour l'application
-- Planification : GitHub Actions (cron) ou tâche Onyxia pour la collecte quotidienne → S3
+- Collecte : script unique lancé une fois (instantané), sorties copiées sur S3 Onyxia
 - LLM (bonus) : API Claude
 
 ## Conventions

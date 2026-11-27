@@ -7,7 +7,9 @@
 | Prénom | Rôle (voir `TACHES.md`) | Journal |
 |---|---|---|
 | Mathis | _TBD_ | [journal](journal/mathis.md) |
-| _…_ | | |
+| Celia | _TBD_ | `journal/celia.md` |
+| Maxence | _TBD_ | `journal/maxence.md` |
+| Emma | _TBD_ | `journal/emma.md` |
 
 ## Contexte
 
@@ -20,10 +22,14 @@ Les stages data intéressants sont rarement publiés. Les étudiants candidatent
 
 ## Solution : Radar
 
-Trouver les entreprises proches de l'étudiant qui ont un **besoin data** (elles recrutent ces profils) mais **pas d'offre de stage visible** → les classer et expliquer pourquoi.
+Trouver les entreprises proches de l'étudiant qui ont un **besoin dans son domaine** (elles recrutent ces profils) mais **pas d'offre visible pour le contrat qu'il cherche** (stage ou alternance) → les classer et expliquer pourquoi.
+
+- **Échelle : France entière**, pour tous les étudiants, pas seulement ceux de l'ENSAI.
+- **Domaine paramétrable** (data par défaut pour la démo ; finance, marketing, informatique… via les codes ROME et des mots-clés).
+- **Contrats** : on collecte stages, alternances et emplois. Les offres d'emploi servent de signal de besoin ; le stage ou l'alternance est ce que l'étudiant vise.
 
 ### Parcours utilisateur
-1. L'étudiant saisit une ville ou une adresse, un rayon, et éventuellement des secteurs et une taille d'entreprise (et, en option, il dépose son CV).
+1. L'étudiant saisit une ville ou une adresse, un rayon, son domaine, le contrat visé (stage ou alternance), et éventuellement des secteurs et une taille d'entreprise (et, en option, il dépose son CV).
 2. Il obtient une carte et une liste d'entreprises classées par score.
 3. Chaque entreprise a une fiche : décomposition du score (pourquoi elle est recommandée), offres data récentes, effectif, croissance, liens.
 4. Bonus : génération d'une lettre de candidature spontanée personnalisée (LLM).
@@ -40,7 +46,7 @@ La Bonne Boîte prédit des embauches en CDI/CDD pour les demandeurs d'emploi, p
 
 ## Livrables
 
-- [ ] Application démo (Streamlit) fonctionnant sur un cache Bretagne pré-calculé
+- [ ] Application démo (Streamlit), France entière, sur des données pré-calculées
 - [ ] Slides de pitch (avec la méthodologie du score et ses limites)
 - [ ] Code reproductible (pipeline de collecte → scores)
 
@@ -51,7 +57,8 @@ Voir [`SOURCES.md`](SOURCES.md). ⚠️ L'API Offres d'emploi France Travail est
 ## Risques connus
 
 - Rapprochement offres ↔ SIRET approximatif (offres anonymes, cabinets) → appariement flou nom + commune, avec **taux de rapprochement affiché**.
-- Pas d'historique des offres → lancer une collecte quotidienne dès maintenant.
+- Pas d'historique des offres (24 h : un seul instantané) → le score décrit le marché **aujourd'hui**.
+- Quota Adzuna (~250 appels/jour) face à l'échelle nationale → utiliser `top_companies` par département, plus La bonne alternance (nationale, avec SIRET).
 - Signal partiel (les stages se publient surtout sur des plateformes sans API) → l'assumer au pitch et croiser plusieurs sources.
 - RGPD : pas d'e-mails ni de noms de personnes (les dirigeants sont dans SIRENE : ne pas les afficher), uniquement des sites et pages carrière.
 
@@ -63,4 +70,9 @@ Voir [`SOURCES.md`](SOURCES.md). ⚠️ L'API Offres d'emploi France Travail est
 
 | Échéance | Jalon |
 |---|---|
-| _TBD_ | |
+| H+2 | Accès aux API, squelette, données factices |
+| H+8 | V1 de bout en bout |
+| H+16 | V2 (score complet, fiche entreprise) |
+| H+18 | Gel des fonctionnalités |
+| H+22 | Répétition de la démo |
+| H+24 | Pitch |

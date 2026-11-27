@@ -2,6 +2,17 @@
 
 ---
 
+## 2026-11-27 — Cadrage après le retour de l'équipe
+
+**Fait :**
+- Prise en compte : 24 h, équipe de 4 (Mathis, Celia, Maxence, Emma), France entière, domaine paramétrable, stage + alternance + emploi, LLM facultatif.
+- `TACHES.md` réécrit en liste priorisée (P0 → P3) avec des jalons horaires, sans attribution ; décisions D3–D5 ; architecture et schémas mis à jour.
+
+**Prochaine étape :**
+- L'équipe pioche dans les P0 (accès aux API, squelette, données factices, dictionnaire des domaines).
+
+---
+
 ## 2026-11-27 — T5 : pitch Radar + inventaire des sources
 
 **Fait :**

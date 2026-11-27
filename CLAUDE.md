@@ -6,8 +6,10 @@ Ce fichier est lu par **toutes** les sessions Claude Code de l'équipe. Plusieur
 
 **Radar** : trouver les entreprises proches d'un étudiant qui ont un besoin data mais pas d'offre de stage visible, pour des candidatures spontanées. Score explicable (bayésien empirique), données ouvertes uniquement. Détails dans `docs/PROJET.md`.
 
-- **Livrable final :** application Streamlit sur un cache Bretagne + slides de pitch
-- **Deadline :** _TBD_
+- **Échelle :** France entière ; domaine paramétrable (data par défaut) ; stage, alternance et emploi
+- **Livrable final :** application Streamlit + slides de pitch
+- **Durée :** hackathon de **24 h** → jalons et gel des fonctionnalités dans `docs/TACHES.md`. Toujours privilégier ce qui fait avancer le prochain jalon.
+- **Équipe :** Mathis, Celia, Maxence, Emma
 
 ## Où se trouve quoi
 
