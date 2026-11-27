@@ -304,6 +304,8 @@ def fiche_content(siret: str, row: pd.Series | None = None, domaine: str | None 
     if NAV_KEY in st.session_state and siren:
         _parent_company(siren)
     _star(siret, row, c)
+    if row.get("score") is None or pd.isna(row.get("score")):
+        _site_not_candidate(siret, siren)  # explique pourquoi (au lieu de ne rien afficher)
     _why(row)
     _need(row, domaine)
     _offers_block(siren, siret)
@@ -364,6 +366,44 @@ def _candidature_row(siret: str) -> pd.Series | None:
         return None
     hit = df[df["siret"].astype(str) == str(siret)]
     return hit.iloc[0] if not hit.empty else None
+
+
+def _site_not_candidate(siret: str, siren: str | None) -> None:
+    """Fiche d'un site absent des candidatures de la recherche : dire pourquoi (T76, @maxence).
+
+    Sans ce bloc, la fiche du site restait muette alors que celle de l'entreprise expliquait.
+    """
+    st.markdown("#### Candidature spontanée")
+    df, ctx = _candidatures(), st.session_state.get("_candidatures_ctx")
+    if df.empty or ctx is None:
+        st.caption(
+            "Choisis une ville dans Explorer pour savoir si ce site est une bonne cible de "
+            "candidature spontanée autour de toi."
+        )
+        return
+    sirens = df["siren"] if "siren" in df else df["siret"].astype(str).str[:9]
+    kept = df[sirens.astype(str) == str(siren)] if siren else df.iloc[0:0]
+    if not kept.empty and st.session_state.get("une_par_entreprise"):
+        best = kept.iloc[0]
+        st.caption(
+            f"« Une ligne par entreprise » est cochée : seul le site le mieux classé de "
+            f"l'entreprise est gardé dans ta recherche ({_site_label(best)}). Décoche-la dans "
+            "les filtres pour voir ce site."
+        )
+        if NAV_KEY in st.session_state:  # navigation site ↔ entreprise disponible
+            st.button(
+                "Voir le site le mieux classé",
+                key=f"vers_meilleur_site_{siret}",
+                icon=":material/open_in_new:",
+                on_click=_go,
+                args=(("site", str(best["siret"])),),
+            )
+        return
+    st.caption(
+        f"Ce site n'est pas une cible dans ta recherche ({ctx['lieu']}, {ctx['rayon']} km) : "
+        "soit il est hors du rayon, soit l'entreprise a déjà une offre pour ton contrat "
+        "(voir l'onglet Offres), soit un filtre (taille, secteur) l'écarte."
+    )
 
 
 def _company_candidature(siren: str) -> None:
