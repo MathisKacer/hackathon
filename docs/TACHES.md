@@ -78,6 +78,7 @@
 ## 🔵 En cours
 
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
+- [ ] T78 — 🔗T76 **Candidature spontanée dans les fiches, même sans ville** : sans recherche (ou hors des résultats), la fiche site et la fiche entreprise donnent quand même l'essentiel (offres déjà publiées pour le contrat visé, besoin data, besoin attendu, recruteur d'alternants LBA, groupe) au lieu de renvoyer vers Explorer — @maxence
 - _…_
 
 ## ✅ Fait
