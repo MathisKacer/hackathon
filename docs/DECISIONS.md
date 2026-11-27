@@ -49,7 +49,8 @@
 
 ---
 
-### D21 — 🟡 PROPOSITION, à valider par @mathis et @maxence — Noter les domaines autres que data (2026-11-27, @emma)
+### D21 — ⏸️ REPORTÉE — Noter les domaines autres que data (2026-11-27, @emma)
+**Statut (2026-11-27) :** reportée. L'équipe se concentre **uniquement sur les offres data** pour le moment. La proposition ci-dessous reste valable si on rouvre le sujet. Il faudra alors d'abord compter, sur les vraies données LBA (T17), les offres et recruteurs par domaine. Ce qui nous concerne déjà pour data, via T51 et T28 : les recruteurs LBA et La Bonne Boîte sur les codes ROME data.
 **Contexte :** depuis D20, l'app propose tous les domaines de `domains.yaml`, mais `scores.parquet` ne contient que data (`SCORED_DOMAINS = ("data",)`, D13). Si un étudiant choisit finance, marketing, rh ou informatique, **la couche 🟠 est vide** (`radar/spontaneous.py › load_nearby` filtre `s.domaine = ?`). Le calcul du score est pourtant générique. La vraie limite, c'est la donnée : toutes les offres Adzuna viennent de la recherche « data », donc pour un autre domaine on ne compterait que les offres qui mentionnent « data ».
 **Proposition :**
 1. **Source principale pour les autres domaines : La bonne alternance**, qui couvre **tous les métiers**, avec codes ROME, sur toute la France et sans quota : 12 748 offres et surtout 382 180 recruteurs potentiels (T11). Le nombre d'offres LBA du domaine (via `classify`, déjà dans `offres.parquet`) alimente l'intensité. Le fait qu'un recruteur LBA recrute un code ROME du domaine peut alimenter `c_embauche`, ce qui rejoint T24/T28.

@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-11-27 — Décision d'équipe : focus sur les offres data
+
+**Fait :**
+- D21 (noter les domaines autres que data) passée en **« reportée »** : l'équipe ne s'intéresse qu'aux offres data pour le moment.
+- T9 (nouvelles catégories de métiers) déplacée dans « Bloqué / en attente », marquée reportée.
+
+**Fichiers touchés :**
+- `docs/DECISIONS.md`, `docs/TACHES.md`, `docs/journal/emma.md`
+
+**Points d'attention pour l'équipe :**
+- L'app propose encore tous les domaines de `domains.yaml` (D20), mais seul data a un score : couche 🟠 vide pour les autres. **@maxence** : limiter le choix à data, ou afficher « bientôt disponible » pour les autres domaines ?
+- T51 (recruteurs LBA dans la couche 🟠) et T28 (`c_embauche` réel) servent directement data, et ne dépendent pas de D21.
+
+---
+
 ## 2026-11-27 — T14 : test de l'API ROMEO ✅ (résultat : non retenue)
 
 **Fait :**
