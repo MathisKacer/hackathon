@@ -89,3 +89,18 @@ def test_bodacc_registre_parsing():
     )
     assert sir.iloc[0] == "499060473" and pd.isna(sir.iloc[1])
     assert hasattr(F, "capital_changes")
+
+
+def test_one_sided_update_never_below_prior():
+    """D33 : « 0 offre » ne fait pas descendre sous l'a priori ; une offre fait monter."""
+    f = _firms(5_000)
+    f["k"] = np.random.default_rng(3).poisson(0.05 * f["E"])
+    m = CovariateModel().fit(f)
+    g = f.iloc[[0, 0]].copy()
+    g["E"] = [50.0, 50.0]
+    g["k"] = [0, 5]
+    post = m.posterior(g)
+    assert post["intensite_post"].iloc[0] == pytest.approx(post["prior_moyenne"].iloc[0])
+    assert post["intensite_post"].iloc[1] > post["prior_moyenne"].iloc[1]
+    m.one_sided = False  # bayésien classique : 0 offre sur une grosse exposition fait descendre
+    assert m.posterior(g)["intensite_post"].iloc[0] < post["prior_moyenne"].iloc[0]

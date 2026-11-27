@@ -54,6 +54,21 @@ def pct_rank(s: pd.Series) -> pd.Series:
     return s.rank(pct=True, method="average")
 
 
+def _dedupe_postings(o: pd.DataFrame, key: str) -> pd.DataFrame:
+    """Une offre par (entreprise ou établissement, titre normalisé) : une même annonce publiée
+    dans plusieurs villes ou republiée ne compte qu'une fois (9,6 % de doublons, D33 :
+    sinon les comptes ne sont pas des événements indépendants)."""
+    if o.empty or "titre" not in o.columns:  # source sans titre : pas de dédoublonnage
+        return o
+    title = (
+        o["titre"].fillna("").str.lower()
+        .str.replace(r"\(?\b[hf]\s*/\s*[hf]\b\)?", " ", regex=True)
+        .str.replace(r"[^a-z0-9àâçéèêëîïôûùüÿœ]+", " ", regex=True)
+        .str.strip()
+    )  # fmt: skip
+    return o.assign(_t=title).drop_duplicates([key, "_t"]).drop(columns="_t")
+
+
 def _company_table(ent: pd.DataFrame, offres: pd.DataFrame, domain: str, cov: dict) -> pd.DataFrame:
     """Une ligne par SIREN : k (offres du domaine), E (exposition), section NAF, effectif."""
     e = ent.copy()
@@ -70,7 +85,7 @@ def _company_table(ent: pd.DataFrame, offres: pd.DataFrame, domain: str, cov: di
     comp["couverture"] = (comp["eff_couv"] / comp["effectif_entreprise"]).fillna(0.0)
 
     o = offres[(offres["domaine"] == domain) & ~offres["intermediaire"].fillna(False)]
-    o = o.dropna(subset=["siren_match"])
+    o = _dedupe_postings(o.dropna(subset=["siren_match"]), "siren_match")
     by_siren = o.assign(stage=o["contrat"].eq("stage"), alt=o["contrat"].eq("alternance")).groupby(
         "siren_match"
     )
@@ -87,7 +102,7 @@ def _company_table(ent: pd.DataFrame, offres: pd.DataFrame, domain: str, cov: di
 def _siret_counts(offres: pd.DataFrame, domain: str) -> pd.DataFrame:
     o = offres[~offres["intermediaire"].fillna(False)].dropna(subset=["siret_match"])
     n_tot = o.groupby("siret_match").size().rename("n_offres")
-    d = o[o["domaine"] == domain]
+    d = _dedupe_postings(o[o["domaine"] == domain], "siret_match")
     by = d.assign(stage=d["contrat"].eq("stage"), alt=d["contrat"].eq("alternance")).groupby(
         "siret_match"
     )

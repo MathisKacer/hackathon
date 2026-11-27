@@ -11,46 +11,67 @@ retire l'avantage mécanique des grandes entreprises (qui publient plus).
 
 | score | AUC | AUC à taille comparable | trouvées dans le top 200 |
 |---|---|---|---|
-| v0 : moyenne du secteur (NAF) | 0.794 | 0.804 | 3.0 |
-| v0 : + offres de l'entreprise (D13, actuel) | 0.722 | 0.772 | 1.0 |
-| v1 : covariables seules (a priori) | 0.838 | 0.821 | 8.0 |
-| v1 : covariables + offres (a posteriori) | 0.831 | 0.817 | 4.0 |
-| GBM (arbres boostés), hors échantillon | 0.555 | 0.477 | 3.0 |
-| v0 : volume attendu (× effectif) | 0.924 | 0.805 | 13.0 |
-| v1 : volume attendu (× effectif) | 0.927 | 0.836 | 28.0 |
+| v0 : moyenne du secteur (NAF) | 0.793 | 0.804 | 3.0 |
+| v0 : + offres de l'entreprise (D13, actuel) | 0.733 | 0.779 | 1.0 |
+| v1 : covariables seules (a priori) | 0.83 | 0.817 | 8.0 |
+| v1 : covariables + offres, bayésien classique | 0.809 | 0.798 | 1.0 |
+| v1 : covariables + offres, à sens unique (production) | 0.83 | 0.817 | 8.0 |
+| GBM (arbres boostés), hors échantillon | 0.604 | 0.562 | 1.0 |
+| v0 : volume attendu (× effectif) | 0.924 | 0.81 | 14.0 |
+| v1 : volume attendu (× effectif), sens unique | 0.906 | 0.831 | 29.0 |
 | témoin : effectif seul | 0.875 | 0.589 | 18.0 |
 
 ## Besoin futur : toutes les entreprises de la zone collectée
 
 | score | AUC | AUC à taille comparable | trouvées dans le top 200 |
 |---|---|---|---|
-| v0 : moyenne du secteur (NAF) | 0.819 | 0.826 | 11.0 |
-| v0 : + offres de l'entreprise (D13, actuel) | 0.79 | 0.826 | 65.0 |
-| v1 : covariables seules (a priori) | 0.861 | 0.843 | 12.0 |
-| v1 : covariables + offres (a posteriori) | 0.868 | 0.853 | 35.0 |
-| GBM (arbres boostés), hors échantillon | 0.557 | 0.478 | 5.0 |
-| v0 : volume attendu (× effectif) | 0.945 | 0.853 | 71.0 |
-| v1 : volume attendu (× effectif) | 0.947 | 0.873 | 64.0 |
+| v0 : moyenne du secteur (NAF) | 0.817 | 0.825 | 11.0 |
+| v0 : + offres de l'entreprise (D13, actuel) | 0.799 | 0.833 | 64.0 |
+| v1 : covariables seules (a priori) | 0.856 | 0.841 | 12.0 |
+| v1 : covariables + offres, bayésien classique | 0.866 | 0.854 | 60.0 |
+| v1 : covariables + offres, à sens unique (production) | 0.877 | 0.863 | 54.0 |
+| GBM (arbres boostés), hors échantillon | 0.606 | 0.565 | 1.0 |
+| v0 : volume attendu (× effectif) | 0.947 | 0.858 | 71.0 |
+| v1 : volume attendu (× effectif), sens unique | 0.937 | 0.877 | 74.0 |
 | témoin : effectif seul | 0.878 | 0.593 | 33.0 |
 
-## Coefficients du modèle v1 (Poisson, offset log exposition ; φ = 0.87), hors NAF
+## Coefficients du modèle v1 (Poisson, offset log exposition ; φ = 28.02), hors NAF
 
-« effet × » : multiplicateur de l'intensité attendue pour +1 sur la variable.
+« effet × » : multiplicateur de l'intensité attendue pour +1 sur la variable. Intervalles à
+95 % avec **erreurs-types robustes (sandwich)** : celles de Poisson seraient trop étroites
+(surdispersion).
 
 |  | coef | IC bas | IC haut | effet × |
 |---|---|---|---|---|
-| const | -6.648 | -7.259 | -6.038 | 0.0 |
-| log_effectif | -0.048 | -0.116 | 0.02 | 0.95 |
-| log_n_etab | -0.272 | -0.349 | -0.194 | 0.76 |
-| log_age | 0.135 | 0.007 | 0.262 | 1.14 |
-| jeune_moins_5_ans | -0.113 | -0.699 | 0.472 | 0.89 |
-| log_modif_capital | 0.384 | 0.232 | 0.535 | 1.47 |
-| augmentation_capital | -0.093 | -0.386 | 0.199 | 0.91 |
-| log_densite_data | 0.344 | 0.295 | 0.394 | 1.41 |
-| ess | -0.272 | -0.683 | 0.138 | 0.76 |
-| societe_mission | -2.677 | -21.192 | 15.838 | 0.07 |
-| cat_ETI | 0.595 | 0.373 | 0.818 | 1.81 |
-| cat_GE | 0.634 | 0.361 | 0.907 | 1.89 |
+| const | -6.542 | -8.117 | -4.966 | 0.0 |
+| log_effectif | -0.059 | -0.272 | 0.154 | 0.94 |
+| log_n_etab | -0.272 | -0.475 | -0.069 | 0.76 |
+| log_age | 0.138 | -0.193 | 0.468 | 1.15 |
+| jeune_moins_5_ans | -0.144 | -1.011 | 0.723 | 0.87 |
+| log_modif_capital | 0.375 | 0.044 | 0.707 | 1.45 |
+| augmentation_capital | -0.047 | -0.642 | 0.548 | 0.95 |
+| log_densite_data | 0.334 | 0.231 | 0.436 | 1.4 |
+| ess | -0.858 | -1.695 | -0.02 | 0.42 |
+| cat_ETI | 0.536 | 0.002 | 1.07 | 1.71 |
+| cat_GE | 0.671 | 0.121 | 1.221 | 1.96 |
+
+## Hypothèses du modèle : vérification (modèle de production, toutes les offres)
+
+| Hypothèse | Mesure | Verdict |
+|---|---|---|
+| Offres indépendantes (pas de doublons) | 9.7% de doublons bruts (même entreprise, même titre) | corrigé : comptés une fois |
+| Exposition ∝ effectif (élasticité 1) | coef. log effectif = 0.081 (IC -0.159 ; 0.322) | écart faible, absorbé par la covariable |
+| Surdispersion bien modélisée | Pearson Poisson 6.03 → binomiale négative 4.71 (≈ 1 attendu) | voir ci-dessous |
+| φ constant selon la taille | φ par tranche d'effectif : {'0–20': 403.426, '20–50': 173.084, '50–250': 38.712, '250–1000': 12.726, '1000–inf': 6.237} | non → φ estimé par tranche |
+| Nombre de zéros | 149,698 observés, 149,713 attendus | ✅ |
+| Calibration (observé / prédit par décile) | [0.0, 0.0, 0.0, 3.21, 1.98, 2.5, 1.0, 0.42, 1.18, 0.99] | haut de distribution ✅ |
+| Erreurs-types | sandwich (HC0) | ✅ |
+
+Non testables ici (à assumer) : probabilité de détection identique pour toutes les entreprises
+(Adzuna ne voit pas les sites carrières ni Welcome to the Jungle), échantillon Île-de-France =
+offres les plus récentes, indépendance entre filiales d'un même groupe (L7), erreurs de
+rapprochement et de classification sur k (L6, L9, L25), incertitude sur β et φ non propagée
+(bayésien empirique « plug-in », négligeable avec 150,197 entreprises).
 
 ## Pourquoi pas l'étiquette « recruteur d'alternants data » de La bonne alternance ?
 

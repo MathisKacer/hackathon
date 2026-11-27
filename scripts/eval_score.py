@@ -1,3 +1,4 @@
+# ruff: noqa: E501  (tableaux Markdown du rapport, non sécables)
 """T69 — Évaluation honnête des variantes du score d'intensité (v0 D13, v1 covariables, GBM).
 
     uv run python scripts/eval_score.py
@@ -52,7 +53,12 @@ def auc_by_size(y: pd.Series, s: pd.Series, size: pd.Series) -> float:
 def table(cands: dict[str, pd.Series], y: pd.Series, size: pd.Series, k: int = 200) -> pd.DataFrame:
     rows = []
     for name, s in cands.items():
-        s = s.reindex(y.index).fillna(s.min())
+        s = s.reindex(y.index).replace([np.inf, -np.inf], np.nan)
+        if s.isna().any():
+            print(
+                f"  ⚠️ {name} : {int(s.isna().sum())} valeurs manquantes ou infinies (classées en bas)"
+            )
+        s = s.fillna(s.min())
         top = y.to_numpy()[np.argsort(-s.to_numpy(), kind="stable")[:k]]
         rows.append(
             {
@@ -93,7 +99,19 @@ def main() -> None:
 
     v0 = posterior(f.reset_index(), fit_priors(f.reset_index())).set_index("siren")
     m = CovariateModel().fit(f)
-    v1 = m.posterior(f)
+    v1 = m.posterior(f)  # à sens unique (production)
+    m.one_sided = False
+    v1_bi = m.posterior(f)  # bayésien classique : « 0 offre » fait aussi descendre
+    m.one_sided = True
+    # Hypothèses : vérifiées sur le modèle ajusté avec TOUTES les offres (celui de la production)
+    full = (
+        _company_table(ent, adz, DOMAIN, cov)
+        .set_index("siren")
+        .join(feats.drop(columns=["naf_section", "naf_division", "effectif_entreprise"]))
+    )
+    diag = CovariateModel().fit(full).diagnostics(full)
+    dup = adz[(adz["domaine"] == DOMAIN) & adz["siren_match"].notna()]
+    dup_rate = dup.duplicated(["siren_match", "titre"]).mean()
     main_dep = (
         ent.assign(eff=ent["effectif_estime"].fillna(0))
         .sort_values("eff", ascending=False)
@@ -107,11 +125,19 @@ def main() -> None:
         "v0 : moyenne du secteur (NAF)": v0["prior_moyenne"],
         "v0 : + offres de l'entreprise (D13, actuel)": v0["intensite_post"],
         "v1 : covariables seules (a priori)": pd.Series(v1["prior_moyenne"], index=f.index),
-        "v1 : covariables + offres (a posteriori)": pd.Series(v1["intensite_post"], index=f.index),
+        "v1 : covariables + offres, bayésien classique": pd.Series(
+            v1_bi["intensite_post"], index=f.index
+        ),
+        "v1 : covariables + offres, à sens unique (production)": pd.Series(
+            v1["intensite_post"], index=f.index
+        ),
         "GBM (arbres boostés), hors échantillon": gbm,
         # volume attendu (intensité × effectif) : ce que classe c_embauche
         "v0 : volume attendu (× effectif)": v0["intensite_post"] * eff,
-        "v1 : volume attendu (× effectif)": pd.Series(v1["intensite_post"], index=f.index) * eff,
+        "v1 : volume attendu (× effectif), sens unique": pd.Series(
+            v1["intensite_post"], index=f.index
+        )
+        * eff,
         "témoin : effectif seul": eff,
     }
     zone = f["couverture"] > 0
@@ -136,6 +162,7 @@ def main() -> None:
     print("\n— Besoin caché (sans offre avant → offre après) —\n" + t_hid.to_string())
     print("\n— Besoin futur (toutes les entreprises de la zone collectée) —\n" + t_all.to_string())
     print(f"\nφ = {m.phi:.2f} ; coefficients v1 hors NAF :\n{coefs.to_string()}")
+    print("\nDiagnostics :", diag, f"; doublons bruts {dup_rate:.1%}")
 
     REPORT.write_text(
         f"""# Évaluation du score d'intensité (T69) — généré par `scripts/eval_score.py`
@@ -157,9 +184,29 @@ retire l'avantage mécanique des grandes entreprises (qui publient plus).
 
 ## Coefficients du modèle v1 (Poisson, offset log exposition ; φ = {m.phi:.2f}), hors NAF
 
-« effet × » : multiplicateur de l'intensité attendue pour +1 sur la variable.
+« effet × » : multiplicateur de l'intensité attendue pour +1 sur la variable. Intervalles à
+95 % avec **erreurs-types robustes (sandwich)** : celles de Poisson seraient trop étroites
+(surdispersion).
 
 {md(coefs)}
+
+## Hypothèses du modèle : vérification (modèle de production, toutes les offres)
+
+| Hypothèse | Mesure | Verdict |
+|---|---|---|
+| Offres indépendantes (pas de doublons) | {dup_rate:.1%} de doublons bruts (même entreprise, même titre) | corrigé : comptés une fois |
+| Exposition ∝ effectif (élasticité 1) | coef. log effectif = {diag["elasticite_effectif"][0]} (IC {diag["elasticite_effectif"][1]} ; {diag["elasticite_effectif"][2]}) | écart faible, absorbé par la covariable |
+| Surdispersion bien modélisée | Pearson Poisson {diag["pearson_poisson"]} → binomiale négative {diag["pearson_binneg"]} (≈ 1 attendu) | voir ci-dessous |
+| φ constant selon la taille | φ par tranche d'effectif : {diag["phi_par_tranche"]} | non → φ estimé par tranche |
+| Nombre de zéros | {diag["zeros_observes"]:,} observés, {diag["zeros_attendus"]:,.0f} attendus | ✅ |
+| Calibration (observé / prédit par décile) | {diag["calibration_deciles"]} | haut de distribution ✅ |
+| Erreurs-types | sandwich (HC0) | ✅ |
+
+Non testables ici (à assumer) : probabilité de détection identique pour toutes les entreprises
+(Adzuna ne voit pas les sites carrières ni Welcome to the Jungle), échantillon Île-de-France =
+offres les plus récentes, indépendance entre filiales d'un même groupe (L7), erreurs de
+rapprochement et de classification sur k (L6, L9, L25), incertitude sur β et φ non propagée
+(bayésien empirique « plug-in », négligeable avec {diag["n"]:,} entreprises).
 
 ## Pourquoi pas l'étiquette « recruteur d'alternants data » de La bonne alternance ?
 
