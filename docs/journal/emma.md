@@ -4,6 +4,30 @@
 
 ---
 
+## 2026-11-27 — T74 : essai La Bonne Boîte pour la finance (domaines par entreprise)
+
+**Fait :**
+- Contexte : idée de donner à chaque entreprise un ou plusieurs domaines selon ce qu'elle peut recruter (reprise de D21, pas encore validée par l'équipe). Question testée : La Bonne Boîte peut-elle servir d'a priori par secteur **et** de signal propre à l'entreprise ?
+- Avant : l'enquête BMO de France Travail (fichiers ouverts 2024 et 2026) a été écartée : métier × bassin d'emploi seulement, **pas de secteur**, et pas de métier « data » séparé.
+- Collecte de la finance avec le collecteur existant (`radar/collect/lbb.py`, script temporaire hors dépôt), par paquets de 25 codes ROME (HTTP 500 au-delà). Résultat local : `data/raw/lbb_essai_finance.parquet` (pas dans Git, pas partagé). Aucun code du dépôt modifié.
+
+**Fichiers touchés :**
+- `docs/SOURCES.md`, `docs/TACHES.md`, `docs/journal/emma.md`
+
+**Résultats / chiffres clés :**
+- 20 611 établissements (M1203 comptabilité en tête), 70 % dans le référentiel, 3,5 % du référentiel signalé finance (data : 0,33 %) ; 157 signalés finance et data.
+- Le NAF seul retrouve les signalés avec une **AUC de 0,97** (validation croisée par départements ; NAF × taille 0,97 ; taille seule 0,61 ; métiers des recruteurs LBA 0,66).
+- Mais c'est un artefact : 247/315 gros NAF n'ont **aucun** signalé (gestion de fonds 0/636), et les secteurs en tête sont étonnants (jeux de hasard 75 %, grossistes en surgelés 58 %), banques 64.19Z 9 % seulement. La Bonne Boîte semble attribuer les métiers via une correspondance NAF ↔ ROME, puis classer par potentiel d'embauche global.
+
+**Problèmes / points d'attention pour l'équipe :**
+- **La Bonne Boîte ne dit pas « cette entreprise recrute en finance »** : le domaine vient du secteur. Même limite que les recruteurs LBA (L26). Pour la data (T28, D27), c'est déjà le cas : `c_embauche` reste valable comme **capacité d'embauche**, pas comme preuve d'un besoin data.
+- Le seul signal propre à l'entreprise **par domaine** en données ouvertes reste ses **offres** (d'où l'intérêt de bien les classer : T68).
+
+**Prochaine étape :**
+- Décider avec l'équipe : a priori par secteur (La Bonne Boîte ou recruteurs LBA, présenté comme « d'après le secteur ») + offres classées (T68) pour le signal propre à l'entreprise.
+
+---
+
 ## 2026-11-27 — T67 : niveau d'études attendu ✅
 
 **Fait :**
