@@ -51,7 +51,6 @@
 **Favoris**
 
 **Lisibilité des résultats et filtres** _(ajoutées par @emma ; elles touchent toutes `app/vues/explorer.py`, en cours de modification par Celia pour T57 : se coordonner avec elle)_
-- [ ] T66 — **Masquer le filtre « Régions »** quand une ville est choisie dans « Où ? » (le rayon autour de la ville le rend redondant, voire contradictoire). Penser à `WIDGET_KEYS` / `profile_keys()` (`app/commun.py`) : ne pas perdre la valeur enregistrée dans un profil
 
 ## 🟢 P3 — Bonus (seulement si le P2 est fini)
 
@@ -77,6 +76,7 @@
 ## 🔵 En cours
 
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
+- [ ] T66 — **Masquer le filtre « Régions »** quand une ville est choisie dans « Où ? » (le rayon autour de la ville le rend redondant, voire contradictoire). Penser à `WIDGET_KEYS` / `profile_keys()` (`app/commun.py`) : ne pas perdre la valeur enregistrée dans un profil — @maxence
 - _…_
 
 ## ✅ Fait
