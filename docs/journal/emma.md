@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-11-27 — Note de passation : domaines par entreprise avec un LLM (T77, proposition)
+
+**Fait :**
+- Mise en note de toute la discussion sur « dans quels domaines une entreprise peut recruter » pour que @mathis reprenne : `docs/PISTE_DOMAINES_LLM.md` (objectif, sources testées et écartées, grille LLM NAF × taille × domaine, brouillon de consigne, précautions, moyens de calcul, branchement possible dans le score, étapes).
+- T77 ajoutée dans TACHES (P2) comme **proposition à valider** ; BMO marquée testée dans SOURCES. Aucun code modifié, aucun LLM lancé.
+
+**Fichiers touchés :**
+- `docs/PISTE_DOMAINES_LLM.md` (nouveau), `docs/TACHES.md`, `docs/SOURCES.md`, `docs/journal/emma.md`
+
+**Résultats / chiffres clés :**
+- 718 NAF × 4 tailles × 5 domaines = 14 360 cases, une question par NAF (ou par 10) : ~72 appels, ~175 000 à 250 000 tokens.
+- Temps : API ~10–20 min ; CPU open source ~3 h (pod sans GPU) ; GPU + vLLM quelques minutes (+ 20–40 min d'installation).
+
+**Problèmes / points d'attention pour l'équipe :**
+- Rouvre D21 (reportée) et touche `radar/score/build.py` (@mathis) : décision d'équipe nécessaire avant de coder.
+- Pas de clé d'API remplie ni de GPU sur le pod d'Emma pour l'instant.
+
+**Prochaine étape :**
+- Décision d'équipe ; trouver un GPU (résultat de `nvidia-smi`) ou une clé ; préparer liste des NAF, consigne et script.
+
+---
+
 ## 2026-11-27 — T74 : essai La Bonne Boîte pour la finance (domaines par entreprise)
 
 **Fait :**
