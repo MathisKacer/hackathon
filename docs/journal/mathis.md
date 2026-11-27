@@ -2,6 +2,13 @@
 
 ---
 
+## 2026-11-27 — Modèle de réponse simulé
+
+**Fait :**
+- Décision D6 : modèle de réponse aux candidatures spontanées entraîné sur des réponses simulées (entreprises réelles), affiché comme démonstrateur. Tâches T35–T37.
+
+---
+
 ## 2026-11-27 — Cadrage après le retour de l'équipe
 
 **Fait :**

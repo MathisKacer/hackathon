@@ -14,6 +14,12 @@
 
 ---
 
+### D6 — Modèle de réponse entraîné sur des réponses simulées (2026-11-27, @mathis)
+**Contexte :** l'équipe veut un modèle « qui va répondre à une candidature spontanée », mais aucune donnée ouverte ne contient ces réponses. Le but pour le hackathon : montrer que la chaîne fonctionne.
+**Décision :** les entreprises et leurs variables sont réelles ; seule la réponse est simulée, selon une règle paramétrique (paramètres documentés dans `radar/response/params.yaml`). On entraîne un modèle et on montre la calibration, l'AUC et les paramètres retrouvés.
+**Alternatives écartées :** générer les réponses avec un LLM (non reproductible, payant, règle inconnue donc on ne peut pas vérifier que le modèle la retrouve).
+**Conséquences :** **toujours étiqueter comme simulé** (app + slides). Réponse préparée pour le jury : la chaîne sera réentraînée sur de vrais retours d'utilisateurs.
+
 ### D5 — Pas de collecte quotidienne (2026-11-27, @mathis)
 **Contexte :** hackathon de 24 h.
 **Décision :** une seule collecte (instantané). Pas d'historique, pas de planification.

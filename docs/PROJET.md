@@ -39,7 +39,8 @@ Trouver les entreprises proches de l'étudiant qui ont un **besoin dans son doma
 - **Opportunité cachée** : recrute des profils data, mais aucune offre de stage visible.
 - **Dynamisme** : croissance (CA, effectif), probabilité d'embauche.
 - **Adéquation** : distance ou temps de trajet, secteur, taille, compétences du CV.
-- **Score** : combinaison pondérée, poids réglables par l'utilisateur, chaque contribution affichée. Pas de modèle supervisé (pas de vérité terrain), donc la transparence est assumée.
+- **Score** : combinaison pondérée, poids réglables par l'utilisateur, chaque contribution affichée.
+- **Modèle de réponse (démonstrateur)** : probabilité qu'une entreprise réponde à une candidature spontanée. Les entreprises et leurs variables sont **réelles** ; seules les réponses sont **simulées**, selon une règle paramétrique documentée, faute de données ouvertes sur ces réponses. On montre que la chaîne fonctionne (calibration, AUC, paramètres retrouvés). Elle sera réentraînée sur de vrais retours d'utilisateurs après le lancement. **Toujours affiché comme simulé** dans l'app et les slides.
 
 ### Ce qui nous distingue de La Bonne Boîte
 La Bonne Boîte prédit des embauches en CDI/CDD pour les demandeurs d'emploi, par métier, à partir des déclarations d'embauche. Elle ne mesure ni la **maturité data** d'une entreprise, ni les **stages**, et n'explique pas son score. Radar s'adresse aux étudiants, mesure le besoin data, explique chaque recommandation et peut utiliser La Bonne Boîte comme simple variable d'entrée.

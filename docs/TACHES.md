@@ -49,6 +49,11 @@
 
 ## 🟡 P2 — Valeur ajoutée (H+8 → H+16)
 
+**Modèle de réponse (démonstrateur, réponses simulées)**
+- [ ] T35 — 🔗T20 **Simulateur** : règle paramétrique P(réponse | besoin, taille, secteur, distance, historique d'embauche…) dans `radar/response/params.yaml`, tirage des réponses sur les entreprises réelles → `candidatures_simulees.parquet`
+- [ ] T36 — 🔗T35 **Modèle de réponse** : logistique (puis arbres boostés si on a le temps) → `p_reponse.parquet` ; slides : calibration, AUC, paramètres retrouvés vs vrais
+- [ ] T37 — 🔗T36,T40 Intégration dans l'app : tri par P(réponse) + bandeau « démonstrateur : réponses simulées »
+
 - [ ] T32 — Explication automatique par entreprise (« recommandée car… ») à partir des contributions au score
 - [ ] T33 — Modèle gamma-Poisson (nombre d'offres du domaine, avec l'effectif comme exposition) ; comparer au bêta-binomial
 - [ ] T34 — **Validation sans vérité terrain** : stabilité du classement (bootstrap), sensibilité aux poids, cohérence avec La Bonne Boîte et la tension du marché → graphiques pour les slides

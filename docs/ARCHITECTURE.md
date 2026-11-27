@@ -41,6 +41,10 @@ hackathon/
 │   │   ├── components.py       # intensité data, opportunité cachée, dynamisme, adéquation
 │   │   ├── shrinkage.py        # bêta-binomial bayésien empirique
 │   │   └── validate.py         # stabilité (bootstrap), sensibilité aux poids, cohérence externe
+│   ├── response/
+│   │   ├── simulate.py         # génère des réponses simulées sur les entreprises réelles
+│   │   ├── params.yaml         # vrais paramètres de la simulation (documentés)
+│   │   └── model.py            # entraîne le modèle de réponse, calibration, paramètres retrouvés
 │   └── llm/letter.py           # génération de lettre (bonus)
 ├── app/streamlit_app.py
 ├── scripts/                    # points d'entrée : collect_all.py, build_all.py
@@ -59,6 +63,9 @@ Tous les fichiers sont en parquet dans `data/processed/` (copie sur S3). **Ne pa
 | `offres.parquet` | process | score, app | ci-dessus + `domaine: str` (clé de `domains.yaml` ou `autre`), `contrat: stage/alternance/emploi`, `siret_match, match_score, match_methode` |
 | `entreprises.parquet` | collect/sirene… | process, score, app | `siret, siren, nom, naf, naf_libelle, tranche_effectif, categorie, lat, lon, commune, ca_n, ca_n_1, procedure_collective: bool, lbb_proba` |
 | `scores.parquet` | score | app | **une ligne par (`siret`, `domaine`)** : composantes dans [0, 1] (`c_intensite, c_dynamisme, c_embauche…`) + `n_offres, n_offres_domaine, n_stage_domaine, n_alternance_domaine, intensite_post, intensite_ic_bas, intensite_ic_haut` |
+
+| `candidatures_simulees.parquet` | response/simulate | response/model | `siret, profil_id, domaine, contrat_vise, distance_km, <variables>, p_vraie, repondu: bool` — **données simulées** |
+| `p_reponse.parquet` | response/model | app | `siret, domaine, contrat_vise, p_reponse, contributions…` |
 
 Le score final **n'est pas stocké** : l'app le calcule à la volée, `score = Σ wⱼ · cⱼ`, avec les poids choisis par l'utilisateur. L'adéquation (distance, CV) et l'**opportunité cachée** dépendent de l'utilisateur (contrat visé) et sont calculées dans l'app : opportunité cachée = besoin dans le domaine (offres d'emploi) mais 0 offre du contrat visé (stage ou alternance).
 
