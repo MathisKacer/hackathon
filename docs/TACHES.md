@@ -31,7 +31,6 @@
 **Score**
 
 **App**
-- [ ] T51 — 🔗T40,T17 **Recruteurs LBA dans la couche orange** : quand le contrat visé est l'alternance, marquer (ou bonifier) les entreprises présentes dans `lba_recruteurs.parquet` avec un ROME du domaine (signal « recrute des alternants sans offre publiée »)
 - [ ] T53 — 🔗T36 `scripts/build_response.py` plante (« Singular matrix ») si les scores sont construits **sans les offres Adzuna** (LBA seules : `c_intensite` et `c_embauche` constantes) → message clair, ou retirer les variables constantes avant l'ajustement (vu par @maxence en T37)
 
 **Intégration**
@@ -74,6 +73,7 @@
 
 - [ ] T43 — **Fiche entreprise** : décomposition du score, intervalle crédible, offres récentes, effectif, CA, lien vers l'Annuaire des entreprises — @celia
   ⚠️ **Coordination T32 / T43** (pour travailler en parallèle sans conflit) : **T32 (@mathis)** = fonction `explain(ligne) -> str` dans `radar/explain.py`, qui ajoute une colonne **`explication`** au classement de la couche orange ; Mathis garde le **popup de la carte** (`_company_popup`) et la liste. **T43 (@celia)** = module `radar/fiche.py` + **panneau « Fiche entreprise » sous la liste** (on choisit une entreprise, on voit tout) ; ne touche pas au popup ; **affiche `explication` si la colonne existe**. Dans `app/streamlit_app.py` : popup = Mathis, panneau du bas = Celia.
+- [ ] T51 — 🔗T40,T17 **Recruteurs LBA dans la couche orange** : quand le contrat visé est l'alternance, marquer (ou bonifier) les entreprises présentes dans `lba_recruteurs.parquet` avec un ROME du domaine (signal « recrute des alternants sans offre publiée ») — @maxence
 
 ## ✅ Fait
 
