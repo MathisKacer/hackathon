@@ -1,4 +1,4 @@
-"""Procédures collectives BODACC → colonnes procedure_* de entreprises.parquet (T23, D23).
+"""Procédures collectives BODACC → colonnes procedure_* de entreprises.parquet (T23, D24).
 
     uv run python scripts/collect_bodacc.py            # utilise le cache s'il existe
     uv run python scripts/collect_bodacc.py --refresh  # retélécharge les annonces (~1 min)

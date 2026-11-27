@@ -172,3 +172,30 @@ def test_apply_procedures_without_bodacc_columns_is_neutral():
     df = pd.DataFrame({"siret": ["1"], "score": [0.5]})
     out = apply_procedures(df, "stage")
     assert out["score"].tolist() == [0.5] and out["alerte"].tolist() == [""]
+
+
+def test_rank_spontaneous_applies_procedures():
+    """Branchement dans la couche orange : pénalité, alerte, liquidation masquée par défaut."""
+    from radar.spontaneous import rank_spontaneous
+
+    rennes = (48.1109, -1.6837)
+    df = pd.DataFrame(
+        {
+            "siret": ["1", "2", "3"],
+            "nom": ["Saine", "EnRedressement", "EnLiquidation"],
+            "lat": [48.115, 48.11, 48.112],
+            "lon": [-1.68, -1.70, -1.69],
+            "c_intensite": [0.5, 0.9, 0.95],
+            "c_embauche": [0.5, 0.9, 0.95],
+            "n_offres_domaine": [0, 0, 0],
+            "n_stage_domaine": [0, 0, 0],
+            "n_alternance_domaine": [0, 0, 0],
+            "procedure_type": [None, "redressement", "liquidation"],
+            "procedure_date": [None, "2026-02-01", "2026-03-01"],
+        }
+    )
+    out = rank_spontaneous(df, *rennes, radius_km=20, contrat="Alternance")
+    assert list(out["nom"]) == ["Saine", "EnRedressement"]  # 0,9 × 0,4 = 0,36 < 0,5
+    assert out.set_index("nom").loc["EnRedressement", "alerte"].startswith("🟠")
+    shown = rank_spontaneous(df, *rennes, 20, "Alternance", show_liquidation=True)
+    assert "EnLiquidation" in set(shown["nom"])

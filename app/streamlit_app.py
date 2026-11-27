@@ -433,7 +433,7 @@ if place is not None:
             ["p_reponse", "score"], ascending=False, na_position="last"
         ).reset_index(drop=True)
 # Connecté : enregistre la recherche et affiche « Mes recherches » ; anonyme : ne fait rien (T49).
-# Avec une adresse : SIRET des premières entreprises de la couche orange (consigne CLAUDE.md).
+# Avec une adresse : noms des premières entreprises de la couche orange (consigne CLAUDE.md).
 search_history(
     PROFILE_KEYS,
     n_results=len(view) + len(spontaneous),

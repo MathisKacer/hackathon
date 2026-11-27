@@ -1,4 +1,4 @@
-"""T23 — Procédures collectives (BODACC) → situation de chaque entreprise (D23).
+"""T23 — Procédures collectives (BODACC) → situation de chaque entreprise (D24).
 
 Source : API ouverte du BODACC (opendatasoft, sans clé), annonces de la famille
 « Procédures collectives » des PERIOD_YEARS dernières années, téléchargées en un seul export
@@ -35,7 +35,7 @@ EXPORT_URL = (
     "annonces-commerciales/exports/parquet"
 )
 RAW_FILE = PATHS.raw / "bodacc_collectives.parquet"
-PERIOD_YEARS = 2  # seules les procédures récentes comptent (D23)
+PERIOD_YEARS = 2  # seules les procédures récentes comptent (D24)
 
 # Situations qui déclenchent une alerte (« fin » n'en déclenche pas).
 ALERT_TYPES = ("sauvegarde", "redressement", "liquidation", "plan")

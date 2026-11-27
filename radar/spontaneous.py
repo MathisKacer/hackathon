@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 
 from radar.config import FILES
+from radar.procedures import apply_procedures
 
 EARTH_RADIUS_KM = 6371.0
 # Colonnes de entreprises.parquet affichées dans l'app (celles qui manquent sont ignorées).
@@ -33,6 +34,10 @@ ENTREPRISE_COLS = (
     "tranche_effectif",
     "lat",
     "lon",
+    # Situation BODACC (T23, D24) : alerte et pénalité, voir radar/procedures.py
+    "procedure_type",
+    "procedure_date",
+    "procedure_url",
 )
 ANNUAIRE_URL = "https://annuaire-entreprises.data.gouv.fr/etablissement/{siret}"
 
@@ -177,12 +182,15 @@ def rank_spontaneous(
     radius_km: float,
     contrat: str = "tous",
     weights: dict[str, float] | None = None,
+    show_liquidation: bool = False,
 ) -> pd.DataFrame:
     """Entreprises du rayon sans offre correspondante, triées par score décroissant.
 
     Ajoute `distance_km`, `score`, `url_annuaire`, les composantes `c_proximite`, `c_cachee`
     et, avec `weights` (T42), les colonnes `apport_<composante>`. Sans `weights` : score D13.
     Écarte les `volume_suspect` (intermédiaires non repérés, D13).
+    Procédures collectives (T23, D24) : score multiplié par `coef_procedure` selon la situation
+    et le contrat, colonne `alerte` ; entreprises en liquidation masquées sauf `show_liquidation`.
     """
     if df.empty:
         return df.assign(distance_km=[], score=[], url_annuaire=[])
@@ -197,5 +205,6 @@ def rank_spontaneous(
         out["score"] = spontaneous_score(out)
     else:
         out = weighted_score(out, weights)
+    out = apply_procedures(out, contrat, show_liquidation)
     out["url_annuaire"] = out["siret"].map(lambda s: ANNUAIRE_URL.format(siret=s))
     return out.sort_values(["score", "distance_km"], ascending=[False, True]).reset_index(drop=True)

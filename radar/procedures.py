@@ -1,4 +1,4 @@
-"""Situation des entreprises (BODACC, T23, D23) : alerte et pénalité dans la couche orange.
+"""Situation des entreprises (BODACC, T23, D24) : alerte et pénalité dans la couche orange.
 
 Aucune entreprise n'est supprimée des données. Dans la couche orange :
 - le score est multiplié par un coefficient qui dépend de la situation ET du contrat visé
