@@ -307,7 +307,7 @@ if place is None:
                 "Alternance": "mais n'ont publié aucune offre d'alternance",
                 "Emploi": "mais n'ont publié aucune offre d'emploi",
             }.get(contrat, "sans offre en ligne")
-            + " : à contacter directement.",
+            + " : idéales pour une candidature spontanée.",
         ),
         (
             ":material/apartment:",
