@@ -74,6 +74,7 @@
 
 ## 🔵 En cours
 
+- [ ] T14 — 🔗T13,T8 **Tester l'API ROMEO** (intitulé de poste → codes ROME) sur ~100 titres Adzuna classés `autre` ; comparer aux mots-clés ; noter débit et limites dans `SOURCES.md` — @emma
 - _…_
 
 ## ✅ Fait
@@ -110,5 +111,4 @@
 
 ## 🧊 Bloqué / en attente
 
-- T14 — 🔗T13,T8 **Tester l'API ROMEO** (France Travail : intitulé de poste → codes ROME + score de confiance) pour classer les offres Adzuna, qui n'ont pas de code ROME. Test sur ~100 titres classés `autre` par `classify` (3 225 titres distincts « autre » sur 8 710) : ROMEO fait-il mieux que les mots-clés, y compris sur les titres anglais ? Noter débit, intitulés par appel et délai d'accès dans `SOURCES.md`. Si concluant : code ROME ROMEO en entrée de `classify` (cache par titre), ce qui simplifie T9 — @emma, **en attente : @mathis doit ajouter ROMEO aux abonnements de l'application sur francetravail.io** (scope absent aujourd'hui)
 - API Offres d'emploi France Travail : suspendue côté France Travail (voir `SOURCES.md`)
