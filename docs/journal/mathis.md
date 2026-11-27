@@ -2,6 +2,25 @@
 
 ---
 
+## 2026-11-27 — T68 (note) + T69 : score v1 avec covariables
+
+**Fait :**
+- T68 : note détaillée (NLP / LLM open source pour classer les offres) dans `TACHES.md`, limite L25.
+- Audit du score : faux négatifs = réseaux géants avec 1 offre (classement correct) ; faux positifs = avocats, vétérinaires (lissage fixe, rang centile, ex æquo).
+- **Erreur corrigée en cours de route** : l'étiquette « recruteur d'alternants data » de LBA est 100 % déterminée par le NAF → abandonnée ; remplacée par une **validation temporelle** (offres avant / après le 18/11).
+- `radar/score/features.py` (SIRENE âge/ESS/mission, BODACC capital 128 543 annonces, densité data 3 km), `radar/score/covariates.py` (Poisson + offset, φ, a posteriori Gamma, GBM hors échantillon), `scripts/eval_score.py` → `docs/EVAL_SCORE.md`, intégration dans `build_scores` (repli v0). Décision **D33**. 4 tests (dont étude de simulation sur les effets).
+
+**Résultats / chiffres clés :**
+- Besoin caché : AUC 0,722 → **0,838** ; volume attendu : top 200 13 → **28** entreprises retrouvées. GBM : 0,56–0,63 hors échantillon (événement rare).
+- Effets : capital ×1,47 ; densité data ×1,41 ; ETI/GE ×1,8 ; nb d'établissements ×0,76.
+- Modèle de réponse : couverture des IC 93 % sur 8 graines (graine par défaut 5/7, malchanceuse).
+
+**Points d'attention pour l'équipe :**
+- `build_all` télécharge au premier lancement les caractéristiques (BODACC capital, SIRENE ; ~25 s), puis cache dans `data/raw/`.
+- Paliers de Maxence (D32) : `c_intensite` reste un rang centile, seuils inchangés.
+
+---
+
 ## 2026-11-27 — Fiabilité : T53, vérification de l'app (3 pages), T27
 
 **Fait :**

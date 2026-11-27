@@ -95,14 +95,9 @@ Le score final **n'est pas stocké** : l'app le calcule à la volée, `score = �
 
 ## Modèle de score (détail)
 
-Voir **D13** dans `DECISIONS.md` (le bêta-binomial initialement prévu a été remplacé).
-
-- **Intensité dans le domaine** (data) de l'entreprise i : k_i offres data observées, exposition E_i = Σ effectif × couverture de la région / 100. k_i ~ Poisson(λ_i E_i), λ_i ~ Gamma(α_s, β_s) par **division NAF**, lissée vers la section puis la moyenne globale ; a priori par la méthode des moments de Clayton & Kaldor. A posteriori Gamma(α_s + k_i, β_s + E_i) : moyenne et intervalle crédible à 90 % (offres data pour 100 salariés).
-- **Composantes** dans [0, 1] par rangs centiles : `c_intensite` (λ a posteriori), `c_embauche` (besoin attendu de l'établissement, proxy en attendant La Bonne Boîte), `c_dynamisme` (neutre 0,5 en attendant T22).
-- **Couche orange** : entreprises sans offre data (`n_offres_domaine_siren == 0`), hors `volume_suspect`, triées par la moyenne pondérée des composantes (intensité, besoin attendu, proximité, opportunité cachée, recruteur d'alternants LBA — D26, dynamisme) avec les poids de l'utilisateur (T42, D22) ; apports `apport_<c>` affichés ; tous les poids à 0 → √(c_intensite × c_embauche) (D13).
-- **Validation** : l'estimateur retrouve les paramètres sur données simulées (test) ; à faire pour les slides : stabilité du top-k par bootstrap, sensibilité aux poids.
-- **Validation (T34)** : `radar/validation.py` + `scripts/validate_scores.py` → stabilité (bootstrap), sensibilité aux poids, cohérence avec La Bonne Boîte et La bonne alternance ; résultats et graphiques dans `docs/VALIDATION.md` et `docs/figures/`.
-- **Code** : `radar/score/intensity.py` (modèle), `radar/score/embauche.py` (`c_embauche`, T28), `radar/score/build.py` (assemblage), `scripts/build_scores.py`.
+**v1 (D33, en production)** : `radar/score/covariates.py`. k_i ~ BinNeg(μ_i E_i, φ) avec log μ_i = x_i·β (Poisson + offset log E, φ par moments), a posteriori Gamma(1/φ + k_i, 1/(φ μ_i) + E_i). Covariables dans `radar/score/features.py` : division NAF, taille, nb d'établissements, âge, modifications de capital (BODACC), densité d'entreprises data à 3 km, catégorie, ESS, mission. Repli automatique sur **v0 (D13)** (`radar/score/intensity.py`, a priori par secteur seulement) si les caractéristiques manquent ; `score_version` dans `scores.parquet`.
+- **Composantes** dans [0, 1] par rangs centiles : `c_intensite` (λ a posteriori), `c_embauche` (La Bonne Boîte d'abord, sinon besoin attendu de l'établissement, D27), `c_dynamisme` (neutre 0,5 en attendant T22).
+- **Évaluation** : `scripts/eval_score.py` → `docs/EVAL_SCORE.md` (validation temporelle, besoin caché, AUC à taille comparable).
 
 ## Explication des recommandations (T32, D29)
 

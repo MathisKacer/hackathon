@@ -28,6 +28,7 @@ from radar.collect.lbb import best_by_siret
 from radar.config import FILES, PATHS
 from radar.geo import region_of
 from radar.schemas import check_columns
+from radar.score.covariates import CovariateModel
 from radar.score.embauche import embauche_component
 from radar.score.intensity import fit_priors, posterior
 
@@ -103,19 +104,44 @@ def _siret_counts(offres: pd.DataFrame, domain: str) -> pd.DataFrame:
     return out.fillna(0).astype(int).reset_index()
 
 
+def _intensity(
+    comp: pd.DataFrame, ent: pd.DataFrame, features: pd.DataFrame | None
+) -> pd.DataFrame:
+    """Intensité a posteriori par SIREN : v1 (covariables, T69, D33) si les caractéristiques
+    sont disponibles, sinon v0 (a priori par secteur NAF seulement, D13)."""
+    if features is not None:
+        try:
+            f = comp.set_index("siren").join(
+                features.set_index("siren").drop(
+                    columns=["naf_section", "naf_division", "effectif_entreprise"],
+                    errors="ignore",
+                )
+            )
+            post = CovariateModel().fit(f).posterior(f)
+            out = comp.set_index("siren").join(post).reset_index()
+            out["score_version"] = "v1_covariables"
+            return out
+        except Exception as e:  # données incomplètes : on garde un score, celui de D13
+            log.warning("Score v1 impossible (%s) : repli sur v0 (D13)", e)
+    out = posterior(comp, fit_priors(comp))
+    out["score_version"] = "v0_secteur"
+    return out
+
+
 def build_scores(
     ent: pd.DataFrame,
     offres: pd.DataFrame,
     cov: dict[str, float],
     lbb: pd.DataFrame | None = None,
+    features: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
-    """`lbb` : établissements La Bonne Boîte (data/raw/lbb.parquet, T28), ou None → proxy seul."""
+    """`lbb` : établissements La Bonne Boîte (data/raw/lbb.parquet, T28), ou None → proxy seul.
+    `features` : caractéristiques des entreprises (T69), ou None → score v0 (D13)."""
     ent = ent[~ent["naf"].fillna("").str.startswith(EXCLUDED_NAF_PREFIX)]
     frames = []
     for domain in SCORED_DOMAINS:
         comp = _company_table(ent, offres, domain, cov)
-        priors = fit_priors(comp)
-        comp = posterior(comp, priors)
+        comp = _intensity(comp, ent, features)
         # Plus d'offres du domaine que la moitié de l'effectif en 60 jours : invraisemblable pour
         # un employeur direct (intermédiaire non repéré, ou offres d'un groupe rattachées à une
         # petite entité juridique — SIRENE ne relie pas les sociétés d'un même groupe).
@@ -153,6 +179,13 @@ def run() -> pd.DataFrame:
     lbb = pd.read_parquet(LBB_FILE) if LBB_FILE.exists() else None
     if lbb is None:
         log.warning("%s absent : c_embauche = proxy seul (lancer scripts/collect_lbb.py)", LBB_FILE)
-    out = build_scores(ent, offres, load_coverage(), lbb)
+    try:  # T69 : caractéristiques (SIRENE, BODACC capital, densité), en cache dans data/raw/
+        from radar.score.features import build_features
+
+        features = build_features(ent[~ent["naf"].fillna("").str.startswith(EXCLUDED_NAF_PREFIX)])
+    except Exception as e:  # pas de réseau au premier lancement, etc.
+        log.warning("Caractéristiques indisponibles (%s) : score v0 (D13)", e)
+        features = None
+    out = build_scores(ent, offres, load_coverage(), lbb, features)
     out.to_parquet(FILES["scores"], index=False)
     return out
