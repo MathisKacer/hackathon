@@ -74,11 +74,11 @@
 
 ## 🔵 En cours
 
-- [ ] T23 — BODACC : écarter ou pénaliser les entreprises en procédure collective — @celia
 - _…_
 
 ## ✅ Fait
 
+- [x] T23 — **BODACC : entreprises en difficulté** (D24) : `scripts/collect_bodacc.py` (aussi dans `build_all.py`) → situation par SIREN (sauvegarde / redressement / liquidation / plan) dans `entreprises.parquet` ; dans la couche orange, score pénalisé selon la situation **et le contrat visé**, drapeau 🟡/🟠/🔴 + lien BODACC (liste et fiche), liquidations masquées par défaut (case pour les afficher). 11 124 établissements en alerte (2,7 %). Aucune entreprise supprimée — @celia
 - [x] T37 — 🔗T36,T40 Intégration dans l'app : tri par P(réponse) + bandeau « démonstrateur : réponses simulées » — @maxence → `radar/response/predict.py` (SIRET affichés, + distance au logit), réglage « Classer par Score / P(réponse) simulée », colonne et fiche, bandeau ; emploi non couvert, « Tous » = moyenne stage/alternance ; D23
 - [x] T42 — 🔗T40 **Curseurs de poids** → recalcul du score en direct — @maxence → 5 curseurs 0–5 (intensité, besoin attendu, proximité, opportunité cachée, dynamisme), score = moyenne pondérée, apport de chaque composante dans la liste et la fiche, bouton « Poids par défaut », enregistrés au profil ; D22
 - [x] T41 — 🔗T40 **Filtres** : domaine, type de contrat visé (stage / alternance / emploi), taille, secteur — @maxence → domaines lus dans `domains.yaml` (offres 🔵 classées par ROME + titre, score 🟠 du domaine), taille en 4 tranches et secteur NAF (multi-choix, couche 🟠, L20) ; `radar/filters.py`, enregistrés dans le profil ; D20

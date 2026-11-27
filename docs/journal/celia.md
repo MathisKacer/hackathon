@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-11-27 — Tâche T23 : BODACC, entreprises en difficulté (D24)
+
+**Fait :**
+- `radar/collect/bodacc.py` : export BODACC des 2 dernières années (procédures collectives), classement des natures de jugement, dernier événement qui change la situation par SIREN, enrichissement de `entreprises.parquet`. Script `scripts/collect_bodacc.py`, étape « 1 bis » dans `build_all.py`.
+- `radar/procedures.py` : pénalité selon la situation et le contrat visé (`PENALTIES`), alertes 🟡/🟠/🔴.
+- `radar/spontaneous.py` : colonnes BODACC chargées, `apply_procedures` dans `rank_spontaneous` (paramètre `show_liquidation`).
+- App : case « Afficher aussi les entreprises en liquidation » (dans le profil), colonne « Situation », alerte + lien BODACC dans la fiche.
+- Choix discuté avec l'équipe : pénaliser et signaler plutôt que supprimer (D24).
+
+**Fichiers touchés :**
+- `radar/collect/bodacc.py`, `radar/procedures.py`, `radar/spontaneous.py`, `scripts/collect_bodacc.py`, `scripts/build_all.py`, `app/streamlit_app.py`, `tests/test_bodacc.py`, `CLAUDE.md`, `docs/*`
+
+**Résultats / chiffres clés :**
+- 404 778 annonces (47 Mo, ~1 min) → 205 047 SIREN ; 11 124 établissements en alerte sur 406 266 (2,7 %) : 6 130 liquidations, 2 449 redressements, 2 046 plans, 499 sauvegardes.
+- Autour de Rennes (20 km, alternance, scores factices) : 54 alertes visibles, 58 liquidations masquées.
+- 28 tests T23 ; suite complète : 249 tests OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- Relancer `scripts/build_all.py` (ou `collect_bodacc.py`) pour avoir les colonnes BODACC dans son `entreprises.parquet`.
+- Coefficients de pénalité choisis à dire d'expert (L23) : à discuter si besoin, réglables dans `radar/procedures.py`.
+
+---
+
 ## 2026-11-27 — Sécurité des mots de passe (suite de T48, D16)
 
 **Fait :**

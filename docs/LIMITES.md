@@ -36,6 +36,14 @@
 | L15 | **Pas de vérité terrain** : on ne sait pas qui répond aux candidatures spontanées | Le modèle de réponse est un **démonstrateur sur réponses simulées** (D6) : ses probabilités reflètent les hypothèses de `params.yaml`, pas le réel | ⏳ retours des utilisateurs après lancement (historique des recherches D14 + bouton « on m'a répondu ») | T35–T36 ✅, T37 ✅ (bandeau « simulé » dans l'app, D23), T34 | « Entreprises réelles, réponses simulées ; le modèle retrouve la règle cachée (7/7 paramètres, bien calibré) : il est prêt à apprendre des vrais retours » |
 | L20 | Filtres **taille** et **secteur** (T41) appliqués aux entreprises 🟠 seulement | Les offres 🔵 n'ont pas d'effectif ni de NAF fiables (Adzuna n'en donne pas ; rapprochement SIRET à 65 %) : elles ne suivent que domaine, contrat, région, âge et mot-clé | ✅ filtrer les offres rapprochées d'un SIRET (`offres.parquet`) | — | « Les filtres taille/secteur servent à cibler les candidatures spontanées » |
 
+## Situation des entreprises (BODACC, T23)
+
+| # | Limite | Impact | Réglable ? | Tâche | À dire au pitch |
+|---|---|---|---|---|---|
+| L21 | Fenêtre de **2 ans** et instantané : une procédure ouverte avant, ou publiée après la collecte, n'est pas vue | Quelques entreprises en difficulté sans alerte | ✅ relancer `collect_bodacc.py --refresh` ; élargir `PERIOD_YEARS` | — | « Données BODACC du jour, procédures des 2 dernières années » |
+| L22 | Annonces sans SIREN (entrepreneurs inscrits au seul répertoire des métiers) ignorées ; rattachement par SIREN, donc **tous les établissements** d'une entreprise sont signalés | Peu d'impact (≥ 10 salariés : surtout des sociétés au RCS) ; un établissement sain d'un groupe en procédure est pénalisé | ✅ en partie (rattacher par n° RM) | — | — |
+| L23 | Coefficients de pénalité **fixés à dire d'expert** (pas estimés) | Classement sensible à ces choix | ✅ réglables dans `radar/procedures.py` ; à terme, estimés sur de vraies réponses | — | « Pénalité explicite et réglable, selon le contrat visé » |
+
 ## Données personnelles
 
 | # | Limite | Impact | Réglable ? | Tâche |
