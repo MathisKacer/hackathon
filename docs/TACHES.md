@@ -59,7 +59,6 @@
 - [ ] T44 — Affichage du **niveau de preuve** (nombre d'offres observées) et du taux de rapprochement global
 
 **Comptes (optionnels, D14) : le mode démo anonyme reste le parcours par défaut**
-- [ ] T49 — 🔗T48 **Historique des recherches** (connecté seulement) : chaque recherche enregistrée (date, paramètres, nombre de résultats, top 5 SIRET) ; liste « Mes recherches » avec bouton « Relancer » ; en anonyme, rien n'est écrit (`st.session_state` seulement)
 - [ ] T19 — **Données factices vs vraies offres** : dans `fake_data`, `date_collecte` est une date alors que les offres Adzuna l'ont en texte → l'app plante sur les données factices (`offers['date_collecte'].max()[:10]`, dernière ligne de `streamlit_app.py`) et elles n'ont pas `region_requete`. Aligner l'un ou l'autre
 
 ## 🟢 P3 — Bonus (seulement si le P2 est fini)
@@ -78,6 +77,7 @@
 
 ## 🔵 En cours
 
+- [ ] T49 — 🔗T48 **Historique des recherches** (connecté seulement) : chaque recherche enregistrée (date, paramètres, nombre de résultats, top 5 SIRET) ; liste « Mes recherches » avec bouton « Relancer » ; en anonyme, rien n'est écrit (`st.session_state` seulement) — @celia
 - [ ] T25 — 🔗T21 **Rattrapage du rapprochement** (L6, L9) : pour les noms non rapprochés (~1 200), API Recherche d'entreprises (`/search?q=<nom>` + proximité ; gère sigles et noms commerciaux, ~7 req/s) + table d'alias manuelle pour les 30 plus gros émetteurs (SFR, EY, Pennylane…) ; objectif : SFR & co ne sortent plus en orange — @mathis
 - [ ] T50 — 🔗T11/T12,T20,T30 **Pipeline `scripts/build_all.py`** : brut → `offres.parquet` → `scores.parquet` ; brancher l'app sur les vraies données (**jalon V1**) — @mathis
 - [ ] T17 — 🔗T11 **Partager les données LBA sur S3** (`offres_raw/lba.parquet`, `lba_recruteurs.parquet`) : relancer `scripts/collect_lba.py` sur Onyxia puis `scripts/share_s3.py` — @maxence
