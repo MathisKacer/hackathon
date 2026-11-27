@@ -51,7 +51,6 @@
 
 **Lisibilité des résultats et filtres** _(ajoutées par @emma ; elles touchent toutes `app/vues/explorer.py`, en cours de modification par Celia pour T57 : se coordonner avec elle)_
 
-- [ ] T73 — **Effectifs plus clairs** (remarque de Celia) : SIRENE ne donne qu'une **tranche** par site, jamais un nombre exact (« 2 000 à 4 999 salariés » à Lyon ≠ « jusqu'à 5 000 »). (1) Par site : libellé « entre 2 000 et 4 999 salariés ». (2) Entreprise entière : ajouter à l'extraction SIRENE la **tranche officielle de l'unité légale** (`trancheEffectifsUniteLegale`, ex. « 10 000 salariés et plus ») et afficher aussi le **total estimé à partir des sites** (« environ 62 700 salariés sur ses 524 sites d'au moins 10 salariés ») dans la fiche entreprise et sur la ligne « toute l'entreprise » de la recherche (aujourd'hui vide). Relancer `extract_sirene.py` après
 
 ## 🟢 P3 — Bonus (seulement si le P2 est fini)
 
@@ -76,6 +75,7 @@
 
 ## 🔵 En cours
 
+- [ ] T73 — **Effectifs plus clairs** (remarque de Celia) : SIRENE ne donne qu'une **tranche** par site, jamais un nombre exact (« 2 000 à 4 999 salariés » à Lyon ≠ « jusqu'à 5 000 »). (1) Par site : libellé « entre 2 000 et 4 999 salariés ». (2) Entreprise entière : ajouter à l'extraction SIRENE la **tranche officielle de l'unité légale** (`trancheEffectifsUniteLegale`, ex. « 10 000 salariés et plus ») et afficher aussi le **total estimé à partir des sites** (« environ 62 700 salariés sur ses 524 sites d'au moins 10 salariés ») dans la fiche entreprise et sur la ligne « toute l'entreprise » de la recherche (aujourd'hui vide). Relancer `extract_sirene.py` après — @celia
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
 - _…_
 
