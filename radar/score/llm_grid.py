@@ -31,7 +31,7 @@ from radar.filters import TAILLES
 
 log = logging.getLogger(__name__)
 
-PROMPT_VERSION = "v2"  # v1 : trop de 3 (fonctions support notées « cœur de métier »)
+PROMPT_VERSION = "v3"  # v1 : trop de 3 ; v2 : cœur de métier sous-noté (banque finance 2)
 PROMPT_DIR = Path(__file__).parent / "prompts"
 CACHE_DIR = PATHS.processed / "llm_grille"
 GRID_FILE = PATHS.processed / "grille_domaines.parquet"
