@@ -47,7 +47,7 @@ from favoris import favorite_refs, offer_ref, sync_offers_editor, temp_banner
 from fiche_ui import open_fiche
 from recherches import save_button
 from streamlit_folium import st_folium
-from style import GREEN, LINK_STYLE, RED, Tile, fmt_int, hero, kpi_tiles, pill
+from style import GREEN, LINK_STYLE, Tile, fmt_int, hero, kpi_tiles, pill
 
 from radar.collect.sirene import tranche_display
 from radar.competences import MATCH_COLORS, add_match, match_skills
@@ -285,9 +285,6 @@ else:
         n_sites = len(spontaneous)
     n_off = len(view)
     n_prio = int((spontaneous.get("palier", pd.Series(dtype=int)) == 1).sum())
-    n_alert = (
-        int(spontaneous["procedure_type"].notna().sum()) if "procedure_type" in spontaneous else 0
-    )
     st.caption(f"Autour de **{place.label}** · {rayon} km{contrat_txt}")
     tiles = [
         Tile(
@@ -305,8 +302,6 @@ else:
             GREEN,
         ),
     ]
-    if n_alert:
-        tiles.append(Tile(fmt_int(n_alert), "en difficulté (signalées)", RED))
     kpi_tiles(tiles)
     if spontaneous.empty and not FILES["scores"].exists():
         st.caption("Équipe : `scores.parquet` manquant (lancer `scripts/build_all.py`).")
