@@ -119,11 +119,9 @@ def login_forms(profile_keys: dict) -> None:
         password = st.text_input("Mot de passe", type="password", help=accounts.PASSWORD_RULES)
         confirm = st.text_input("Confirmer le mot de passe", type="password")
         st.caption(
-            f"Au moins {accounts.PASSWORD_MIN} caractères, avec 3 types parmi "
-            "minuscules, majuscules, chiffres et caractères spéciaux. "
-            "Une phrase marche bien : « velo rouge 2026 Rennes »."
+            f"{accounts.PASSWORD_MIN} caractères minimum, dont au moins 3 types parmi : "
+            "minuscule, majuscule, chiffre, caractère spécial."
         )
-        st.caption("Tes réglages actuels deviennent ton profil.")
         if st.form_submit_button("Créer mon compte", width="stretch"):
             if password != confirm:
                 st.error("Les deux mots de passe ne correspondent pas.")
