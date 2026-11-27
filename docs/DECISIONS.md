@@ -14,6 +14,14 @@
 
 ---
 
+### D23 — P(réponse) dans l'app : classement au choix, bandeau « simulé » permanent (2026-11-27, @maxence)
+**Contexte :** T37 : brancher le démonstrateur T36 (D18) dans la couche orange sans laisser croire qu'il s'agit de vraies probabilités.
+**Décision :** `radar/response/predict.py`. L'app lit `p_reponse.parquet` **pour les seuls SIRET affichés** (DuckDB) et ajoute la distance au logit : logit(p) = logit(p₀) + `coefficients['distance_10km']` × km / 10 (`modele_reponse.json`). Contrat visé : stage ou alternance → la ligne correspondante ; « Tous » → moyenne des deux ; « Emploi » → pas de P(réponse) (le modèle ne le couvre pas). Réglage « Classer les entreprises 🟠 par » : **Score** (défaut, explicable, D22) ou **P(réponse) simulée** (enregistré au profil, clé `tri`). Dès que P(réponse) est affichée : bandeau « 🧪 Démonstrateur — réponses simulées », colonne « P(réponse) simulée » en %, ligne « P(réponse) *simulée* » dans la fiche. Modèle absent, domaine non couvert ou emploi → message expliquant pourquoi, classement par score.
+**Alternatives écartées :** P(réponse) comme 6ᵉ composante du score pondéré (mélangerait une grandeur simulée au score réel) ; tri par P(réponse) par défaut (le cœur du pitch reste le score explicable sur données réelles) ; charger tout `p_reponse.parquet` (France entière × 2 contrats).
+**Conséquences :** l'app a besoin de `p_reponse.parquet` et `modele_reponse.json` (`scripts/build_response.py`, qui demande des scores construits **avec les offres Adzuna** : sur LBA seules, l'intensité est constante et la logistique échoue, matrice singulière).
+
+---
+
 ### D22 — Score orange pondéré : moyenne des composantes, poids 0 à 5, apports affichés (2026-11-27, @maxence)
 **Contexte :** T42 : l'étudiant règle les poids et le classement se recalcule en direct ; PROJET demande que chaque contribution soit affichée.
 **Décision :** `score = Σ wⱼ·cⱼ / Σ wⱼ` (reste dans [0, 1]) sur 5 composantes : `c_intensite` et `c_embauche` (D13), **`c_proximite`** = 1 − distance / rayon, **`c_cachee`** = 1 si l'entreprise publie des offres du domaine mais aucune pour le contrat visé (l'« opportunité cachée » du pitch ; toujours 0 avec « Tous »), `c_dynamisme` (neutre tant que T22 manque). Curseurs entiers de 0 à 5, défaut intensité 3, besoin 3, proximité 1, opportunité cachée 1, dynamisme 0 ; bouton « Poids par défaut ». Chaque composante a une colonne `apport_<c>` = wⱼ·cⱼ / Σw, dont la somme est le score : affichée dans la liste (« + … ») et en barres dans la fiche de la carte. Tous les poids à 0 → repli sur le score D13. Poids enregistrés dans le profil (`poids_*`). Code : `radar/spontaneous.py` (`COMPONENTS`, `DEFAULT_WEIGHTS`, `weighted_score`).

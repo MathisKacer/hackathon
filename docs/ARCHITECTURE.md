@@ -51,7 +51,8 @@ hackathon/
 │   ├── response/
 │   │   ├── simulate.py         # génère des réponses simulées sur les entreprises réelles
 │   │   ├── params.yaml         # vrais paramètres de la simulation (documentés)
-│   │   └── model.py            # entraîne le modèle de réponse, calibration, paramètres retrouvés
+│   │   ├── model.py            # entraîne le modèle de réponse, calibration, paramètres retrouvés
+│   │   └── predict.py          # T37 : P(réponse) dans l'app (lecture DuckDB des SIRET affichés + effet de la distance, D23)
 │   └── llm/letter.py           # génération de lettre (bonus)
 ├── app/streamlit_app.py        # + app/compte.py : bloc « compte » et « Mes recherches » de la barre latérale (T48, T49)
 ├── scripts/                    # points d'entrée : collect_all.py, build_all.py, make_fake_data.py

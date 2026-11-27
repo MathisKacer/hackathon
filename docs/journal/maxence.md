@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-11-27 — T37 : P(réponse) dans l'app
+
+**Fait :**
+- `radar/response/predict.py` : lit `p_reponse.parquet` pour les seuls SIRET affichés (DuckDB) et ajoute l'effet de la distance au logit avec le coefficient de `modele_reponse.json` (D18). Stage / alternance → la ligne du contrat ; « Tous » → moyenne des deux ; « Emploi » → pas de P(réponse).
+- App : réglage **« Classer les entreprises 🟠 par : Score / P(réponse) simulée »** (clé `tri`, enregistré au profil), colonne « P(réponse) simulée » en % dans la liste, ligne dans la fiche de la carte, **bandeau « 🧪 Démonstrateur — réponses simulées »** dès qu'une probabilité est affichée. Si le modèle manque, si le domaine n'est pas couvert ou en emploi : message qui explique pourquoi, classement par score.
+- Décision **D23** ; L15 mise à jour ; nouvelle tâche **T53**.
+
+**Fichiers touchés :**
+- `radar/response/predict.py` (nouveau), `tests/test_predict.py` (nouveau, 5 tests), `app/streamlit_app.py`, `docs/DECISIONS.md`, `docs/ARCHITECTURE.md`, `docs/LIMITES.md`, `docs/TACHES.md`
+
+**Résultats / chiffres clés :**
+- 221 tests OK, ruff OK. AppTest (Rennes, 20 km) avec un `p_reponse` construit à partir des coefficients de `docs/MODELE_REPONSE.md` : bandeau affiché, tri par P(réponse) qui reclasse la liste, message en « Emploi », probabilités plus hautes en alternance (coefficient +0,33).
+
+**Problèmes / points d'attention pour l'équipe :**
+- Sur mon pod, j'ai reconstruit les **vraies** entreprises SIRENE et les scores (`build_all.py --sirene`) : il n'y a plus de données factices. Mais je n'ai que les offres **LBA** (pas Adzuna) → `c_intensite` vaut 0,5 partout et `scripts/build_response.py` plante (« Singular matrix ») → T53.
+- **@mathis** : il me faut tes `scores.parquet`, `entreprises.parquet`, `p_reponse.parquet` et `modele_reponse.json` (via `build_all.py --share` / `share_s3.py`, en MP) pour voir T37 avec les vraies probabilités.
+
+**Prochaine étape :**
+- Récupérer les fichiers de Mathis et vérifier l'app de bout en bout ; T51.
+
+---
+
 ## 2026-11-27 — T42 : curseurs de poids du score orange
 
 **Fait :**

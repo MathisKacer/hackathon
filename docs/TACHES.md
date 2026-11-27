@@ -32,6 +32,7 @@
 
 **App**
 - [ ] T51 — 🔗T40,T17 **Recruteurs LBA dans la couche orange** : quand le contrat visé est l'alternance, marquer (ou bonifier) les entreprises présentes dans `lba_recruteurs.parquet` avec un ROME du domaine (signal « recrute des alternants sans offre publiée »)
+- [ ] T53 — 🔗T36 `scripts/build_response.py` plante (« Singular matrix ») si les scores sont construits **sans les offres Adzuna** (LBA seules : `c_intensite` et `c_embauche` constantes) → message clair, ou retirer les variables constantes avant l'ajustement (vu par @maxence en T37)
 
 **Intégration**
 
@@ -74,11 +75,11 @@
 ## 🔵 En cours
 
 - [ ] T23 — BODACC : écarter ou pénaliser les entreprises en procédure collective — @celia
-- [ ] T37 — 🔗T36,T40 Intégration dans l'app : tri par P(réponse) + bandeau « démonstrateur : réponses simulées » — données prêtes : `p_reponse.parquet` (à distance nulle, filtre `contrat_vise`) ; ajouter `coefficients['distance_10km'] × km / 10` au logit, coefficient dans `data/processed/modele_reponse.json` (D18) — @maxence
 - _…_
 
 ## ✅ Fait
 
+- [x] T37 — 🔗T36,T40 Intégration dans l'app : tri par P(réponse) + bandeau « démonstrateur : réponses simulées » — @maxence → `radar/response/predict.py` (SIRET affichés, + distance au logit), réglage « Classer par Score / P(réponse) simulée », colonne et fiche, bandeau ; emploi non couvert, « Tous » = moyenne stage/alternance ; D23
 - [x] T42 — 🔗T40 **Curseurs de poids** → recalcul du score en direct — @maxence → 5 curseurs 0–5 (intensité, besoin attendu, proximité, opportunité cachée, dynamisme), score = moyenne pondérée, apport de chaque composante dans la liste et la fiche, bouton « Poids par défaut », enregistrés au profil ; D22
 - [x] T41 — 🔗T40 **Filtres** : domaine, type de contrat visé (stage / alternance / emploi), taille, secteur — @maxence → domaines lus dans `domains.yaml` (offres 🔵 classées par ROME + titre, score 🟠 du domaine), taille en 4 tranches et secteur NAF (multi-choix, couche 🟠, L20) ; `radar/filters.py`, enregistrés dans le profil ; D20
 - [x] T40 — 🔗T4,T5 **Page de recherche + couche 2 « Candidature spontanée » (orange)** : adresse → géocodage (Géoplateforme) → rayon → même carte folium, entreprises **sans offre correspondante** classées par score ; légende des deux couches + deux listes triées — @maxence → `radar/spontaneous.py` (DuckDB, exclusion par contrat visé au niveau SIREN, score D13) + `radar/geocode.py` (Géoplateforme, cache disque) ; D19
