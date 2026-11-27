@@ -19,6 +19,7 @@ Ce fichier est lu par **toutes** les sessions Claude Code de l'équipe. Plusieur
 | `docs/MODELE_REPONSE.md` | Rapport du modèle de réponse (réponses simulées) : AUC, calibration, paramètres retrouvés — **généré**, ne pas éditer | `scripts/build_response.py` |
 | `docs/LIMITES.md` | Limites connues : impact, réglable ou non, tâche associée, ce qu'il faut en dire au pitch | Quiconque découvre ou lève une limite |
 | `docs/SECURITE.md` | Sécurité des comptes : règles des mots de passe, stockage, blocage, ce qui manque | Quiconque touche aux comptes |
+| `docs/GUIDE.md` | Mode d'emploi des comptes, de l'historique, de la sécurité, de SIRENE et de BODACC : utilisation, fonctionnement, réglages, suites possibles | Quiconque modifie ces fonctionnalités |
 | `docs/SOURCES.md` | Inventaire des API et données (accès, quotas, statut testé) | Quiconque teste une source |
 | `docs/ARCHITECTURE.md` | Structure technique : modules, données, flux, conventions | Quiconque change la structure |
 | `docs/TACHES.md` | Tableau des tâches (à faire / en cours / fait) avec responsable | Tout le monde, en continu |

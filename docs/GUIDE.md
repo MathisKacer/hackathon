@@ -1,0 +1,209 @@
+# Guide des fonctionnalités : comptes, historique, sécurité, SIRENE, BODACC
+
+> **Mode d'emploi** des parties construites par @celia : à quoi elles servent, comment les utiliser, comment elles marchent, comment les régler, et ce qu'on peut faire ensuite.
+> Pour le reste de l'app (carte, score, poids, P(réponse)) : `ARCHITECTURE.md` et les décisions D19 à D23.
+> Mettre à jour ce guide quand on change une de ces fonctionnalités.
+
+## Sommaire
+
+1. [Vue d'ensemble](#1-vue-densemble)
+2. [Référentiel des entreprises (SIRENE, T20)](#2-référentiel-des-entreprises-sirene-t20)
+3. [Entreprises en difficulté (BODACC, T23)](#3-entreprises-en-difficulté-bodacc-t23)
+4. [Comptes facultatifs et profil (T48)](#4-comptes-facultatifs-et-profil-t48)
+5. [Historique des recherches (T49)](#5-historique-des-recherches-t49)
+6. [Sécurité des mots de passe (D16)](#6-sécurité-des-mots-de-passe-d16)
+7. [Où sont les données ?](#7-où-sont-les-données-)
+8. [Commandes utiles](#8-commandes-utiles)
+9. [Ce qu'on peut faire ensuite](#9-ce-quon-peut-faire-ensuite)
+
+---
+
+## 1. Vue d'ensemble
+
+| Fonctionnalité | Tâche | Ce que voit l'utilisateur | Fichiers principaux | Décision |
+|---|---|---|---|---|
+| Référentiel des entreprises | T20 | Les entreprises de la couche orange : nom, secteur, taille, adresse, position | `radar/collect/sirene.py`, `scripts/extract_sirene.py` | D12 |
+| Entreprises en difficulté | T23 | Drapeau 🟡/🟠/🔴, score réduit, liquidations masquées | `radar/collect/bodacc.py`, `radar/procedures.py` | D24 |
+| Comptes facultatifs + profil | T48 | « Se connecter / Créer un compte » ; réglages retrouvés à la connexion | `radar/accounts.py`, `app/compte.py` | D14 |
+| Historique des recherches | T49 | « 🕘 Mes recherches » avec « ↻ Relancer » | `radar/accounts.py`, `app/compte.py` | D14 |
+| Sécurité des mots de passe | — | Règles affichées, blocage après 5 échecs | `radar/accounts.py`, `docs/SECURITE.md` | D16 |
+
+Principe commun : **la démo marche sans rien configurer**, en mode anonyme, et chaque fonctionnalité se règle en un seul endroit du code.
+
+---
+
+## 2. Référentiel des entreprises (SIRENE, T20)
+
+**À quoi ça sert.** La liste des entreprises candidates pour la couche orange « Candidature spontanée » : tous les établissements actifs d'au moins 10 salariés en France.
+
+**Comment ça marche.**
+- DuckDB lit **à distance** les trois fichiers SIRENE de data.gouv (établissements, unités légales, géolocalisation) et la nomenclature NAF, sans télécharger les ~3,7 Go : seules les colonnes utiles sont lues.
+- Filtre : établissement actif, tranche d'effectif ≥ 10 salariés (le code `'NN'`, effectif inconnu, est exclu), nomenclature NAF rév. 2.
+- Résultat : **406 266 établissements** (278 950 entreprises), 99,7 % géolocalisés, 100 % avec un nom, dans `data/processed/entreprises.parquet` (~26 Mo).
+- Le nom affiché est celui de l'entreprise (unité légale), sinon celui de l'établissement, sinon prénom + nom pour un entrepreneur individuel.
+- Respect de la vie privée : position et adresse **masquées** pour les établissements en diffusion partielle (`diffusion_partielle`).
+
+**Colonnes utiles en plus du contrat :** `effectif_min`, `effectif_max`, `effectif_estime` (utilisé par le rapprochement T21), `tranche_libelle` (« 20 à 49 salariés »), `adresse`, `departement`, `naf_section`, `naf_division`, `siege`…
+
+**Utiliser.**
+```bash
+uv run python scripts/extract_sirene.py            # France entière, ~2 min
+uv run python scripts/extract_sirene.py --dep 35   # un département, pour tester vite
+```
+
+**Régler.** URL des fichiers SIRENE (à changer au prochain millésime) en tête de `radar/collect/sirene.py` ; seuil d'effectif : `MIN_TRANCHE_EFFECTIF` dans `radar/config.py`.
+
+**Histoire.** T20 a été faite deux fois en parallèle (Celia et Mathis) parce qu'un push était bloqué ; les deux versions ont été fusionnées (D12) en gardant le meilleur de chacune.
+
+---
+
+## 3. Entreprises en difficulté (BODACC, T23)
+
+**À quoi ça sert.** Ne pas recommander une entreprise en faillite sans le dire. On **pénalise et on signale, sans supprimer** (D24) : une entreprise en sauvegarde ou sous plan continue de fonctionner, et à terme Radar veut recenser un maximum d'entreprises avec leur situation.
+
+**Ce que voit l'utilisateur dans la couche orange :**
+
+| Situation | Drapeau | Effet |
+|---|---|---|
+| Sauvegarde (difficultés anticipées, le dirigeant garde la main) | 🟡 | score légèrement réduit |
+| Plan adopté (sauvegarde ou redressement : l'entreprise poursuit) | 🟡 | score légèrement réduit |
+| Redressement judiciaire (cessation des paiements, activité sous contrôle du tribunal) | 🟠 | score nettement réduit, surtout pour l'alternance et l'emploi |
+| Liquidation judiciaire (activité en principe arrêtée) | 🔴 | score très réduit et **masquée par défaut** ; case « Afficher aussi les entreprises en liquidation » |
+
+L'alerte apparaît dans la colonne « Situation » de la liste et dans la fiche de la carte, avec la date et un lien vers l'annonce BODACC.
+
+**Comment ça marche.**
+1. `radar/collect/bodacc.py` télécharge en un seul export les annonces « procédures collectives » des **2 dernières années** (~405 000 annonces, 47 Mo, ~1 min) et les garde en cache dans `data/raw/bodacc_collectives.parquet`.
+2. Chaque annonce est classée d'après la nature du jugement (`classify_nature`) : sauvegarde, redressement, liquidation (y compris clôture pour insuffisance d'actif et plan de cession), plan, fin (procédure close sans liquidation), ou ignorée (état des créances, interdiction de gérer…).
+3. Pour chaque SIREN, on garde le **dernier événement qui change la situation**. Une procédure terminée (« fin ») ne donne pas d'alerte.
+4. Les colonnes `procedure_type`, `procedure_date`, `procedure_nature`, `procedure_url` et `procedure_collective` sont ajoutées à `entreprises.parquet` (par SIREN : tous les établissements de l'entreprise).
+5. Dans la couche orange, `rank_spontaneous` (`radar/spontaneous.py`) appelle `apply_procedures` (`radar/procedures.py`) : score × coefficient, colonne `alerte`, liquidations retirées sauf si la case est cochée.
+
+**Chiffres.** 11 124 établissements en alerte sur 406 266 (2,7 %) : 6 130 liquidations, 2 449 redressements, 2 046 plans, 499 sauvegardes.
+
+**Coefficients appliqués au score** (dans `PENALTIES`, `radar/procedures.py`) :
+
+| | stage | alternance | emploi |
+|---|---|---|---|
+| sauvegarde, plan | ×0,85 | ×0,75 | ×0,75 |
+| redressement | ×0,6 | ×0,4 | ×0,4 |
+| liquidation | ×0,1 | ×0,05 | ×0,05 |
+
+Pourquoi selon le contrat : une alternance ou un emploi engage bien plus l'entreprise (contrat long, salaire) qu'un stage. Rappel : un stage de plus de 2 mois est obligatoirement gratifié en France, donc on ne distingue pas stages rémunérés et non rémunérés.
+
+**Utiliser.**
+```bash
+uv run python scripts/collect_bodacc.py            # utilise le cache s'il existe
+uv run python scripts/collect_bodacc.py --refresh  # retélécharge les annonces (données du jour)
+uv run python scripts/build_all.py                 # le pipeline complet l'inclut (étape « 1 bis »)
+```
+
+**Régler.** Coefficients : `PENALTIES` ; drapeaux et phrases : `ALERTS` (tous deux dans `radar/procedures.py`) ; fenêtre de temps : `PERIOD_YEARS` ; classement des jugements : `_RULES` (dans `radar/collect/bodacc.py`).
+
+**Limites** (L21–L23) : 2 ans d'historique seulement ; tous les établissements d'une entreprise en procédure sont signalés ; coefficients fixés à dire d'expert.
+
+---
+
+## 4. Comptes facultatifs et profil (T48)
+
+**À quoi ça sert.** Retrouver ses réglages de recherche d'une visite à l'autre, sans rendre la connexion obligatoire.
+
+**Ce que voit l'utilisateur.**
+- Par défaut : « 🕶️ **Mode démo anonyme** : rien n'est enregistré ».
+- Volet « Se connecter ou créer un compte » (barre latérale) : onglets **Connexion** et **Créer un compte**. À la création, les réglages actuels deviennent le profil.
+- Connecté : « 💾 Enregistrer » (sauvegarde les réglages), « Se déconnecter », « Supprimer mon compte » (case à cocher de confirmation ; efface compte, profil et historique).
+- À la connexion, tous les réglages reviennent : adresse, rayon, domaine, contrat, régions, mot-clé, taille, secteur, poids du score, classement, « afficher les liquidations »…
+
+**Comment ça marche.**
+- `radar/accounts.py` : la partie serveur (comptes, mots de passe, profils, historique) dans une base SQLite. Testable sans Streamlit.
+- `app/compte.py` : le bloc de la barre latérale.
+- **Le profil = les valeurs des widgets de recherche** listés dans `PROFILE_KEYS` (`app/streamlit_app.py`). Chaque widget a une `key` ; à la connexion, le profil est recopié dans `st.session_state`. Une valeur devenue invalide (région disparue des données…) est ignorée.
+
+**⚠️ Règle pour ajouter un réglage à l'app** (aussi dans `CLAUDE.md`) :
+1. lui donner une `key` ;
+2. l'ajouter à `PROFILE_KEYS` avec ses options permises (`None` = valeur libre) ;
+3. lui donner un libellé dans `PROFILE_LABELS` ;
+4. poser sa valeur par défaut avec `st.session_state.setdefault(...)`, pas avec `value=` ;
+5. le créer **après** `account_sidebar(PROFILE_KEYS)`.
+
+Sinon le réglage n'est pas enregistré dans le profil.
+
+---
+
+## 5. Historique des recherches (T49)
+
+**Ce que voit l'utilisateur (connecté seulement).** Volet « 🕘 Mes recherches » en bas de la barre latérale : pour chaque recherche, la date, un résumé lisible (« Contrat : Stage · Régions : Bretagne »), le nombre de résultats et les premières entreprises. Bouton « ↻ Relancer » (remet tous les réglages) et « Effacer mon historique ». En anonyme, rien n'est enregistré.
+
+**Comment ça marche.**
+- `search_history(...)` est appelée dans l'app **après** le calcul des résultats : la recherche en cours apparaît tout de suite.
+- Streamlit relance la page à chaque changement de réglage : pour ne pas créer une entrée par cran de curseur, les changements faits **à moins de 2 minutes** de la dernière recherche la mettent à jour. Une recherche identique à la précédente n'est pas dupliquée. **50 recherches max** par compte.
+- « ↻ Relancer » passe par un rappel `on_click` : Streamlit l'exécute avant de redessiner la page, ce qui permet de modifier les widgets.
+- `top=` reçoit les **noms** des premières entreprises (affichés tels quels), pas les SIRET.
+
+**Régler.** `SEARCH_MERGE_WINDOW`, `SEARCH_MAX_PER_USER`, `SEARCH_TOP_MAX` dans `radar/accounts.py` ; nombre affiché : `HISTORY_SHOWN` dans `app/compte.py`.
+
+---
+
+## 6. Sécurité des mots de passe (D16)
+
+Détails complets, justification et références (CNIL, NIST) : **`docs/SECURITE.md`**. En bref :
+
+- **Choix du mot de passe** : au moins 12 caractères et 3 types parmi minuscules, majuscules, chiffres, caractères spéciaux (l'espace compte : les phrases de passe passent) ; mots de passe courants refusés ; identifiant interdit dans le mot de passe ; le message dit exactement ce qui ne va pas.
+- **Stockage** : jamais en clair ; haché avec **scrypt** et un sel aléatoire par compte ; comparaison à temps constant.
+- **Connexion** : après **5 échecs**, compte bloqué **15 minutes**, même en rechargeant la page ; un identifiant inconnu répond dans le même temps qu'un identifiant existant.
+- **Données personnelles** : pas d'e-mail, pas de nom ; « Supprimer mon compte » efface tout.
+- **Ce qui manque** (assumé) : double authentification, vérification des mots de passe fuités, « mot de passe oublié », « se souvenir de moi ».
+
+Pour tester : `motdepasse1` est refusé, `Radar-Demo-2026` est accepté.
+
+---
+
+## 7. Où sont les données ?
+
+| Donnée | Fichier | Dans Git ? | Comment l'obtenir |
+|---|---|---|---|
+| Entreprises (SIRENE + BODACC) | `data/processed/entreprises.parquet` | non | `extract_sirene.py` puis `collect_bodacc.py` (ou `build_all.py`) |
+| Annonces BODACC (cache) | `data/raw/bodacc_collectives.parquet` | non | `collect_bodacc.py` |
+| Comptes, profils, historique | `data/app/radar.db` | **jamais** | créé à la première création de compte |
+
+**La base des comptes est un simple fichier SQLite**, sans serveur de base de données : l'app l'ouvre et y écrit directement. Elle est sur le disque persistant du service VS Code Onyxia :
+- conservée quand on relance l'app ou qu'on met le service en pause ;
+- **perdue si le service est supprimé** ;
+- **une base par membre de l'équipe** : un compte créé chez l'un n'existe pas chez l'autre. Pour la démo, créer les comptes **sur le pod qui sert à la présentation**.
+
+Détails : `docs/SECURITE.md` › « Où est la base ? ».
+
+---
+
+## 8. Commandes utiles
+
+```bash
+uv run python scripts/extract_sirene.py [--dep 35]    # référentiel entreprises (T20)
+uv run python scripts/collect_bodacc.py [--refresh]   # entreprises en difficulté (T23)
+uv run python scripts/build_all.py                     # tout reconstruire (SIRENE, BODACC, offres, scores…)
+uv run streamlit run app/streamlit_app.py              # lancer l'app → <URL du service>/proxy/8501/
+
+uv run pytest -q tests/test_sirene.py                  # tests SIRENE
+uv run pytest -q tests/test_bodacc.py                  # tests BODACC (28)
+uv run pytest -q tests/test_accounts.py tests/test_compte_ui.py   # tests comptes, historique, sécurité
+rm data/app/radar.db                                   # repartir de zéro côté comptes
+```
+
+---
+
+## 9. Ce qu'on peut faire ensuite
+
+Par ordre d'intérêt (✅ = déjà une tâche dans `TACHES.md`) :
+
+| Idée | Intérêt | Effort | Tâche |
+|---|---|---|---|
+| **Fiche entreprise complète** : situation BODACC détaillée (historique des jugements), effectif, secteur, offres en cours | Va vers « tout savoir sur une entreprise dès qu'on la cherche » | moyen | ✅ T43 |
+| **Rechercher une entreprise par son nom** et voir toutes ses infos (recrutement en cours, situation, score) | Vision à terme : recenser un maximum d'entreprises | moyen | à créer |
+| **Suivi des candidatures** (envoyée, relancée, réponse) dans le compte | Fournirait de **vraies réponses** pour remplacer les réponses simulées du modèle (D6) | moyen | à créer |
+| Base des comptes **hébergée** (Supabase, région UE) avec repli sur SQLite | Comptes partagés et sauvegardés | 1 h 30–2 h | ✅ T52 (très optionnel) |
+| « Mot de passe oublié » et « se souvenir de moi » | Confort | moyen (demande un e-mail ou un cookie signé) | avec T52 |
+| BODACC : rattacher les entrepreneurs du répertoire des métiers, élargir la fenêtre, actualiser chaque jour | Couverture plus complète | faible | — |
+| Estimer les coefficients BODACC sur de vraies réponses | Pénalité justifiée par les données, plus à dire d'expert | dépend du suivi des candidatures | — |
+| Données financières (chiffre d'affaires) pour la composante « dynamisme » | Score plus riche | moyen (fichiers INPI à vérifier) | ✅ T22 |
+
+**Pour le pitch** : « Pas de compte obligatoire ; mots de passe hachés et règles CNIL ; entreprises en difficulté signalées d'après le BODACC, avec une pénalité qui dépend du contrat visé ; tout est réglable et expliqué. »
