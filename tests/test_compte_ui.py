@@ -51,7 +51,7 @@ def test_anonymous_by_default_writes_nothing(app, tmp_path):
     assert con.execute("SELECT count(*) FROM users").fetchone()[0] == 0
 
 
-def _signup(at, username="celia", password="motdepasse1", confirm=None):
+def _signup(at, username="celia", password="Radar-Demo-2026", confirm=None):
     texts = at.sidebar.text_input
     # onglet « Créer un compte » : 2e formulaire (identifiant, mot de passe, confirmation)
     texts[2].input(username)
@@ -87,7 +87,7 @@ def test_signup_saves_settings_then_login_restores_them(app):
     app.sidebar.multiselect[0].set_value([])
     app.run()
 
-    _login(app, "celia", "motdepasse1")
+    _login(app, "celia", "Radar-Demo-2026")
     assert app.session_state["compte_user"]["username"] == "celia"
     assert app.sidebar.radio[0].value == "Stage"
     assert app.sidebar.multiselect[0].value == ["Bretagne"]
@@ -104,7 +104,7 @@ def test_save_button_updates_profile(app):
 
 
 def test_wrong_password_and_mismatch(app):
-    _signup(app, confirm="different1")
+    _signup(app, confirm="Different-Mdp-9")
     assert any("ne correspondent pas" in e.value for e in app.sidebar.error)
     _signup(app)
     _button(app, "Se déconnecter")
@@ -121,7 +121,29 @@ def test_delete_account(app):
     app.run()
     _button(app, "Supprimer")
     assert "compte_user" not in app.session_state
-    assert accounts.authenticate(accounts.connect(), "celia", "motdepasse1") is None
+    assert accounts.authenticate(accounts.connect(), "celia", "Radar-Demo-2026") is None
+
+
+def test_weak_password_rejected_with_explanation(app):
+    _signup(app, password="motdepasse1")
+    assert "compte_user" not in app.session_state
+    assert any("12 caractères" in e.value for e in app.sidebar.error)
+
+
+def test_lockout_survives_page_reload(app):
+    _signup(app)
+    _button(app, "Se déconnecter")
+    for _ in range(accounts.LOGIN_MAX_FAILS):
+        _login(app, "celia", "mauvais")
+    _login(app, "celia", "Radar-Demo-2026")  # bon mot de passe, mais compte bloqué
+    assert "compte_user" not in app.session_state
+    assert any("bloqué jusqu'à" in e.value for e in app.sidebar.error)
+    # « recharger la page » = nouvelle session : toujours bloqué
+    fresh = AppTest.from_function(_mini_app, default_timeout=30)
+    fresh.run()
+    _login(fresh, "celia", "Radar-Demo-2026")
+    assert "compte_user" not in fresh.session_state
+    assert any("bloqué jusqu'à" in e.value for e in fresh.sidebar.error)
 
 
 # --- Historique (T49) ---------------------------------------------------------------------
@@ -210,7 +232,7 @@ def test_full_app_runs_with_account_box(tmp_path, monkeypatch):
     assert not at.warning  # pas d'avertissement « valeur par défaut + session_state »
 
     # Connecté : la recherche est enregistrée et « Mes recherches » apparaît (T49).
-    uid = accounts.create_user(accounts.connect(), "celia", "motdepasse1")
+    uid = accounts.create_user(accounts.connect(), "celia", "Radar-Demo-2026")
     at.session_state["compte_user"] = {"id": uid, "username": "celia"}
     at.run()
     assert not at.exception, at.exception

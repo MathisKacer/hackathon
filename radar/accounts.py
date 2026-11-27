@@ -3,7 +3,8 @@
 Le mode démo anonyme n'appelle jamais ce module : rien n'est écrit tant qu'on ne se connecte pas.
 
 - Mots de passe hachés avec scrypt (bibliothèque standard), sel aléatoire par compte ;
-  jamais stockés ni journalisés en clair.
+  jamais stockés ni journalisés en clair. Règles de choix et blocage après échecs : D16 et
+  docs/SECURITE.md.
 - Profil = dictionnaire JSON des réglages de recherche (domaine, contrat, adresse, rayon,
   filtres, poids…). Le module ne connaît pas les clés : c'est l'app qui décide quoi enregistrer.
 - Base : data/app/radar.db (ignorée par Git). Un pod Onyxia est éphémère : la base est
@@ -36,7 +37,62 @@ from radar.config import PATHS
 DB_PATH = PATHS.data / "app" / "radar.db"
 
 USERNAME_RE = re.compile(r"^[a-z0-9._-]{3,30}$")
-PASSWORD_MIN, PASSWORD_MAX = 8, 128
+# Règles des mots de passe (D16, inspirées de la recommandation CNIL de 2022) : au moins
+# 12 caractères et 3 types parmi minuscules, majuscules, chiffres et caractères spéciaux ;
+# ni mot de passe courant, ni identifiant contenu dans le mot de passe.
+PASSWORD_MIN, PASSWORD_MAX = 12, 128
+PASSWORD_MIN_CATEGORIES = 3
+PASSWORD_RULES = (
+    f"Au moins {PASSWORD_MIN} caractères, avec au moins {PASSWORD_MIN_CATEGORIES} types parmi "
+    "minuscules, majuscules, chiffres et caractères spéciaux. Pas de mot de passe courant, "
+    "et pas ton identifiant."
+)
+# Mots de passe très répandus (listes de fuites), comparés sans tenir compte de la casse.
+# Courte liste volontairement : la règle des 3 types écarte déjà la plupart des autres.
+COMMON_PASSWORDS = frozenset(
+    {
+        "123456789012",
+        "1234567890ab",
+        "azertyuiop12",
+        "azertyuiop123",
+        "azerty123456",
+        "qwertyuiop12",
+        "qwerty123456",
+        "motdepasse12",
+        "motdepasse123",
+        "motdepasse!1",
+        "password1234",
+        "password123!",
+        "password@123",
+        "passw0rd1234",
+        "p@ssw0rd1234",
+        "p@ssword1234",
+        "bonjour12345",
+        "bonjour123!!",
+        "soleil123456",
+        "iloveyou1234",
+        "admin1234567",
+        "welcome12345",
+        "changeme1234",
+        "football1234",
+        "marseille123",
+        "jetaime12345",
+        "doudou123456",
+        "loulou123456",
+        "chocolat1234",
+        "princesse123",
+        "azerty@12345",
+        "abcdef123456",
+        "abc123456789",
+        "000000000000",
+        "111111111111",
+    }
+)
+
+# Blocage par compte (D16) : après LOGIN_MAX_FAILS échecs, connexion refusée pendant
+# LOGIN_LOCK_DURATION, même en rechargeant la page.
+LOGIN_MAX_FAILS = 5
+LOGIN_LOCK_DURATION = timedelta(minutes=15)
 PROFILE_MAX_BYTES = 10_000
 
 # Historique (T49). Streamlit relance la page à chaque changement de réglage : les changements
@@ -54,7 +110,9 @@ CREATE TABLE IF NOT EXISTS users (
     id            INTEGER PRIMARY KEY,
     username      TEXT    NOT NULL UNIQUE,
     password_hash TEXT    NOT NULL,
-    created_at    TEXT    NOT NULL
+    created_at    TEXT    NOT NULL,
+    failed_logins INTEGER NOT NULL DEFAULT 0,
+    locked_until  TEXT
 );
 CREATE TABLE IF NOT EXISTS profils (
     user_id    INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
@@ -75,6 +133,14 @@ CREATE INDEX IF NOT EXISTS recherches_user ON recherches (user_id, created_at);
 
 class AccountError(ValueError):
     """Erreur affichable telle quelle (identifiant pris, mot de passe trop court…)."""
+
+
+class AccountLocked(AccountError):
+    """Trop d'échecs de connexion : compte bloqué jusqu'à `until` (UTC)."""
+
+    def __init__(self, until: datetime):
+        self.until = until
+        super().__init__("Trop de tentatives de connexion : réessaie plus tard.")
 
 
 def _now(now: datetime | None = None) -> str:
@@ -119,11 +185,50 @@ def connect(db_path: Path | str | None = None) -> sqlite3.Connection:
     con = sqlite3.connect(path, check_same_thread=False)
     con.execute("PRAGMA foreign_keys = ON")
     con.executescript(SCHEMA)
+    _migrate(con)
     return con
+
+
+def _migrate(con: sqlite3.Connection) -> None:
+    """Ajoute les colonnes de blocage aux bases créées avant D16."""
+    cols = {r[1] for r in con.execute("PRAGMA table_info(users)")}
+    with con:
+        if "failed_logins" not in cols:
+            con.execute("ALTER TABLE users ADD COLUMN failed_logins INTEGER NOT NULL DEFAULT 0")
+        if "locked_until" not in cols:
+            con.execute("ALTER TABLE users ADD COLUMN locked_until TEXT")
 
 
 def normalize_username(username: str) -> str:
     return username.strip().lower()
+
+
+def password_problems(password: str, username: str = "") -> list[str]:
+    """Liste des règles non respectées (vide si le mot de passe est accepté)."""
+    problems = []
+    if len(password) < PASSWORD_MIN:
+        problems.append(f"au moins {PASSWORD_MIN} caractères ({len(password)} saisis)")
+    if len(password) > PASSWORD_MAX:
+        problems.append(f"au plus {PASSWORD_MAX} caractères")
+    categories = sum(
+        (
+            any(c.islower() for c in password),
+            any(c.isupper() for c in password),
+            any(c.isdigit() for c in password),
+            any(not c.isalnum() for c in password),
+        )
+    )
+    if categories < PASSWORD_MIN_CATEGORIES:
+        problems.append(
+            f"au moins {PASSWORD_MIN_CATEGORIES} types parmi minuscules, majuscules, chiffres "
+            f"et caractères spéciaux ({categories} utilisés)"
+        )
+    if password.lower() in COMMON_PASSWORDS:
+        problems.append("pas un mot de passe courant")
+    username = normalize_username(username)
+    if len(username) >= 3 and username in password.lower():
+        problems.append("ne doit pas contenir l'identifiant")
+    return problems
 
 
 def create_user(con: sqlite3.Connection, username: str, password: str) -> int:
@@ -133,8 +238,9 @@ def create_user(con: sqlite3.Connection, username: str, password: str) -> int:
             "Identifiant invalide : 3 à 30 caractères parmi lettres, chiffres, "
             "« . », « _ » et « - »."
         )
-    if not PASSWORD_MIN <= len(password) <= PASSWORD_MAX:
-        raise AccountError(f"Le mot de passe doit faire au moins {PASSWORD_MIN} caractères.")
+    problems = password_problems(password, username)
+    if problems:
+        raise AccountError("Mot de passe refusé : " + " ; ".join(problems) + ".")
     try:
         with con:
             cur = con.execute(
@@ -146,15 +252,41 @@ def create_user(con: sqlite3.Connection, username: str, password: str) -> int:
     return int(cur.lastrowid)
 
 
-def authenticate(con: sqlite3.Connection, username: str, password: str) -> int | None:
-    """Renvoie l'id de l'utilisateur, ou None si l'identifiant ou le mot de passe est faux."""
+def authenticate(
+    con: sqlite3.Connection, username: str, password: str, now: datetime | None = None
+) -> int | None:
+    """Renvoie l'id de l'utilisateur, ou None si l'identifiant ou le mot de passe est faux.
+
+    Lève AccountLocked si le compte est bloqué (LOGIN_MAX_FAILS échecs d'affilée) : la
+    vérification n'est alors même pas tentée, un bon mot de passe ne débloque pas.
+    """
+    now = now or datetime.now(UTC)
     row = con.execute(
-        "SELECT id, password_hash FROM users WHERE username = ?", (normalize_username(username),)
+        "SELECT id, password_hash, failed_logins, locked_until FROM users WHERE username = ?",
+        (normalize_username(username),),
     ).fetchone()
     if row is None:
         verify_password(password, _DUMMY_HASH)
         return None
-    return int(row[0]) if verify_password(password, row[1]) else None
+    user_id, stored, fails, locked_until = row
+    if locked_until and datetime.fromisoformat(locked_until) > now:
+        raise AccountLocked(datetime.fromisoformat(locked_until))
+    if verify_password(password, stored):
+        with con:
+            con.execute(
+                "UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = ?", (user_id,)
+            )
+        return int(user_id)
+    fails += 1
+    with con:
+        if fails >= LOGIN_MAX_FAILS:
+            con.execute(
+                "UPDATE users SET failed_logins = 0, locked_until = ? WHERE id = ?",
+                (_now(now + LOGIN_LOCK_DURATION), user_id),
+            )
+        else:
+            con.execute("UPDATE users SET failed_logins = ? WHERE id = ?", (fails, user_id))
+    return None
 
 
 def get_username(con: sqlite3.Connection, user_id: int) -> str | None:
