@@ -74,6 +74,7 @@
 ## 🔵 En cours
 
 - [ ] T29 — 🔗T28, scores régénérés par @mathis (`collect_lbb.py` puis `build_all.py`) **App : `c_embauche` avec La Bonne Boîte** (D27). Dans `radar/spontaneous.py › COMPONENTS`, renommer le curseur « Besoin attendu » (ex. « Potentiel d'embauche ») et corriger l'explication : « établissements signalés par La Bonne Boîte (France Travail) en tête, classés par potentiel d'embauche ; sinon estimation à partir des offres et de l'effectif ». Dans la liste orange, petit badge « La Bonne Boîte » quand `c_embauche_source == "la_bonne_boite"` — @emma (reprise à la place de @maxence, qui ne l'avait pas commencée)
+- [ ] T55 — 🔗T40 **Suggesteur de ville** : on tape le nom de la ville et on la valide dans une liste déroulante « Ville (code postal) » (toutes les communes de France, geo.api.gouv.fr, cache disque ; repli sur les communes du référentiel hors ligne) au lieu d'une adresse libre — @maxence
 
 ## ✅ Fait
 
