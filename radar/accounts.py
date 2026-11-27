@@ -1,4 +1,4 @@
-"""Comptes facultatifs (T48, D14) : utilisateurs et profils, dans une base SQLite locale.
+"""Comptes facultatifs (T48, T49, D14) : utilisateurs, profils et historique, en SQLite local.
 
 Le mode démo anonyme n'appelle jamais ce module : rien n'est écrit tant qu'on ne se connecte pas.
 
@@ -15,7 +15,9 @@ Usage :
     user_id = authenticate(con, "celia", "un mot de passe")   # None si incorrect
     save_profile(con, user_id, {"contrat": "Stage", "rayon_km": 20})
     load_profile(con, user_id)                                  # {} si aucun profil
-    delete_user(con, user_id)                                   # efface le compte et le profil
+    log_search(con, user_id, {"contrat": "Stage"}, n_results=42, top=["ACME"])  # T49
+    list_searches(con, user_id)                                 # plus récentes d'abord
+    delete_user(con, user_id)                                   # efface compte, profil, historique
 """
 
 from __future__ import annotations
@@ -26,7 +28,7 @@ import json
 import re
 import secrets
 import sqlite3
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from radar.config import PATHS
@@ -36,6 +38,13 @@ DB_PATH = PATHS.data / "app" / "radar.db"
 USERNAME_RE = re.compile(r"^[a-z0-9._-]{3,30}$")
 PASSWORD_MIN, PASSWORD_MAX = 8, 128
 PROFILE_MAX_BYTES = 10_000
+
+# Historique (T49). Streamlit relance la page à chaque changement de réglage : les changements
+# faits à moins de SEARCH_MERGE_WINDOW de la dernière recherche la mettent à jour au lieu
+# d'en créer une nouvelle (on garde l'état final, pas chaque cran de curseur).
+SEARCH_MERGE_WINDOW = timedelta(minutes=2)
+SEARCH_MAX_PER_USER = 50
+SEARCH_TOP_MAX = 5
 
 # scrypt : paramètres recommandés pour un usage interactif (~50 ms, 16 Mo de mémoire).
 _SCRYPT = {"n": 2**14, "r": 8, "p": 1}
@@ -52,6 +61,15 @@ CREATE TABLE IF NOT EXISTS profils (
     data       TEXT    NOT NULL,
     updated_at TEXT    NOT NULL
 );
+CREATE TABLE IF NOT EXISTS recherches (
+    id            INTEGER PRIMARY KEY,
+    user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at    TEXT    NOT NULL,
+    params        TEXT    NOT NULL,
+    n_resultats   INTEGER NOT NULL,
+    top_resultats TEXT    NOT NULL
+);
+CREATE INDEX IF NOT EXISTS recherches_user ON recherches (user_id, created_at);
 """
 
 
@@ -59,8 +77,8 @@ class AccountError(ValueError):
     """Erreur affichable telle quelle (identifiant pris, mot de passe trop court…)."""
 
 
-def _now() -> str:
-    return datetime.now(UTC).isoformat(timespec="seconds")
+def _now(now: datetime | None = None) -> str:
+    return (now or datetime.now(UTC)).isoformat(timespec="seconds")
 
 
 # --- Mots de passe ------------------------------------------------------------------------
@@ -145,7 +163,7 @@ def get_username(con: sqlite3.Connection, user_id: int) -> str | None:
 
 
 def delete_user(con: sqlite3.Connection, user_id: int) -> None:
-    """Supprime le compte et tout ce qui lui est rattaché (profil ; historique avec T49)."""
+    """Supprime le compte et tout ce qui lui est rattaché (profil, historique)."""
     with con:
         con.execute("DELETE FROM users WHERE id = ?", (user_id,))
 
@@ -171,3 +189,87 @@ def save_profile(con: sqlite3.Connection, user_id: int, profile: dict) -> None:
 def load_profile(con: sqlite3.Connection, user_id: int) -> dict:
     row = con.execute("SELECT data FROM profils WHERE user_id = ?", (user_id,)).fetchone()
     return json.loads(row[0]) if row else {}
+
+
+# --- Historique des recherches (T49) -----------------------------------------------------
+
+
+def _dump(obj) -> str:
+    return json.dumps(obj, ensure_ascii=False, sort_keys=True)
+
+
+def log_search(
+    con: sqlite3.Connection,
+    user_id: int,
+    params: dict,
+    n_results: int,
+    top: list[str] | None = None,
+    now: datetime | None = None,
+) -> int:
+    """Enregistre une recherche ; renvoie son id.
+
+    Fusionne avec la dernière recherche si les paramètres sont identiques, ou si elle date de
+    moins de SEARCH_MERGE_WINDOW (réglages en cours d'ajustement). `top` : quelques résultats
+    à afficher dans l'historique (noms d'entreprises, ou SIRET quand T40 sera là).
+    """
+    if not isinstance(params, dict):
+        raise AccountError("Les paramètres de recherche doivent être un dictionnaire.")
+    params_json = _dump(params)
+    if len(params_json.encode()) > PROFILE_MAX_BYTES:
+        raise AccountError("Recherche trop volumineuse.")
+    top_json = _dump([str(t) for t in (top or [])][:SEARCH_TOP_MAX])
+    now = now or datetime.now(UTC)
+    last = con.execute(
+        "SELECT id, created_at, params FROM recherches WHERE user_id = ? "
+        "ORDER BY created_at DESC, id DESC LIMIT 1",
+        (user_id,),
+    ).fetchone()
+    with con:
+        if last and (
+            last[2] == params_json or now - datetime.fromisoformat(last[1]) < SEARCH_MERGE_WINDOW
+        ):
+            con.execute(
+                "UPDATE recherches SET created_at = ?, params = ?, n_resultats = ?, "
+                "top_resultats = ? WHERE id = ?",
+                (_now(now), params_json, int(n_results), top_json, last[0]),
+            )
+            search_id = last[0]
+        else:
+            cur = con.execute(
+                "INSERT INTO recherches (user_id, created_at, params, n_resultats, top_resultats) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (user_id, _now(now), params_json, int(n_results), top_json),
+            )
+            search_id = cur.lastrowid
+        # On ne garde que les SEARCH_MAX_PER_USER plus récentes.
+        con.execute(
+            """DELETE FROM recherches WHERE user_id = ? AND id NOT IN (
+                   SELECT id FROM recherches WHERE user_id = ?
+                   ORDER BY created_at DESC, id DESC LIMIT ?)""",
+            (user_id, user_id, SEARCH_MAX_PER_USER),
+        )
+    return int(search_id)
+
+
+def list_searches(con: sqlite3.Connection, user_id: int, limit: int = 20) -> list[dict]:
+    """Recherches de l'utilisateur, les plus récentes d'abord."""
+    rows = con.execute(
+        "SELECT id, created_at, params, n_resultats, top_resultats FROM recherches "
+        "WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT ?",
+        (user_id, limit),
+    ).fetchall()
+    return [
+        {
+            "id": r[0],
+            "created_at": datetime.fromisoformat(r[1]),
+            "params": json.loads(r[2]),
+            "n_resultats": r[3],
+            "top_resultats": json.loads(r[4]),
+        }
+        for r in rows
+    ]
+
+
+def clear_searches(con: sqlite3.Connection, user_id: int) -> None:
+    with con:
+        con.execute("DELETE FROM recherches WHERE user_id = ?", (user_id,))
