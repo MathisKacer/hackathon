@@ -53,7 +53,6 @@
 **CV et correspondance de profil (suite de T45, demandées par @emma)**
 
 
-- [ ] T86 — 🔗T83 **Compétences : supprimer et enregistrer une à une** (demandée par @emma) : dans Mon espace › Mes compétences, chaque compétence enregistrée a sa propre **croix « supprimer »** (retirée du profil tout de suite, sans repasser par la liste ni par le bouton global) ; ajouter une compétence (choisie dans la liste ou tapée) l'**enregistre aussitôt**, une à une, au lieu d'attendre « Enregistrer mes compétences ». Le CV déposé ajoute ses compétences d'un coup, mais chacune reste supprimable ensuite. Pistes : étiquettes cliquables (`st.pills` / boutons ✕ par compétence) + un champ « Ajouter une compétence » (liste + saisie libre) ; enregistrement direct via `accounts.save_profile` ; garder le nettoyage `clean_skills` (D42). À décider : même comportement dans Explorer › Filtres › Ton CV (qui modifie aujourd'hui la recherche en cours sans toucher au profil) ou seulement dans Mon espace ; garder ou retirer le bouton « Enregistrer mes compétences ». Code : `app/cv_ui.py`, `app/compte.py` (`_profile_section`), tests `tests/test_compte_ui.py` ; mettre à jour D42, GUIDE § 4 et § 16
 
 **Recherches enregistrées (demandée par @emma)**
 
@@ -85,6 +84,7 @@
 ## 🔵 En cours
 
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
+- [ ] T86 — 🔗T83 **Compétences : supprimer et enregistrer une à une** (demandée par @emma) : dans Mon espace › Mes compétences, chaque compétence enregistrée a sa propre **croix « supprimer »** (retirée du profil tout de suite, sans repasser par la liste ni par le bouton global) ; ajouter une compétence (choisie dans la liste ou tapée) l'**enregistre aussitôt**, une à une, au lieu d'attendre « Enregistrer mes compétences ». Le CV déposé ajoute ses compétences d'un coup, mais chacune reste supprimable ensuite. Pistes : étiquettes cliquables (`st.pills` / boutons ✕ par compétence) + un champ « Ajouter une compétence » (liste + saisie libre) ; enregistrement direct via `accounts.save_profile` ; garder le nettoyage `clean_skills` (D42). À décider : même comportement dans Explorer › Filtres › Ton CV (qui modifie aujourd'hui la recherche en cours sans toucher au profil) ou seulement dans Mon espace ; garder ou retirer le bouton « Enregistrer mes compétences ». Code : `app/cv_ui.py`, `app/compte.py` (`_profile_section`), tests `tests/test_compte_ui.py` ; mettre à jour D42, GUIDE § 4 et § 16 — @emma (choix d'Emma : bouton « Enregistrer mes compétences » retiré)
 - _…_
 
 ## ✅ Fait
