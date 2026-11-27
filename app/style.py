@@ -82,6 +82,16 @@ CSS = f"""
                 align-items: center; justify-content: center; font-weight: 700;
                 background: {NAVY}; color: #fff; margin-bottom: .4rem; }}
 
+/* Mon espace (T85) : en-tête avec initiale, avantages du compte, cartes */
+.radar-hero .who {{ display: flex; align-items: center; gap: 1rem; }}
+.radar-avatar {{ width: 3.4rem; height: 3.4rem; border-radius: 50%; flex: none;
+                display: flex; align-items: center; justify-content: center;
+                font-size: 1.5rem; font-weight: 700; color: {NAVY}; background: #fff; }}
+[class*="st-key-espace_"] {{
+    background: {BG_CARD}; border-radius: 14px !important;
+    box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 4px 14px rgba(16,24,40,.05);
+}}
+
 /* Onglets un peu plus marqués */
 [data-testid="stTab"] p {{ font-size: 1rem; font-weight: 600; }}
 </style>
@@ -97,6 +107,17 @@ def hero(title: str, tagline: str, compact: bool = False) -> None:
     cls = "radar-hero compact" if compact else "radar-hero"
     st.markdown(
         f"<div class='{cls}'><h1>{html.escape(title)}</h1><p>{html.escape(tagline)}</p></div>",
+        unsafe_allow_html=True,
+    )
+
+
+def profile_header(username: str, tagline: str) -> None:
+    """Bandeau de Mon espace : initiale dans un rond, « Bonjour … » et une phrase."""
+    initial = html.escape(username[:1].upper() or "?")
+    st.markdown(
+        f"<div class='radar-hero compact'><div class='who'><span class='radar-avatar'>{initial}"
+        f"</span><div><h1>Bonjour {html.escape(username)}</h1><p>{html.escape(tagline)}</p>"
+        "</div></div></div>",
         unsafe_allow_html=True,
     )
 

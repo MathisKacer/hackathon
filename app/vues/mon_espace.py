@@ -8,8 +8,18 @@ from compte import _con, account_page, current_user
 from cv_ui import cv_and_skills
 from favoris import favorites, remove
 from fiche_ui import open_fiche
+from style import GREEN, RED, pill
 
 from radar import accounts
+
+STATUT_COLORS = {
+    "Envoyée": "#1a56db",
+    "Relancée": "#e8590c",
+    "Entretien": "#6d28d9",
+    "Réponse positive": GREEN,
+    "Réponse négative": RED,
+    "Sans réponse": "#6B7280",
+}
 
 
 def _save_note(kind: str, ref: str, key: str) -> None:
@@ -56,7 +66,8 @@ def _follow_up(f: dict, connected: bool) -> None:
 def favorites_section() -> None:
     connected = current_user() is not None
     companies, offers_fav = favorites("entreprise"), favorites("offre")
-    st.subheader("Mes favoris")
+    if not connected:
+        st.subheader("Mes favoris")
     if not companies and not offers_fav:
         st.write(
             "Ajoute des entreprises (☆ dans leur fiche) ou des offres (case ★ dans la liste) "
@@ -65,14 +76,8 @@ def favorites_section() -> None:
         return
     if not connected:
         st.caption("Favoris temporaires : crée un compte ou connecte-toi pour les garder.")
-    applied = [f for f in companies + offers_fav if f["candidate"]]  # T82
-    tab_c, tab_o, tab_a = st.tabs(
-        [
-            f"Entreprises ({len(companies)})",
-            f"Offres ({len(offers_fav)})",
-            f"Mes candidatures ({len(applied)})",
-        ]
-    )
+    # Libellés sans compteurs : sinon « Retirer » ramènerait au premier onglet
+    tab_c, tab_o = st.tabs(["Entreprises", "Offres"])
     to_open = None
     with tab_c:
         for f in companies:
@@ -94,6 +99,7 @@ def favorites_section() -> None:
                     to_open = f["ref"]
                 b2.button(
                     "Retirer",
+                    type="tertiary",
                     key=f"fav_retirer_e_{f['ref']}",
                     icon=":material/delete:",
                     on_click=remove,
@@ -119,6 +125,7 @@ def favorites_section() -> None:
                     )
                 b2.button(
                     "Retirer",
+                    type="tertiary",
                     key=f"fav_retirer_o_{f['ref']}",
                     icon=":material/delete:",
                     on_click=remove,
@@ -126,35 +133,41 @@ def favorites_section() -> None:
                     width="stretch",
                 )
                 _follow_up(f, connected)
-    with tab_a:  # T82 : favoris cochés « Candidaté », avec leur statut
-        if not connected:
-            st.caption("Connecte-toi pour suivre tes candidatures.")
-        elif not applied:
-            st.write(
-                "Coche « Candidaté » sur un favori pour le retrouver ici et suivre sa réponse."
-            )
-        for f in applied:
-            with st.container(border=True):
-                left, right = st.columns([3, 2], vertical_alignment="center")
-                kind = "Entreprise" if f["kind"] == "entreprise" else "Offre"
-                left.markdown(f"**{f['label']}**")
-                left.caption(kind + (f" · {f['note']}" if f["note"] else ""))
-                key = f"fav_statut_{f['kind']}_{f['ref']}"
-                st.session_state.setdefault(key, f["statut"] or accounts.CANDIDATURE_STATUTS[0])
-                right.selectbox(
-                    "Statut",
-                    accounts.CANDIDATURE_STATUTS,
-                    key=key,
-                    on_change=_save_statut,
-                    args=(f["kind"], f["ref"], key),
-                    label_visibility="collapsed",
-                )
     if to_open:
         domaine = st.session_state.get("domaine")
         if to_open.startswith("siren:"):  # favori « toute l'entreprise » (T57)
             open_fiche(None, None, domaine, siren=to_open.removeprefix("siren:"))
         else:
             open_fiche(to_open, None, domaine)
+
+
+def candidatures_section() -> None:
+    """Favoris cochés « Candidaté » (T82), avec leur statut en couleur."""
+    applied = [f for f in favorites() if f["candidate"]]
+    if not applied:
+        st.write("Coche « Candidaté » sur un favori pour le retrouver ici et suivre sa réponse.")
+        return
+    for f in applied:
+        kind_ref = f"{f['kind']}_{f['ref']}"
+        key = f"fav_statut_{kind_ref}"
+        st.session_state.setdefault(key, f["statut"] or accounts.CANDIDATURE_STATUTS[0])
+        with st.container(border=True, key=f"espace_candidature_{kind_ref.replace(':', '_')}"):
+            left, middle, right = st.columns([3, 1.3, 1.5], vertical_alignment="center")
+            left.markdown(f"**{f['label']}**")
+            kind = "Entreprise" if f["kind"] == "entreprise" else "Offre"
+            left.caption(kind + (f" · {f['note']}" if f["note"] else ""))
+            statut = st.session_state[key]
+            middle.markdown(
+                pill(statut, STATUT_COLORS.get(statut, "#6B7280")), unsafe_allow_html=True
+            )
+            right.selectbox(
+                "Statut",
+                accounts.CANDIDATURE_STATUTS,
+                key=key,
+                on_change=_save_statut,
+                args=(f["kind"], f["ref"], key),
+                label_visibility="collapsed",
+            )
 
 
 account_page(
@@ -165,4 +178,5 @@ account_page(
     saved_keys=saved_profile_keys(),  # T81 : le profil ne garde que les compétences du CV
     # T83 : déposer son CV et ajouter / retirer des compétences ici aussi
     profile_editor=lambda: cv_and_skills("cv_fichier_profil"),
+    candidatures_section=candidatures_section,
 )

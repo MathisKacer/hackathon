@@ -27,7 +27,7 @@ from zoneinfo import ZoneInfo
 
 import streamlit as st
 from admin_ui import must_change_banner, password_change_box
-from style import hero
+from style import NAVY, Tile, hero, kpi_tiles, profile_header
 
 from radar import accounts
 
@@ -318,69 +318,19 @@ def _profile_section(con, user: dict, saved_keys: dict, labels: dict, editor=Non
         st.rerun()
 
 
-def account_page(
-    profile_keys: dict[str, list | None],
-    labels: dict[str, str] | None = None,
-    explorer_page=None,
-    favorites_section=None,
-    saved_keys: dict[str, list | None] | None = None,
-    profile_editor=None,
-) -> None:
-    """Page « Mon espace » : connexion, ou profil + favoris + historique + suppression.
-
-    `profile_keys` : réglages d'une recherche (historique « Mes recherches », bouton Relancer).
-    `saved_keys` (T81) : réglages gardés dans le **profil** (par défaut : tous) ; Radar n'y met
-    que les compétences du CV. Ils sont restaurés à la connexion.
-    `profile_editor` (T83) : fonction qui affiche de quoi modifier le profil (CV, compétences).
-    `favorites_section` : fonction qui affiche « Mes favoris » (app/vues/mon_espace.py, T54).
-    """
-    saved_keys = profile_keys if saved_keys is None else saved_keys
-    labels = labels or {}
-    if st.session_state.pop(GO_EXPLORER_KEY, False) and explorer_page is not None:
-        st.switch_page(st.Page(explorer_page))
-    user = _validated_user()
-    if user is None:
-        hero("Mon espace", "Ton compte, tes favoris et tes recherches.", compact=True)
-        st.write(
-            "Radar marche sans compte : rien n'est enregistré. Avec un compte, tes compétences "
-            "(tirées de ton CV) et l'historique de tes recherches sont gardés d'une visite à "
-            "l'autre."
-        )
-        left, _ = st.columns([1, 1])
-        with left, st.container(border=True):
-            login_forms(saved_keys)
-        if favorites_section is not None:
-            favorites_section()
-        return
-
-    hero(
-        f"Bonjour {user['username']}",
-        "Tes compétences, tes favoris et tes recherches.",
-        compact=True,
-    )
-    con = _con()
-    must_change_banner(con, user)  # T79 : mot de passe provisoire donné par un administrateur
-    if st.button("Se déconnecter", icon=":material/logout:"):
-        st.session_state.pop(USER_KEY, None)
-        st.rerun()
-    _profile_section(con, user, saved_keys, labels, profile_editor)
-
-    if favorites_section is not None:
-        favorites_section()
-
-    st.subheader("Mes recherches")
+def _searches_section(con, user: dict, profile_keys: dict, labels: dict) -> None:
+    """Onglet « Mes recherches » : historique avec « Relancer » (T49)."""
     searches = accounts.list_searches(con, user["id"], limit=HISTORY_SHOWN)
     if not searches:
         st.write("Tes recherches apparaîtront ici.")
+        return
     for s in searches:
-        with st.container(border=True):
+        with st.container(border=True, key=f"espace_recherche_{s['id']}"):
             left, right = st.columns([5, 1], vertical_alignment="center")
             date = s["created_at"].astimezone(TZ).strftime("%d/%m à %H:%M")
-            left.markdown(
-                f"**{date}** · {s['n_resultats']} résultat(s)  \n"
-                f"{summarize(s['params'], labels)}"
-                + (f"  \n*{', '.join(s['top_resultats'][:3])}*" if s["top_resultats"] else "")
-            )
+            left.markdown(f"**{summarize(s['params'], labels)}**")
+            top = f" · {', '.join(s['top_resultats'][:3])}" if s["top_resultats"] else ""
+            left.caption(f"{date} · {s['n_resultats']} résultat(s){top}")
             right.button(
                 "Relancer",
                 icon=":material/replay:",
@@ -389,11 +339,17 @@ def account_page(
                 args=(s["params"], profile_keys),
                 width="stretch",
             )
-    if searches:
-        st.button("Effacer mon historique", on_click=_clear_history, args=(user["id"],))
+    st.button(
+        "Effacer mon historique",
+        type="tertiary",
+        icon=":material/delete_sweep:",
+        on_click=_clear_history,
+        args=(user["id"],),
+    )
 
-    password_change_box(con, user)  # T79 (D39)
-    with st.expander("Supprimer mon compte"):
+
+def _delete_account_box(con, user: dict) -> None:
+    with st.expander("Supprimer mon compte", icon=":material/warning:"):
         st.caption("Efface définitivement ton compte, ton profil et ton historique.")
         ok = st.checkbox("Je confirme la suppression", key="page_confirm_suppr")
         if st.button("Supprimer mon compte", type="primary", disabled=not ok):
@@ -402,3 +358,90 @@ def account_page(
             st.session_state.pop("page_confirm_suppr", None)
             st.toast("Compte supprimé.")
             st.rerun()
+
+
+def _anonymous_page(saved_keys: dict, favorites_section) -> None:
+    """Sans compte : à gauche ce qu'apporte un compte, à droite la connexion."""
+    hero("Mon espace", "Ton compte, tes favoris et tes recherches.", compact=True)
+    left, right = st.columns([1, 1], gap="large")
+    with left:
+        st.markdown("#### Pourquoi créer un compte ?")
+        for icon, title, text in (
+            ("star", "Garder tes favoris", "entreprises et offres, d'une visite à l'autre."),
+            ("send", "Suivre tes candidatures", "envoyée, relancée, entretien, réponse."),
+            ("history", "Retrouver tes recherches", "et les relancer en un clic."),
+            ("badge", "Garder tes compétences", "tirées de ton CV."),
+        ):
+            st.markdown(f":material/{icon}: **{title}** : {text}")
+        st.caption("Radar marche aussi sans compte : dans ce cas, rien n'est enregistré.")
+    with right, st.container(border=True, key="espace_connexion"):
+        login_forms(saved_keys)
+    if favorites_section is not None:
+        st.divider()
+        favorites_section()
+
+
+def account_page(
+    profile_keys: dict[str, list | None],
+    labels: dict[str, str] | None = None,
+    explorer_page=None,
+    favorites_section=None,
+    saved_keys: dict[str, list | None] | None = None,
+    candidatures_section=None,
+    profile_editor=None,
+) -> None:
+    """Page « Mon espace » : connexion, ou résumé chiffré + onglets (T85).
+
+    Onglets : Mes candidatures, Mes favoris, Mes recherches, Mon profil. Leurs libellés ne
+    contiennent pas de compteurs : un libellé qui change ramènerait au premier onglet.
+    `profile_keys` : réglages d'une recherche (historique « Mes recherches », bouton Relancer).
+    `saved_keys` (T81) : réglages gardés dans le **profil** (par défaut : tous) ; Radar n'y met
+    que les compétences du CV. Ils sont restaurés à la connexion.
+    `profile_editor` (T83) : fonction qui affiche de quoi modifier le profil (CV, compétences).
+    `favorites_section`, `candidatures_section` : fonctions d'app/vues/mon_espace.py.
+    """
+    saved_keys = profile_keys if saved_keys is None else saved_keys
+    labels = labels or {}
+    if st.session_state.pop(GO_EXPLORER_KEY, False) and explorer_page is not None:
+        st.switch_page(st.Page(explorer_page))
+    user = _validated_user()
+    if user is None:
+        _anonymous_page(saved_keys, favorites_section)
+        return
+
+    con = _con()
+    profile_header(user["username"], "Où en sont tes candidatures ?")
+    _, right = st.columns([5, 1])
+    if right.button("Se déconnecter", icon=":material/logout:", type="tertiary"):
+        st.session_state.pop(USER_KEY, None)
+        st.rerun()
+    must_change_banner(con, user)  # T79 : mot de passe provisoire donné par un administrateur
+
+    favs = accounts.list_favorites(con, user["id"])
+    applied = [f for f in favs if f["candidate"]]
+    interviews = sum(f["statut"] == "Entretien" for f in applied)
+    searches = accounts.list_searches(con, user["id"], limit=accounts.SEARCH_MAX_PER_USER)
+    counts = (
+        (len(applied), "candidature", "#1a56db"),
+        (interviews, "entretien", "#6d28d9"),
+        (len(favs), "favori", "#e8590c"),
+        (len(searches), "recherche", NAVY),
+    )
+    kpi_tiles([Tile(str(n), word + ("s" if n > 1 else ""), color) for n, word, color in counts])
+
+    names = [":material/send: Mes candidatures", ":material/star: Mes favoris"]
+    names += [":material/history: Mes recherches", ":material/person: Mon profil"]
+    tab_apply, tab_fav, tab_search, tab_profile = st.tabs(names)
+    with tab_apply:
+        if candidatures_section is not None:
+            candidatures_section()
+    with tab_fav:
+        if favorites_section is not None:
+            favorites_section()
+    with tab_search:
+        _searches_section(con, user, profile_keys, labels)
+    with tab_profile:
+        _profile_section(con, user, saved_keys, labels, profile_editor)
+        st.divider()
+        password_change_box(con, user)  # T79 (D39)
+        _delete_account_box(con, user)

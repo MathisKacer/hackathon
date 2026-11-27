@@ -21,7 +21,7 @@ def must_change_banner(con, user: dict) -> None:
     if admin.must_change_password(con, user["id"]):
         st.warning(
             "Tu utilises un **mot de passe provisoire** donné par un administrateur : "
-            "change-le ci-dessous (« Changer mon mot de passe »).",
+            "change-le dans l'onglet « Mon profil ».",
             icon=":material/key:",
         )
 

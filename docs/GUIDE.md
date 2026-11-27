@@ -454,3 +454,13 @@ Case vide quand SIRENE n'a pas l'information. **Pas de total calculé** : additi
 **Réglages.** Liste et expressions : `SKILLS` (choix prudents : pas « C » ni « Go », « R » seulement en majuscule isolée, « recrutement » de présentation écarté) ; lissage : `M_SECTOR`, `M_COMPANY` ; paliers : `MATCH_TIERS`, couleurs `MATCH_COLORS`. Tests : `tests/test_competences.py` (ajouter un cas avant de modifier une expression).
 
 **Limites et suites.** Correspondance surtout au niveau du secteur, descriptions tronquées, PDF scannés illisibles (L29). Suites : proposer le domaine et le niveau d'études à partir du CV ; lettre de candidature (T46).
+
+---
+
+## Mon espace : la présentation (T85)
+
+- **Sans compte** : à gauche « Pourquoi créer un compte ? », à droite la carte « Connexion / Créer un compte » ; les favoris temporaires en dessous.
+- **Connecté** : bandeau avec l'initiale, 4 chiffres en couleur, puis les onglets **Mes candidatures** (statut en pastille de couleur), **Mes favoris** (Entreprises / Offres), **Mes recherches** et **Mon profil** (compétences et CV, mot de passe, suppression du compte tout en bas).
+- Les libellés d'onglets n'ont **pas de compteurs** : un libellé qui change ramènerait au premier onglet.
+- Code : `account_page` (`app/compte.py`), sections de `app/vues/mon_espace.py`, styles dans `app/style.py` (`profile_header`, blocs à clé `espace_…`).
+

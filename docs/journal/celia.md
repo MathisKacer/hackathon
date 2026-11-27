@@ -4,6 +4,17 @@
 
 ---
 
+## 2026-11-27 — Tâche T85 : Mon espace repensé
+
+**Fait :**
+- Page en résumé chiffré + 4 onglets ; connexion en deux colonnes ; pastilles de statut. Présentation seulement.
+- Fusion avec la T83 d'Emma (CV et compétences saisies à la main) : sa fonction `_profile_section` et `cv_and_skills` reprises à l'identique dans l'onglet « Mon profil ». Étiquette de ma tâche renumérotée T85 (T83 prise par Emma).
+
+**Résultats / chiffres clés :**
+- 380 tests OK.
+
+---
+
 ## 2026-11-27 — Tâche T82 : Mes candidatures
 
 **Fait :**
