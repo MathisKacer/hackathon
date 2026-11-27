@@ -25,7 +25,6 @@
 **Offres**
 - [x] T10 — 🔗T1 **Test Adzuna** : volume d'offres data en France et dans le 35, champs réellement renvoyés, nombre d'entreprises que renvoie `top_companies` → noter les résultats dans `SOURCES.md`
 - [ ] T16 — 🔗T12 **Compléter la collecte Adzuna** : relancer `uv run python scripts/collect_adzuna.py` chaque jour (reprend grâce au cache) ; découper l'Île-de-France par département (5 000/14 385 récupérées, plafond de 100 pages) ; ⚠️ le quota (~240/jour) est **partagé par tous ceux qui utilisent la même clé**
-- [ ] T13 — 🔗T6 **Classifieur d'offres** : `domaine` (data ou autre), `contrat` (stage / alternance / emploi), à partir du ROME, des mots-clés et du type de contrat
 
 **Entreprises**
 
@@ -73,6 +72,7 @@
 
 ## 🔵 En cours
 
+- [ ] T13 — 🔗T6 **Classifieur d'offres** : `domaine` (data ou autre), `contrat` (stage / alternance / emploi), à partir du ROME, des mots-clés et du type de contrat — @emma
 - [ ] T21 — 🔗T11,T12 **Rapprochement nom + commune → SIRET** pour les offres Adzuna (rapidfuzz sur le référentiel T20) ; mesurer le taux de rapprochement et le noter dans `SOURCES.md` — @mathis
 
 ## ✅ Fait
