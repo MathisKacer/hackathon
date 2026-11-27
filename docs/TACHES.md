@@ -84,6 +84,7 @@
 ## 🔵 En cours
 
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
+- [ ] T87 — 🔗T80 **Correspondance plus visible** : message quand aucune compétence n'est reconnue (liste, fenêtre de la carte, fiche) ; colonne « Correspondance » juste après « Priorité » ; correspondance juste sous la priorité dans la fenêtre de la carte (demandée par @emma, qui ne la voyait pas : profil avec une seule compétence non reconnue) — @emma
 - _…_
 
 ## ✅ Fait
