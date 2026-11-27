@@ -33,6 +33,7 @@ import pandas as pd
 from scipy import stats
 
 from radar.domains import load_domains
+from radar.schemas import OFFRES_RAW
 
 FAKE_TAG = "[DONNÉE FACTICE]"
 
@@ -337,8 +338,16 @@ def make_entreprises(rng: np.random.Generator, n: int) -> pd.DataFrame:
 
 
 def make_offres(
-    rng: np.random.Generator, ent: pd.DataFrame, collect_date: date
+    rng: np.random.Generator,
+    ent: pd.DataFrame,
+    collect_date: date,
+    xrng: np.random.Generator | None = None,
 ) -> tuple[dict[str, pd.DataFrame], pd.DataFrame]:
+    """Raw offers per source + "processed" offers.
+
+    `xrng` draws the source-specific columns (T19, `_source_columns`): a separate generator, so
+    that adding those columns did not change the other fake tables for a given seed.
+    """
     n = len(ent)
     rate_mult = np.array([SECTORS[i][3] for i in ent["_sector_idx"]])
     # Company random effect (gamma, shape 0.5) → overdispersion: many zeros, a few big posters.
@@ -436,6 +445,15 @@ def make_offres(
             "siret": np.where(is_lba, e["siret"], None),
         }
     )
+    extra = _source_columns(
+        xrng if xrng is not None else np.random.default_rng(0),
+        e,
+        offers,
+        is_lba,
+        pub,
+        collect_date,
+    )
+    raw = pd.concat([raw, extra], axis=1)
 
     # --- "processed" offers: what process/ (T13 classify + T21 match) would output.
     true_siret = e["siret"].to_numpy()
@@ -452,8 +470,135 @@ def make_offres(
         is_lba, "siret_source", np.where(matched, "nom_commune_fuzzy", "non_rapproche")
     )
 
-    raw_by_source = {s: raw[raw["source"] == s].reset_index(drop=True) for s in ("adzuna", "lba")}
+    # Each raw file only has the contract columns + its own columns, like the real collectors.
+    raw_by_source = {
+        s: raw.loc[raw["source"] == s, OFFRES_RAW + extra_cols].reset_index(drop=True)
+        for s, extra_cols in (("adzuna", ADZUNA_EXTRA), ("lba", LBA_EXTRA))
+    }
     return raw_by_source, offres
+
+
+# Source-specific columns, in the order of the real collectors (collect/adzuna.py, collect/lba.py;
+# test_fake_data checks they stay identical).
+ADZUNA_EXTRA = [
+    "contrat_temps", "categorie", "salaire_min", "salaire_max", "salaire_predit",
+    "zone", "requete", "region_requete",
+]  # fmt: skip
+LBA_EXTRA = [
+    "partenaire", "naf", "naf_libelle", "taille", "adresse", "niveau_diplome",
+    "nb_postes", "statut", "date_expiration", "date_debut", "duree_mois", "teletravail",
+    "delegue_ecole",
+]  # fmt: skip
+
+# Adzuna category label by domain (real labels; "Unknown" is the most frequent one, ~43 %).
+ADZUNA_CATEGORIES = {
+    "data": ["Emplois Informatique", "Emplois Consultants", "Emplois Diplômés"],
+    "informatique": ["Emplois Informatique", "Emplois Ingénierie"],
+    "finance": ["Emplois Comptabilité et Finance"],
+    "marketing": ["Emplois RP, Publicité et Marketing"],
+    "rh": ["Emplois RH et Recrutement"],
+    "autre": ["Emplois Autres/Général"],
+}
+# LBA partners (partner_label; real shares of the 2026-11-27 export, docs/SOURCES.md).
+LBA_PARTNERS = (["Direct Emploi", "France Travail", "offres_emploi_lba", "Hellowork"],
+                [0.50, 0.20, 0.16, 0.14])  # fmt: skip
+# Targeted diploma (offer.target_diploma.european: "3" CAP … "6" Bac+3, "7" Bac+5), or None.
+DIPLOMA_LEVELS = [None, "3", "4", "5", "6", "7"]
+DIPLOMA_P = {
+    "data": [0.08, 0.0, 0.02, 0.15, 0.30, 0.45],
+    "other": [0.10, 0.08, 0.15, 0.27, 0.22, 0.18],
+}  # noqa: E501
+
+
+def _source_columns(
+    rng: np.random.Generator,
+    e: pd.DataFrame,
+    offers: pd.DataFrame,
+    is_lba: np.ndarray,
+    pub: list[date],
+    collect_date: date,
+) -> pd.DataFrame:
+    """Adzuna and LBA specific columns (T19), with the formats of the real collectors.
+
+    One row per offer; Adzuna columns are left empty on LBA rows and vice versa (each source's
+    file keeps only its own). Formats checked on the real Adzuna collection and on the LBA
+    OpenAPI spec. `delegue_ecole` is always False: the fake LBA SIRET is the company's.
+    """
+    from radar.geo import region_of
+
+    m = len(offers)
+    adz = ~is_lba
+    domaine = offers["domaine"].to_numpy()
+    contrat = offers["contrat"].to_numpy()
+    cp = e["_code_postal"].astype(str)
+    region = cp.str[:2].map(region_of)
+
+    # --- Adzuna
+    contrat_temps = rng.choice(["full_time", "part_time", None], m, p=[0.39, 0.01, 0.60])
+    categorie = [
+        "Unknown" if rng.random() < 0.43 else rng.choice(ADZUNA_CATEGORIES[d]) for d in domaine
+    ]
+    has_salary = rng.random(m) < 0.37
+    yearly = np.where(
+        contrat == "emploi", rng.lognormal(np.log(45_000), 0.3, m), rng.uniform(7_000, 20_000, m)
+    )
+    sal_min = np.where(has_salary, np.round(yearly, -3), np.nan)
+    sal_max = np.where(has_salary, np.round(yearly * rng.uniform(1.0, 1.4, m), -3), np.nan)
+    # Real zones: "France > Bretagne > Ille-et-Vilaine > Rennes" (the department level is skipped).
+    zone = "France > " + region.fillna("") + " > " + e["commune"]
+
+    # --- LBA
+    partenaire = rng.choice(LBA_PARTNERS[0], m, p=LBA_PARTNERS[1])
+    niveau = [
+        DIPLOMA_LEVELS[rng.choice(6, p=DIPLOMA_P["data" if d == "data" else "other"])]
+        for d in domaine
+    ]
+    start = [
+        (collect_date + timedelta(days=int(rng.integers(0, 120)))).isoformat()
+        if rng.random() < 0.7
+        else None
+        for _ in range(m)
+    ]
+    duree = rng.choice([12, 24, 36, -1], m, p=[0.35, 0.45, 0.10, 0.10])
+    teletravail = rng.choice(["onsite", "hybrid", "remote", None], m, p=[0.45, 0.25, 0.03, 0.27])
+    numero = rng.integers(1, 200, m)
+
+    def only(mask, values):
+        return pd.Series(values, dtype=object).where(mask, None)
+
+    return pd.DataFrame(
+        {
+            "contrat_temps": only(adz, contrat_temps),
+            "categorie": only(adz, categorie),
+            "salaire_min": np.where(adz, sal_min, np.nan),
+            "salaire_max": np.where(adz, sal_max, np.nan),
+            "salaire_predit": only(adz, [False] * m),
+            "zone": only(adz, zone),
+            "requete": only(adz, ["data"] * m),  # the only Adzuna query collected so far
+            "region_requete": only(adz, region),
+            "partenaire": only(is_lba, partenaire),
+            "naf": only(is_lba, e["naf"]),
+            "naf_libelle": only(is_lba, e["naf_libelle"]),
+            "taille": only(is_lba, e["tranche_effectif"].map(LBA_SIZE)),
+            "adresse": only(
+                is_lba,
+                [
+                    f"{n} rue Factice {c} {v}"
+                    for n, c, v in zip(numero, cp, e["commune"], strict=True)
+                ],
+            ),  # noqa: E501
+            "niveau_diplome": only(is_lba, niveau),
+            "nb_postes": np.where(is_lba, rng.choice([1, 2, 3], m, p=[0.88, 0.09, 0.03]), np.nan),
+            "statut": only(is_lba, ["Active"] * m),
+            "date_expiration": only(
+                is_lba, [f"{(d + timedelta(days=60)).isoformat()}T00:00:00Z" for d in pub]
+            ),  # noqa: E501
+            "date_debut": only(is_lba, start),
+            "duree_mois": np.where(is_lba & (duree > 0), duree, np.nan),
+            "teletravail": only(is_lba, teletravail),
+            "delegue_ecole": only(is_lba, [False] * m),
+        }
+    )
 
 
 # --------------------------------------------------------------------------- LBA recruiters (T7)
@@ -664,7 +809,8 @@ def generate(
     rng = np.random.default_rng(seed)
     collect_date = collect_date or date(2026, 11, 27)
     ent = make_entreprises(rng, n_entreprises)
-    raw, offres = make_offres(rng, ent, collect_date)
+    # Source-specific columns: own generator (see make_offres), the tables above stay identical.
+    raw, offres = make_offres(rng, ent, collect_date, np.random.default_rng([seed, 19]))
     scores = make_scores(ent, offres)
     cand, p_rep = make_response(rng, ent, scores)
     # Drawn last, so that the tables above stay identical for a given seed.

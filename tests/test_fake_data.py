@@ -83,3 +83,55 @@ def test_dates_are_iso_strings_like_real_collectors(data):
         for col in ("date_collecte", "date_publication"):
             assert df[col].map(type).eq(str).all(), col
             assert pd.to_datetime(df[col], utc=True).notna().all()
+
+
+def test_source_columns_like_real_collectors(data):
+    """T19 : chaque fichier factice a exactement les colonnes du vrai collecteur, dans l'ordre."""
+    from radar.collect import adzuna, lba
+
+    assert list(data.offres_raw["adzuna"].columns) == adzuna.COLUMNS
+    assert list(data.offres_raw["lba"].columns) == lba.COLUMNS
+    # les offres « traitées » gardent toutes les colonnes, comme classify_offres
+    assert set(adzuna.COLUMNS) | set(lba.COLUMNS) <= set(data.offres.columns)
+
+
+def test_adzuna_region_requete(data):
+    """T19 : la région de la requête, comme Adzuna (libellés de collect/adzuna.py)."""
+    from radar.collect.adzuna import REGIONS
+    from radar.geo import region_of
+
+    adz = data.offres_raw["adzuna"]
+    assert adz["region_requete"].notna().all()
+    assert set(adz["region_requete"]) <= set(REGIONS)
+    assert (adz["region_requete"] == adz["code_postal"].str[:2].map(region_of)).all()
+    assert adz["zone"].str.startswith("France > ").all()
+    assert (adz["requete"] == "data").all()
+    assert (adz["salaire_min"].dropna() <= adz.loc[adz["salaire_min"].notna(), "salaire_max"]).all()
+
+
+def test_lba_columns_formats(data):
+    """T19 : formats de l'API La bonne alternance (spec OpenAPI), utiles à T67 (niveau d'études)."""
+    lba = data.offres_raw["lba"]
+    assert set(lba["niveau_diplome"].dropna()) <= {"3", "4", "5", "6", "7"}
+    assert lba["niveau_diplome"].notna().mean() >= 0.7  # ~10 % non renseigné
+    assert set(lba["teletravail"].dropna()) <= {"onsite", "hybrid", "remote"}
+    assert (lba["statut"] == "Active").all()
+    assert not lba["delegue_ecole"].any()  # le SIRET factice est celui de l'entreprise
+    ent = data.entreprises.set_index("siret")
+    assert (lba["naf"] == lba["siret"].map(ent["naf"])).all()
+    assert set(lba["duree_mois"].dropna()) <= {12, 24, 36}
+    assert (pd.to_datetime(lba["date_expiration"]) > pd.to_datetime(lba["date_publication"])).all()
+
+
+def test_source_columns_do_not_change_other_columns():
+    """Les colonnes propres aux sources ont leur propre générateur : le reste ne bouge pas."""
+    import numpy as np
+
+    from radar.fake_data import OFFRES_RAW, make_entreprises, make_offres
+
+    ent = make_entreprises(np.random.default_rng(3), 300)
+    day = pd.Timestamp("2026-11-27").date()
+    a = make_offres(np.random.default_rng(5), ent, day, np.random.default_rng(1))[1]
+    b = make_offres(np.random.default_rng(5), ent, day, np.random.default_rng(2))[1]
+    assert a[OFFRES_RAW].equals(b[OFFRES_RAW])
+    assert not a["niveau_diplome"].equals(b["niveau_diplome"])
