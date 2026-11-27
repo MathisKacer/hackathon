@@ -74,6 +74,7 @@ uv run python scripts/validate_scores.py # validation du score (T34, ~15 min) �
 uv run python scripts/collect_bodacc.py  # procédures collectives BODACC → alertes dans entreprises.parquet (T23 ; --refresh pour retélécharger)
 uv run python scripts/build_all.py        # reconstruire entreprises → offres → scores (~1 min)
 uv run streamlit run app/streamlit_app.py # lancer l'app (port 8501)
+uv run python scripts/admin.py promouvoir <identifiant>  # nommer un administrateur (équipe seulement, T79)
 uv run pytest -q                          # tests
 uv run ruff format . && uv run ruff check --fix .   # formatage + lint, avant chaque commit
 ```

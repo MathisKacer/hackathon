@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-11-27 — T79 : administrateurs et gestion des comptes
+
+**Fait :**
+- Demande : il n'y avait aucun administrateur ; seuls les 4 membres de l'équipe doivent pouvoir l'être, les autres comptes étant classiques et gérés par les administrateurs.
+- `radar/admin.py` : colonnes `is_admin`, `must_change_password`, table `admin_log` (ajoutées aux bases existantes) ; 4 administrateurs au plus ; actions réservées aux administrateurs (débloquer, mot de passe provisoire, supprimer un compte classique) ; pas d'action sur un autre administrateur ; « changer mon mot de passe ».
+- `scripts/admin.py` : **seul** moyen de nommer ou retirer un administrateur (`liste`, `promouvoir`, `retirer`, `journal`).
+- App : page « Administration » (`app/vues/administration.py`, `app/admin_ui.py`) visible par les seuls administrateurs ; dans Mon espace, bandeau « mot de passe provisoire » et « Changer mon mot de passe » (`app/compte.py`, 2 appels).
+- Vie privée : l'administrateur voit des nombres, pas le contenu des recherches ni des favoris.
+- Décision **D39** ; `docs/SECURITE.md`, `docs/ARCHITECTURE.md`, commande ajoutée dans `CLAUDE.md`.
+
+**Résultats :** 9 tests (`tests/test_admin.py`), 373 tests OK, ruff OK. AppTest : étudiant → pas de page Administration (et refus si on lance le script de la page) ; administrateur → page, mot de passe provisoire affiché une fois et journalisé ; étudiant → bandeau « change ton mot de passe ».
+
+**À faire par chaque membre :** créer son compte dans l'app, puis `uv run python scripts/admin.py promouvoir <identifiant>` sur son pod.
+
+**Points d'attention :** ruff a modifié le carnet `notebooks/grille_llm_colab.ipynb` de Mathis lors d'un `ruff check --fix .` : modification annulée (`git checkout`), le carnet a des erreurs de lint qui ne sont pas les miennes.
+
+---
+
 ## 2026-11-27 — T78 : candidature spontanée dans les fiches, même sans ville
 
 **Fait :**

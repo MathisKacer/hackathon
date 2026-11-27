@@ -37,6 +37,7 @@ hackathon/
 │   ├── fake_data.py            # T5 : générateur de données FACTICES respectant le contrat
 │   ├── domains.yaml            # T6 : domaines (data, informatique, finance, marketing, rh) → codes ROME 4.0 + mots-clés
 │   ├── domains.py              # chargement de domains.yaml + classify(titre, code_rome) → domaine (base de T13)
+│   ├── admin.py                # T79 : administrateurs (équipe, nommés par scripts/admin.py), gestion des comptes, journal (D39)
 │   ├── candidature.py          # T78 : candidature spontanée sans ville (verdict selon le contrat, besoin, LBA, groupe) (D38)
 │   ├── communes.py             # T55 : communes « Nom (CP) » pour le suggesteur de ville (geo.api.gouv.fr, cache ; repli référentiel) (D28)
 │   ├── geocode.py              # T40 : adresse → lat/lon (Géoplateforme IGN, sans clé, cache disque PATHS.cache)

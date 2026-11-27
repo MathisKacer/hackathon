@@ -10,6 +10,7 @@
 - **Règles inspirées de la CNIL** : au moins 12 caractères et 3 types de caractères ; mots de passe courants refusés.
 - **Blocage après 5 échecs** : compte bloqué 15 minutes, même en rechargeant la page.
 - **Minimum de données personnelles** : pas d'e-mail, et « Supprimer mon compte » efface tout (profil, historique).
+- **Administrateurs = l'équipe seulement** (T79, D39) : nommés uniquement en ligne de commande sur le serveur, jamais depuis le site ; ils voient des nombres, pas le contenu des comptes ; chaque action est journalisée.
 
 ## Choix du mot de passe (à la création du compte)
 
@@ -59,6 +60,16 @@ Conséquence pour la démo : créer les comptes de démonstration **sur le pod q
 - **Identifiant inconnu** : on vérifie quand même un haché factice, pour que le temps de réponse ne révèle pas si le compte existe. Le message est le même : « Identifiant ou mot de passe incorrect ».
 - **Identifiants** normalisés (minuscules, espaces retirés) : `Celia` et `celia` sont le même compte.
 
+## Administrateurs et gestion des comptes (T79, D39)
+
+- **Qui** : les membres de l'équipe seulement, **4 au plus** (`MAX_ADMINS`). On devient administrateur **uniquement** par `uv run python scripts/admin.py promouvoir <identifiant>` dans le terminal du pod (accès réservé à l'équipe). Aucun bouton du site ne permet de nommer un administrateur, et aucun identifiant n'est écrit dans le code : sinon le premier venu qui crée le compte « maxence » deviendrait administrateur.
+- **Ce qu'ils font** (page « Administration », visible seulement par eux et revérifiée à chaque affichage) : voir la liste des comptes, **débloquer** un compte, donner un **mot de passe provisoire** (généré aléatoirement, conforme aux règles, affiché une seule fois, à transmettre par un moyen privé ; l'utilisateur est invité à le changer), **supprimer** un compte classique.
+- **Limites** : un administrateur ne réinitialise ni ne supprime le compte d'un autre administrateur (ça se règle entre membres, par le script) ; il ne peut pas se supprimer depuis la page (passer par Mon espace).
+- **Vie privée** : la liste montre des **nombres** (recherches, favoris, profil oui/non), jamais leur contenu.
+- **Journal** (`admin_log`) : date, auteur (ou « (terminal) » pour le script), action, compte visé.
+- **Pour tout le monde** : « Changer mon mot de passe » dans Mon espace (ancien mot de passe vérifié, mêmes règles qu'à la création).
+- Code : `radar/admin.py`, `app/admin_ui.py`, `app/vues/administration.py`, `scripts/admin.py` ; tests : `tests/test_admin.py`.
+
 ## Données personnelles
 
 - Données stockées : identifiant, empreinte du mot de passe, profil (réglages de recherche, dont l'adresse saisie), historique des recherches (50 max). **Pas d'e-mail, pas de nom.**
@@ -70,7 +81,7 @@ Conséquence pour la démo : créer les comptes de démonstration **sur le pod q
 | Manque | Risque | Ce qu'il faudrait en production |
 |---|---|---|
 | Base locale au service Onyxia (L17) | Comptes perdus si le service est supprimé ; un compte n'existe que sur le pod où il a été créé ; pas de sauvegarde | Base hébergée avec sauvegardes (Supabase : tâche T52, très optionnelle) |
-| Pas de « mot de passe oublié » (L18) | Mot de passe perdu = nouveau compte | Récupération par e-mail (donc collecter un e-mail) |
+| Pas de « mot de passe oublié » automatique (L18) | Atténué (T79) : un administrateur peut donner un mot de passe provisoire, à transmettre hors de l'app | Récupération par e-mail (donc collecter un e-mail) |
 | Pas de « se souvenir de moi » (L18) | Recharger la page déconnecte | Cookie de session signé, avec expiration |
 | Le message de blocage révèle qu'un compte existe (L19) | Un attaquant peut tester si un identifiant existe en provoquant un blocage | Bloquer aussi les identifiants inconnus, ou limiter par adresse IP |
 | Pas de vérification contre les fuites connues (L19) | Un mot de passe déjà fuité mais « conforme » passe | Service *Have I Been Pwned* (k-anonymat) ou grande liste locale |

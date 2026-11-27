@@ -14,6 +14,14 @@
 
 ---
 
+### D39 — Administrateurs : l'équipe seulement, nommée en ligne de commande (2026-11-27, @maxence)
+**Contexte :** T79 : on pouvait créer des comptes, mais personne ne pouvait les gérer (compte bloqué, mot de passe oublié, compte à supprimer).
+**Décision :** colonne `is_admin` (et `must_change_password`, table `admin_log`), ajoutées automatiquement aux bases existantes (`radar/admin.py`). **Seuls les 4 membres de l'équipe** peuvent être administrateurs (`MAX_ADMINS = 4`), nommés **uniquement** par `scripts/admin.py` dans le terminal du pod ; aucun identifiant écrit dans le code. Tous les autres comptes sont **classiques**. Page « Administration » (ajoutée à la navigation pour les seuls administrateurs, droit revérifié dans la page) : liste des comptes avec des **nombres** seulement, débloquer, mot de passe provisoire (affiché une fois), supprimer un compte classique, journal. « Changer mon mot de passe » pour tout le monde.
+**Alternatives écartées :** liste d'identifiants dans le code ou le `.env` (le premier qui crée le compte « maxence » serait administrateur ; et il faudrait redémarrer l'app à chaque changement) ; premier compte créé = administrateur (risqué sur une app ouverte) ; nommer des administrateurs depuis la page (un compte volé pourrait en créer d'autres) ; montrer le contenu des recherches aux administrateurs (inutile pour gérer, contraire au minimum de données).
+**Conséquences :** base locale au pod (L17) : chacun nomme les administrateurs sur son pod. Les administrateurs se gèrent entre eux par le script.
+
+---
+
 ### D38 — Fiches : la candidature spontanée renseignée même sans ville (2026-11-27, @maxence)
 **Contexte :** T78 : sans ville choisie dans Explorer (cas fréquent : arrivée directe sur « Entreprises », redémarrage de l'app), les fiches renvoyaient seulement vers Explorer.
 **Décision :** `radar/candidature.py`. Ce qui ne dépend pas du lieu est affiché dans le bloc « Candidature spontanée » des fiches site et entreprise : **verdict** selon les offres du domaine **pour le contrat visé** (au niveau de l'entreprise : « publie déjà N offres d'alternance → postule via ses offres » / « recrute en data mais aucune offre de stage : opportunité cachée » / « aucune offre : candidature possible »), **besoin dans le domaine** (`c_intensite`) et **besoin attendu** (`c_embauche`) en mots (faible / moyen / élevé / très élevé, avec le rang en %), **recruteur d'alternants LBA** (alternance et « Tous »), **groupe** (D36). Fiche entreprise : site au meilleur besoin attendu. Le palier (D32) et la distance restent réservés à une recherche avec ville (ils dépendent des entreprises autour de soi) : une ligne invite à choisir sa ville.
