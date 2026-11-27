@@ -351,7 +351,7 @@ search_history(
     PROFILE_KEYS,
     n_results=len(view) + len(spontaneous),
     top=(
-        spontaneous["siret"].head(5).astype(str).tolist()
+        spontaneous["nom"].head(5).astype(str).tolist()  # noms lisibles dans « Mes recherches »
         if not spontaneous.empty
         else view["entreprise_nom"].value_counts().head(5).index.tolist()
     ),

@@ -87,7 +87,7 @@ L'app a un **mode démo anonyme** (par défaut, rien n'est enregistré) et une *
 4. prendre sa valeur par défaut avec `st.session_state.setdefault("rayon_km", 20)`, **pas** avec `value=` (sinon Streamlit avertit quand un profil la remplace) ;
 5. être créé **après** `account_sidebar(PROFILE_KEYS)` dans la barre latérale.
 
-Quand la couche orange (T40) existe : passer les SIRET des premières entreprises dans `top=` de `search_history(...)`. Code : `radar/accounts.py` (base SQLite `data/app/radar.db`, hors Git) et `app/compte.py` ; tests : `tests/test_accounts.py`, `tests/test_compte_ui.py`. **Sécurité des mots de passe** (règles, hachage, blocage) : `docs/SECURITE.md`, à mettre à jour si on y touche.
+`top=` de `search_history(...)` : passer les **noms** des premières entreprises (ils sont affichés tels quels dans « Mes recherches »), pas les SIRET. Code : `radar/accounts.py` (base SQLite `data/app/radar.db`, hors Git) et `app/compte.py` ; tests : `tests/test_accounts.py`, `tests/test_compte_ui.py`. **Sécurité des mots de passe** (règles, hachage, blocage) : `docs/SECURITE.md`, à mettre à jour si on y touche.
 
 ## Style de réponse attendu de Claude
 
