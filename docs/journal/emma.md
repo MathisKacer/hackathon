@@ -4,6 +4,33 @@
 
 ---
 
+## 2026-11-27 — T19 : données factices alignées sur les vrais collecteurs ✅
+
+**Fait :**
+- Constat : le plantage décrit dans T19 (`region_requete` absente) n'existait plus — depuis la refonte en 3 pages, `app/commun.py › get_offers` déduit la région du code postal quand la colonne manque. Restait un écart de forme : les offres factices n'avaient que les 15 colonnes du contrat, pas celles propres à chaque source.
+- `radar/fake_data.py` : `_source_columns` ajoute les colonnes d'Adzuna (`contrat_temps, categorie, salaire_min, salaire_max, salaire_predit, zone, requete, region_requete`) et de LBA (`partenaire, naf, naf_libelle, taille, adresse, niveau_diplome, nb_postes, statut, date_expiration, date_debut, duree_mois, teletravail, delegue_ecole`), dans l'ordre des collecteurs. Chaque fichier brut ne garde que ses colonnes ; `offres` (traitées) les a toutes, comme `classify_offres`.
+- Formats vérifiés sur la vraie collecte Adzuna (libellés de catégories, « France > Région > … », 63 % sans salaire) et sur la spec OpenAPI publique de LBA (`niveau_diplome` ∈ « 3 »…« 7 », `teletravail` ∈ onsite/hybrid/remote, `statut` Active, tranches de taille LBA).
+- Ces colonnes ont **leur propre générateur aléatoire** (`default_rng([seed, 19])`) : les autres tables factices sont identiques à graine égale (empreintes comparées avant/après).
+- 4 tests dans `tests/test_fake_data.py`.
+
+**Fichiers touchés :**
+- `radar/fake_data.py`, `tests/test_fake_data.py`, `docs/TACHES.md`, `docs/ARCHITECTURE.md`, `docs/journal/emma.md`
+
+**Résultats / chiffres clés :**
+- Niveau d'études des offres LBA factices : surtout Bac+3/Bac+5 en data, ~10 % non renseigné. `pytest` : 309/309 ; ruff OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- Les vraies offres Adzuna n'ont **jamais de code postal** (100 % vide) alors que les factices en ont un : non modifié (le rapprochement factice en dépend), à garder en tête.
+- `delegue_ecole` toujours faux dans les factices (le SIRET factice est celui de l'entreprise).
+- `tests/test_compte_ui.py` (Celia) ajoute encore `region_requete="Bretagne"` aux offres factices : devenu inutile, laissé tel quel.
+- Les données factices ne sont pas réécrites dans `data/` (vraies données sur mon pod) : relancer `make_fake_data.py` seulement sur un pod sans vraies données.
+- `ruff format .` reformate aussi les blocs de code Python dans les `.md` (une ancienne entrée de ce journal).
+
+**Prochaine étape :**
+- T67 : niveau d'études attendu (LBA `niveau_diplome`, Adzuna à déduire du texte).
+
+---
+
 ## 2026-11-27 — T34 : validation du score sans vérité terrain ✅
 
 **Fait :**
@@ -320,8 +347,9 @@ uv run python scripts/make_fake_data.py          # 3 000 entreprises, graine 42 
 uv run python scripts/make_fake_data.py -n 10000 --seed 1 --force
 ```
 ```python
-from radar.fake_data import generate      # tout en mémoire, sans écrire de fichier
-data = generate(n_entreprises=500, seed=0) # data.entreprises, data.offres, data.scores…
+from radar.fake_data import generate  # tout en mémoire, sans écrire de fichier
+
+data = generate(n_entreprises=500, seed=0)  # data.entreprises, data.offres, data.scores…
 ```
 
 **Résultats / chiffres clés (graine 42, 3 000 entreprises) :**

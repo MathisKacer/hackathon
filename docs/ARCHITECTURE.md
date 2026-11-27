@@ -76,7 +76,7 @@ hackathon/
 
 Tous les fichiers sont en parquet dans `data/processed/` (copie sur S3), sauf les offres brutes, dans `data/raw/offres_raw/<source>.parquet`. **Ne jamais partager `data/cache/`** (cache HTTP). **Ne pas changer un schéma sans prévenir l'équipe et mettre à jour ce tableau ET `radar/schemas.py`** (vérification : `check_columns(df, "<nom>")`).
 
-Données factices pour développer sans la collecte : `uv run python scripts/make_fake_data.py` (T5 ; recruteurs LBA ajoutés par T7). Elles produisent tous les fichiers ci-dessous ; le script refuse d'écraser des fichiers existants sans `--force`.
+Données factices pour développer sans la collecte : `uv run python scripts/make_fake_data.py` (T5 ; recruteurs LBA ajoutés par T7). Les offres brutes factices ont, comme les vrais collecteurs, les colonnes propres à leur source (Adzuna : `region_requete`… ; LBA : `niveau_diplome`… — T19), tirées avec un générateur aléatoire à part. Elles produisent tous les fichiers ci-dessous ; le script refuse d'écraser des fichiers existants sans `--force`.
 
 | Fichier | Produit par | Utilisé par | Colonnes clés |
 |---|---|---|---|
