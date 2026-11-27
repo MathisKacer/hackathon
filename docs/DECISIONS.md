@@ -14,6 +14,14 @@
 
 ---
 
+### D22 — Score orange pondéré : moyenne des composantes, poids 0 à 5, apports affichés (2026-11-27, @maxence)
+**Contexte :** T42 : l'étudiant règle les poids et le classement se recalcule en direct ; PROJET demande que chaque contribution soit affichée.
+**Décision :** `score = Σ wⱼ·cⱼ / Σ wⱼ` (reste dans [0, 1]) sur 5 composantes : `c_intensite` et `c_embauche` (D13), **`c_proximite`** = 1 − distance / rayon, **`c_cachee`** = 1 si l'entreprise publie des offres du domaine mais aucune pour le contrat visé (l'« opportunité cachée » du pitch ; toujours 0 avec « Tous »), `c_dynamisme` (neutre tant que T22 manque). Curseurs entiers de 0 à 5, défaut intensité 3, besoin 3, proximité 1, opportunité cachée 1, dynamisme 0 ; bouton « Poids par défaut ». Chaque composante a une colonne `apport_<c>` = wⱼ·cⱼ / Σw, dont la somme est le score : affichée dans la liste (« + … ») et en barres dans la fiche de la carte. Tous les poids à 0 → repli sur le score D13. Poids enregistrés dans le profil (`poids_*`). Code : `radar/spontaneous.py` (`COMPONENTS`, `DEFAULT_WEIGHTS`, `weighted_score`).
+**Alternatives écartées :** moyenne géométrique pondérée (exige toutes les composantes, mais apports non additifs, moins lisibles) ; poids en pourcentages devant totaliser 100 (curseurs liés, pénibles à régler).
+**Conséquences :** l'opportunité cachée et la proximité ne sont plus que des réglages : une entreprise sans aucune offre peut passer devant une entreprise « cachée » si l'étudiant le veut. Le score n'est pas stocké (calculé dans l'app, cf. ARCHITECTURE).
+
+---
+
 ### D21 — 🟡 PROPOSITION, à valider par @mathis et @maxence — Noter les domaines autres que data (2026-11-27, @emma)
 **Contexte :** depuis D20, l'app propose tous les domaines de `domains.yaml`, mais `scores.parquet` ne contient que data (`SCORED_DOMAINS = ("data",)`, D13). Si un étudiant choisit finance, marketing, rh ou informatique, **la couche 🟠 est vide** (`radar/spontaneous.py › load_nearby` filtre `s.domaine = ?`). Le calcul du score est pourtant générique. La vraie limite, c'est la donnée : toutes les offres Adzuna viennent de la recherche « data », donc pour un autre domaine on ne compterait que les offres qui mentionnent « data ».
 **Proposition :**

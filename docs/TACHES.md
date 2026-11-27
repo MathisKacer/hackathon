@@ -75,11 +75,11 @@
 ## 🔵 En cours
 
 - [ ] T23 — BODACC : écarter ou pénaliser les entreprises en procédure collective — @celia
-- [ ] T42 — 🔗T40 **Curseurs de poids** → recalcul du score en direct — @maxence
 - _…_
 
 ## ✅ Fait
 
+- [x] T42 — 🔗T40 **Curseurs de poids** → recalcul du score en direct — @maxence → 5 curseurs 0–5 (intensité, besoin attendu, proximité, opportunité cachée, dynamisme), score = moyenne pondérée, apport de chaque composante dans la liste et la fiche, bouton « Poids par défaut », enregistrés au profil ; D22
 - [x] T41 — 🔗T40 **Filtres** : domaine, type de contrat visé (stage / alternance / emploi), taille, secteur — @maxence → domaines lus dans `domains.yaml` (offres 🔵 classées par ROME + titre, score 🟠 du domaine), taille en 4 tranches et secteur NAF (multi-choix, couche 🟠, L20) ; `radar/filters.py`, enregistrés dans le profil ; D20
 - [x] T40 — 🔗T4,T5 **Page de recherche + couche 2 « Candidature spontanée » (orange)** : adresse → géocodage (Géoplateforme) → rayon → même carte folium, entreprises **sans offre correspondante** classées par score ; légende des deux couches + deux listes triées — @maxence → `radar/spontaneous.py` (DuckDB, exclusion par contrat visé au niveau SIREN, score D13) + `radar/geocode.py` (Géoplateforme, cache disque) ; D19
 - [x] T36 — 🔗T35 **Modèle de réponse** : logistique (puis arbres boostés si on a le temps) → `p_reponse.parquet` ; slides : calibration, AUC, paramètres retrouvés vs vrais — @mathis → AUC 0,646, 7/7 paramètres retrouvés, rapport `docs/MODELE_REPONSE.md`

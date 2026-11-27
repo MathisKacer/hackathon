@@ -4,6 +4,30 @@
 
 ---
 
+## 2026-11-27 — T42 : curseurs de poids du score orange
+
+**Fait :**
+- Score de la couche 🟠 = **moyenne pondérée** de 5 composantes (0 à 1) : intensité dans le domaine et besoin attendu (D13), **proximité** (1 à l'adresse, 0 au bord du rayon), **opportunité cachée** (offres du domaine mais aucune pour le contrat visé), dynamisme (neutre tant que T22 manque).
+- Bloc « ⚖️ Poids du score 🟠 » dans la barre latérale : 5 curseurs de 0 à 5 (défaut 3 / 3 / 1 / 1 / 0) avec explication au survol, bouton « Poids par défaut ». Le classement, la carte et la liste se recalculent à chaque changement.
+- **Explicabilité** : colonnes « + Intensité », « + Proximité »… dans la liste (leur somme = le score) et barres de décomposition dans la fiche de chaque point de la carte.
+- Tous les poids à 0 → repli sur le score D13. Poids enregistrés dans le profil (clés `poids_*` dans `PROFILE_KEYS` / `PROFILE_LABELS`).
+- Décision **D22**.
+
+**Fichiers touchés :**
+- `radar/spontaneous.py` (`COMPONENTS`, `DEFAULT_WEIGHTS`, `add_user_components`, `weighted_score`, paramètre `weights` de `rank_spontaneous`), `app/streamlit_app.py`, `tests/test_weights.py` (nouveau, 6 tests), `docs/DECISIONS.md`, `docs/ARCHITECTURE.md`, `docs/TACHES.md`
+
+**Résultats / chiffres clés :**
+- 216 tests OK, ruff OK. AppTest (Rennes, 20 km, données factices) : poids par défaut → Sigmaouest (0,81) en tête ; proximité seule → entreprise à 70 m en tête (score 1,00) ; stage + opportunité cachée à 5 → les entreprises qui recrutent en emploi data sans stage passent devant ; le bouton remet bien 3/3/1/1/0.
+
+**Problèmes / points d'attention pour l'équipe :**
+- Le curseur « Dynamisme » ne change rien tant que T22 (finances) n'est pas faite : composante à 0,5 partout (L10).
+- `rank_spontaneous(...)` sans `weights` garde l'ancien score D13 : rien ne casse pour qui l'appelle ailleurs.
+
+**Prochaine étape :**
+- T51 (recruteurs LBA dans la couche orange) ; donner mon avis sur la proposition D21 d'Emma.
+
+---
+
 ## 2026-11-27 — T41 : filtres domaine, contrat, taille, secteur
 
 **Fait :**

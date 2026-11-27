@@ -86,7 +86,7 @@ Voir **D13** dans `DECISIONS.md` (le bêta-binomial initialement prévu a été 
 
 - **Intensité dans le domaine** (data) de l'entreprise i : k_i offres data observées, exposition E_i = Σ effectif × couverture de la région / 100. k_i ~ Poisson(λ_i E_i), λ_i ~ Gamma(α_s, β_s) par **division NAF**, lissée vers la section puis la moyenne globale ; a priori par la méthode des moments de Clayton & Kaldor. A posteriori Gamma(α_s + k_i, β_s + E_i) : moyenne et intervalle crédible à 90 % (offres data pour 100 salariés).
 - **Composantes** dans [0, 1] par rangs centiles : `c_intensite` (λ a posteriori), `c_embauche` (besoin attendu de l'établissement, proxy en attendant La Bonne Boîte), `c_dynamisme` (neutre 0,5 en attendant T22).
-- **Couche orange** : entreprises sans offre data (`n_offres_domaine_siren == 0`), hors `volume_suspect`, triées par √(c_intensite × c_embauche) ou par les poids de l'utilisateur.
+- **Couche orange** : entreprises sans offre data (`n_offres_domaine_siren == 0`), hors `volume_suspect`, triées par la moyenne pondérée des composantes (intensité, besoin attendu, proximité, opportunité cachée, dynamisme) avec les poids de l'utilisateur (T42, D22) ; apports `apport_<c>` affichés ; tous les poids à 0 → √(c_intensite × c_embauche) (D13).
 - **Validation** : l'estimateur retrouve les paramètres sur données simulées (test) ; à faire pour les slides : stabilité du top-k par bootstrap, sensibilité aux poids.
 - **Code** : `radar/score/intensity.py` (modèle), `radar/score/build.py` (assemblage), `scripts/build_scores.py`.
 
