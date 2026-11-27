@@ -108,7 +108,7 @@ def matching_offers(df: pd.DataFrame, contrat: str) -> pd.Series:
 
 
 def spontaneous_score(df: pd.DataFrame) -> pd.Series:
-    """D13 : moyenne géométrique de l'intensité dans le domaine et du besoin attendu."""
+    """D13 : moyenne géométrique de l'intensité dans le domaine et du potentiel d'embauche."""
     return np.sqrt(df["c_intensite"].clip(0, 1) * df["c_embauche"].clip(0, 1))
 
 
@@ -119,8 +119,10 @@ COMPONENTS: dict[str, tuple[str, str]] = {
         "Offres du domaine par salarié, rétrécies vers le secteur (bayésien empirique, D13).",
     ),
     "c_embauche": (
-        "Besoin attendu",
-        "Besoin estimé de l'établissement : intensité × effectif local (D13).",
+        "Potentiel d'embauche",
+        "Établissements signalés par La Bonne Boîte (France Travail) comme susceptibles "
+        "d'embaucher sur un métier du domaine : en tête, classés par leur potentiel. "
+        "Les autres : estimation à partir des offres du secteur et de l'effectif (T28, D27).",
     ),
     "c_proximite": (
         "Proximité",
@@ -155,6 +157,19 @@ COMPONENT_CONTRACTS: dict[str, tuple[str, ...]] = {
     "c_cachee": ("stage", "alternance", "emploi"),
     "c_recruteur_lba": ("alternance", "tous"),
 }
+
+
+LBB_SOURCE = "la_bonne_boite"  # valeur de `c_embauche_source` (radar/score/embauche.py, T28)
+
+
+def signaled_by_lbb(df: pd.DataFrame) -> pd.Series:
+    """True pour les établissements dont `c_embauche` vient de La Bonne Boîte (T29, D27).
+
+    Faux partout si la colonne manque (scores d'avant T28, données factices).
+    """
+    if "c_embauche_source" not in df.columns:
+        return pd.Series(False, index=df.index)
+    return df["c_embauche_source"].eq(LBB_SOURCE).fillna(False)
 
 
 def applicable_weights(weights: dict[str, float], contrat: str) -> dict[str, float]:

@@ -33,9 +33,11 @@ from radar.response.predict import add_p_reponse, contracts_for, load_coefficien
 from radar.spontaneous import (
     COMPONENTS,
     DEFAULT_WEIGHTS,
+    LBB_SOURCE,
     haversine_km,
     load_nearby,
     rank_spontaneous,
+    signaled_by_lbb,
 )
 
 BLUE = "#1f6feb"
@@ -174,9 +176,22 @@ def _company_popup(r: pd.Series) -> str:
         f"<b>{title}</b><br><span style='color:#555'>{'<br>'.join(lines)}</span><br>"
         f"<b style='color:{ORANGE}'>Score {r['score']:.2f}</b> · {signal}<br>"
         f"{_procedure_html(r)}"
+        f"{_lbb_html(r)}"
         f"{_p_reponse_html(r)}"
         f"{_score_breakdown_html(r)}"
         f'<a href="{url}" target="_blank" rel="noopener">Annuaire des entreprises</a></div>'
+    )
+
+
+def _lbb_html(r: pd.Series) -> str:
+    """T29 (D27) : établissement signalé par La Bonne Boîte comme susceptible d'embaucher."""
+    if r.get("c_embauche_source") != LBB_SOURCE:
+        return ""
+    pot = r.get("lbb_potentiel")
+    detail = f" (potentiel {float(pot):.1f})" if pd.notna(pot) else ""
+    return (
+        f"<span style='color:#1b5e20'>✔ Signalée par La Bonne Boîte (France Travail)"
+        f"{detail}</span><br>"
     )
 
 
@@ -562,6 +577,7 @@ with tab_spont:
         cols = {
             "nom": "Entreprise",
             "alerte": "Situation",  # BODACC (T23) : vide si rien à signaler
+            "signal_lbb": "La Bonne Boîte",  # T29 : ✔ si signalée par La Bonne Boîte (D27)
             "nom_etablissement": "Établissement",
             "commune": "Lieu",
             "distance_km": "Distance (km)",
@@ -578,12 +594,15 @@ with tab_spont:
             n_col: "Offres du domaine (autre contrat)",
             "url_annuaire": "Fiche",
         }
+        spontaneous = spontaneous.assign(
+            signal_lbb=signaled_by_lbb(spontaneous).map({True: "✔", False: ""})
+        )
         shown = [
             c
             for c in cols
             if c in spontaneous
             and spontaneous[c].notna().any()
-            and (c != "alerte" or spontaneous[c].astype(bool).any())
+            and (c not in ("alerte", "signal_lbb") or spontaneous[c].astype(bool).any())
         ]
         table = spontaneous[shown].rename(columns=cols)
         st.dataframe(
@@ -610,7 +629,9 @@ with tab_spont:
         st.caption(
             "Score = moyenne pondérée des composantes, avec tes poids (barre latérale). "
             "Les colonnes « + … » donnent l'apport de chaque composante (leur somme = le score). "
-            "Intensité et besoin attendu : rangs centiles du modèle bayésien empirique (D13)."
+            "Intensité : rang centile du modèle bayésien empirique (D13). "
+            "Potentiel d'embauche : établissements signalés par La Bonne Boîte (✔) en tête, "
+            "estimation pour les autres (D27)."
         )
     # Fiche détaillée d'une entreprise de la liste (T43, @celia) — panneau sous la liste.
     render_fiche(spontaneous)
