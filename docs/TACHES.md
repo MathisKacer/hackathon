@@ -52,7 +52,6 @@
 **Lisibilité des résultats et filtres** _(ajoutées par @emma ; elles touchent toutes `app/vues/explorer.py`, en cours de modification par Celia pour T57 : se coordonner avec elle)_
 
 
-- [ ] T75 — 🐞 **Explorer plante avec les données factices depuis T26** (trouvé par @celia) : `get_families` (`app/commun.py`) lit `n_offres_domaine_siren`, `n_stage_domaine_siren`, `n_alternance_domaine_siren` dans `scores.parquet`, absentes des scores factices (`radar/fake_data.py`) → `ArrowInvalid: No match for FieldRef.Name(n_offres_domaine_siren)`. Les vrais scores fonctionnent. Pistes : ajouter ces colonnes au générateur factice, ou lire les colonnes `_siren` seulement si elles existent (repli sur les colonnes sans `_siren`). ℹ️ @maxence (code de T26)
 
 ## 🟢 P3 — Bonus (seulement si le P2 est fini)
 
@@ -80,6 +79,7 @@
 
 - [ ] T76 — **Infos de candidature spontanée dans les fiches** : dans la fiche site, le palier de priorité et le signal (« N offres du domaine, mais aucune pour ton contrat » / « aucune offre publiée ») et la famille de marque, comme dans la fenêtre de la carte, y compris quand la fiche est ouverte depuis la recherche ou la liste des sites ; dans la fiche entreprise, un bloc « Candidature spontanée » (ses sites dans la recherche en cours, le mieux classé, le signal) — @celia
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
+- [ ] T75 — 🐞 **Explorer plante avec les données factices depuis T26** (trouvé par @celia) : `get_families` (`app/commun.py`) lit `n_offres_domaine_siren`, `n_stage_domaine_siren`, `n_alternance_domaine_siren` dans `scores.parquet`, absentes des scores factices (`radar/fake_data.py`) → `ArrowInvalid: No match for FieldRef.Name(n_offres_domaine_siren)`. Les vrais scores fonctionnent. Pistes : ajouter ces colonnes au générateur factice, ou lire les colonnes `_siren` seulement si elles existent (repli sur les colonnes sans `_siren`). ℹ️ @maxence (code de T26) — @maxence
 - _…_
 
 ## ✅ Fait
