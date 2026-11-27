@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-11-27 — Tâche T49 : historique des recherches
+
+**Fait :**
+- `radar/accounts.py` : table `recherches`, `log_search` / `list_searches` / `clear_searches`. Streamlit relance la page à chaque réglage → les changements à moins de 2 min de la dernière recherche la mettent à jour (un cran de curseur ≠ une recherche), recherche identique non dupliquée, 50 max par compte, suppression avec le compte.
+- `app/compte.py` : `search_history(...)`, appelée après le calcul des résultats. Anonyme : ne fait rien. Connecté : enregistre et affiche « 🕘 Mes recherches » (date, résumé lisible, nombre de résultats, 3 premières entreprises), « ↻ Relancer » (rappel `on_click`, pour modifier les widgets avant qu'ils soient redessinés) et « Effacer mon historique ».
+- `app/streamlit_app.py` : `PROFILE_LABELS` (libellés du résumé) et appel de `search_history`.
+
+**Fichiers touchés :**
+- `radar/accounts.py`, `app/compte.py`, `app/streamlit_app.py`, `tests/test_accounts.py`, `tests/test_compte_ui.py`, `docs/*`
+
+**Résultats / chiffres clés :**
+- 29 tests comptes + historique (dont l'app complète en mode connecté) ; suite complète : 143 tests OK.
+
+**Problèmes / points d'attention pour l'équipe :**
+- T40/T41/T42 : nouveau réglage = `key` + entrée dans `PROFILE_KEYS` **et** un libellé dans `PROFILE_LABELS`.
+- « Effacer mon historique » garde la recherche en cours (elle est réenregistrée aussitôt).
+
+**Prochaine étape :**
+- Avec T40 : passer les SIRET des entreprises orange dans `top=`.
+
+---
+
 ## 2026-11-27 — Tâche T48 : connexion facultative + profil
 
 **Fait :**
