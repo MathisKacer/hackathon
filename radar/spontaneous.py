@@ -107,13 +107,82 @@ def spontaneous_score(df: pd.DataFrame) -> pd.Series:
     return np.sqrt(df["c_intensite"].clip(0, 1) * df["c_embauche"].clip(0, 1))
 
 
+# Composantes du score pondéré (T42) : colonne → (libellé court, explication). Toutes dans [0, 1].
+COMPONENTS: dict[str, tuple[str, str]] = {
+    "c_intensite": (
+        "Intensité dans le domaine",
+        "Offres du domaine par salarié, rétrécies vers le secteur (bayésien empirique, D13).",
+    ),
+    "c_embauche": (
+        "Besoin attendu",
+        "Besoin estimé de l'établissement : intensité × effectif local (D13).",
+    ),
+    "c_proximite": (
+        "Proximité",
+        "1 à ton adresse, 0 au bord du rayon.",
+    ),
+    "c_cachee": (
+        "Opportunité cachée",
+        "1 si l'entreprise publie des offres du domaine, mais aucune pour ton contrat.",
+    ),
+    "c_dynamisme": (
+        "Dynamisme",
+        "Croissance de l'entreprise (T22) ; neutre (0,5) tant que les finances manquent.",
+    ),
+}
+# Poids par défaut (curseurs 0 à 5) : proches du classement D13, avec un peu de proximité.
+DEFAULT_WEIGHTS: dict[str, int] = {
+    "c_intensite": 3,
+    "c_embauche": 3,
+    "c_proximite": 1,
+    "c_cachee": 1,
+    "c_dynamisme": 0,
+}
+
+
+def add_user_components(df: pd.DataFrame, radius_km: float, contrat: str) -> pd.DataFrame:
+    """Ajoute les composantes qui dépendent de l'étudiant : proximité et opportunité cachée."""
+    out = df.copy()
+    out["c_proximite"] = (1 - out["distance_km"] / max(radius_km, 1e-9)).clip(0, 1)
+    suffix = "_siren" if "n_offres_domaine_siren" in out.columns else ""
+    has_domain_offers = out[f"n_offres_domaine{suffix}"].fillna(0) > 0
+    no_matching = matching_offers(out, contrat.lower()).fillna(0) == 0
+    out["c_cachee"] = (has_domain_offers & no_matching).astype(float)
+    if "c_dynamisme" not in out.columns:
+        out["c_dynamisme"] = 0.5
+    return out
+
+
+def weighted_score(df: pd.DataFrame, weights: dict[str, float]) -> pd.DataFrame:
+    """score = Σ wⱼ·cⱼ / Σ wⱼ (dans [0, 1]) + une colonne `apport_<composante>` par composante.
+
+    L'apport est la part du score due à la composante (la somme des apports = le score).
+    Tous les poids à 0 : repli sur le score D13 (apports à NaN).
+    """
+    out = df.copy()
+    w = {k: float(v) for k, v in weights.items() if k in COMPONENTS and float(v) > 0}
+    total = sum(w.values())
+    for k in COMPONENTS:
+        out[f"apport_{k}"] = out[k].clip(0, 1).fillna(0) * w.get(k, 0) / total if total else np.nan
+    out["score"] = (
+        out[[f"apport_{k}" for k in COMPONENTS]].sum(axis=1) if total else spontaneous_score(out)
+    )
+    return out
+
+
 def rank_spontaneous(
-    df: pd.DataFrame, lat: float, lon: float, radius_km: float, contrat: str = "tous"
+    df: pd.DataFrame,
+    lat: float,
+    lon: float,
+    radius_km: float,
+    contrat: str = "tous",
+    weights: dict[str, float] | None = None,
 ) -> pd.DataFrame:
     """Entreprises du rayon sans offre correspondante, triées par score décroissant.
 
-    Ajoute `distance_km`, `score`, `n_offres_correspondantes` (= 0 par construction) et
-    `url_annuaire`. Écarte les `volume_suspect` (intermédiaires non repérés, D13).
+    Ajoute `distance_km`, `score`, `url_annuaire`, les composantes `c_proximite`, `c_cachee`
+    et, avec `weights` (T42), les colonnes `apport_<composante>`. Sans `weights` : score D13.
+    Écarte les `volume_suspect` (intermédiaires non repérés, D13).
     """
     if df.empty:
         return df.assign(distance_km=[], score=[], url_annuaire=[])
@@ -122,7 +191,11 @@ def rank_spontaneous(
     out = out[out["distance_km"] <= radius_km]
     if "volume_suspect" in out.columns:
         out = out[~out["volume_suspect"].fillna(False).astype(bool)]
+    out = add_user_components(out, radius_km, contrat)
     out = out[matching_offers(out, contrat.lower()) == 0]
-    out["score"] = spontaneous_score(out)
+    if weights is None:
+        out["score"] = spontaneous_score(out)
+    else:
+        out = weighted_score(out, weights)
     out["url_annuaire"] = out["siret"].map(lambda s: ANNUAIRE_URL.format(siret=s))
     return out.sort_values(["score", "distance_km"], ascending=[False, True]).reset_index(drop=True)

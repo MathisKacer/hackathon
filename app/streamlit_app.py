@@ -26,7 +26,13 @@ from radar.filters import SECTIONS, TAILLES, filter_companies
 from radar.geo import region_of
 from radar.geocode import Place, geocode
 from radar.process.quick_filter import load_raw_offers, prepare_offers
-from radar.spontaneous import haversine_km, load_nearby, rank_spontaneous
+from radar.spontaneous import (
+    COMPONENTS,
+    DEFAULT_WEIGHTS,
+    haversine_km,
+    load_nearby,
+    rank_spontaneous,
+)
 
 BLUE = "#1f6feb"
 ORANGE = "#e8590c"
@@ -34,6 +40,9 @@ FRANCE_CENTER = (46.6, 2.4)
 MAX_OFFERS_IN_POPUP = 25
 MAX_SPONTANEOUS_ON_MAP = 300  # au-delà, la carte devient illisible (la liste garde tout)
 RAYONS = [5, 10, 20, 30, 50, 75, 100]
+# Curseurs de poids du score orange (T42) : composante → clé du widget (enregistrée au profil).
+WEIGHT_KEYS = {c: "poids_" + c.removeprefix("c_") for c in COMPONENTS}
+WEIGHT_MAX = 5
 
 st.set_page_config(page_title="Radar", page_icon="📡", layout="wide")
 
@@ -144,8 +153,28 @@ def _company_popup(r: pd.Series) -> str:
         f"<div style='font-family:sans-serif;font-size:13px'>"
         f"<b>{title}</b><br><span style='color:#555'>{'<br>'.join(lines)}</span><br>"
         f"<b style='color:{ORANGE}'>Score {r['score']:.2f}</b> · {signal}<br>"
+        f"{_score_breakdown_html(r)}"
         f'<a href="{url}" target="_blank" rel="noopener">Annuaire des entreprises</a></div>'
     )
+
+
+def _score_breakdown_html(r: pd.Series) -> str:
+    """Décomposition du score (T42) : apport de chaque composante active, en barres."""
+    rows = []
+    for c, (label, _) in COMPONENTS.items():
+        apport = r.get(f"apport_{c}")
+        if apport is None or pd.isna(apport) or not st.session_state.get(WEIGHT_KEYS[c]):
+            continue
+        width = int(round(100 * float(apport)))
+        rows.append(
+            f"<tr><td style='padding-right:6px'>{html.escape(label)}</td>"
+            f"<td style='width:90px'><div style='background:{ORANGE};height:8px;"
+            f"width:{width}px;max-width:90px'></div></td>"
+            f"<td style='text-align:right'>+{float(apport):.2f}</td></tr>"
+        )
+    if not rows:
+        return ""
+    return "<table style='font-size:12px;color:#333;margin:4px 0'>" + "".join(rows) + "</table>"
 
 
 def build_map(
@@ -249,6 +278,7 @@ PROFILE_KEYS = {
     "rayon": RAYONS,
     "tailles": list(TAILLES),
     "secteurs": list(SECTIONS),
+    **{key: list(range(WEIGHT_MAX + 1)) for key in WEIGHT_KEYS.values()},
 }
 # Libellés affichés dans « Mes recherches » (T49).
 PROFILE_LABELS = {
@@ -262,12 +292,21 @@ PROFILE_LABELS = {
     "rayon": "Rayon (km)",
     "tailles": "Taille",
     "secteurs": "Secteur",
+    **{key: f"Poids {COMPONENTS[c][0].lower()}" for c, key in WEIGHT_KEYS.items()},
 }
 # Valeurs par défaut posées dans session_state (et non via value=) pour qu'un profil chargé
 # puisse les remplacer sans avertissement de Streamlit.
 st.session_state.setdefault("max_age", 60)
 st.session_state.setdefault("only_data", True)
 st.session_state.setdefault("rayon", 20)
+for _c, _key in WEIGHT_KEYS.items():
+    st.session_state.setdefault(_key, DEFAULT_WEIGHTS[_c])
+
+
+def _reset_weights() -> None:
+    for c, key in WEIGHT_KEYS.items():
+        st.session_state[key] = DEFAULT_WEIGHTS[c]
+
 
 with st.sidebar:
     account_sidebar(PROFILE_KEYS)
@@ -317,6 +356,13 @@ with st.sidebar:
         placeholder="Tous les secteurs",
         help="Section NAF de l'établissement (Insee).",
     )
+    with st.expander("⚖️ Poids du score 🟠", expanded=True):
+        st.caption("0 = ignoré. Le score est la moyenne pondérée des composantes (0 à 1).")
+        weights = {
+            c: st.slider(label, 0, WEIGHT_MAX, key=WEIGHT_KEYS[c], help=help_)
+            for c, (label, help_) in COMPONENTS.items()
+        }
+        st.button("Poids par défaut", on_click=_reset_weights, width="stretch")
     st.divider()
     st.markdown(
         f"<span style='color:{BLUE}'>●</span> **Offres réelles** : annonces en ligne (Adzuna)<br>"
@@ -344,7 +390,7 @@ if place is not None:
             "Pas encore de `scores.parquet` : lance `uv run python scripts/build_all.py` "
             "(ou `scripts/make_fake_data.py` pour des données factices)."
         )
-    spontaneous = rank_spontaneous(nearby, place.lat, place.lon, rayon, contrat)
+    spontaneous = rank_spontaneous(nearby, place.lat, place.lon, rayon, contrat, weights)
 # Connecté : enregistre la recherche et affiche « Mes recherches » ; anonyme : ne fait rien (T49).
 # Avec une adresse : SIRET des premières entreprises de la couche orange (consigne CLAUDE.md).
 search_history(
@@ -428,8 +474,12 @@ with tab_spont:
             "naf_libelle": "Secteur",
             "tranche_effectif": "Effectif",
             "score": "Score",
-            "c_intensite": "Intensité domaine",
-            "c_embauche": "Besoin attendu",
+            # Apport de chaque composante active au score (T42) : la somme des apports = score.
+            **{
+                f"apport_{c}": f"+ {label}"
+                for c, (label, _) in COMPONENTS.items()
+                if weights.get(c)
+            },
             n_col: "Offres du domaine (autre contrat)",
             "url_annuaire": "Fiche",
         }
@@ -443,14 +493,17 @@ with tab_spont:
                     "Score", min_value=0.0, max_value=1.0, format="%.2f"
                 ),
                 "Distance (km)": st.column_config.NumberColumn(format="%.1f"),
-                "Intensité domaine": st.column_config.NumberColumn(format="%.2f"),
-                "Besoin attendu": st.column_config.NumberColumn(format="%.2f"),
+                **{
+                    f"+ {label}": st.column_config.NumberColumn(format="%.2f", help=help_)
+                    for label, help_ in COMPONENTS.values()
+                },
                 "Fiche": st.column_config.LinkColumn("Fiche", display_text="Annuaire"),
             },
         )
         st.caption(
-            "Score v0 (D13) : moyenne géométrique de l'intensité de l'entreprise dans le domaine "
-            "et de son besoin attendu (rangs centiles, 0 à 1). Les poids seront réglables (T42)."
+            "Score = moyenne pondérée des composantes, avec tes poids (barre latérale). "
+            "Les colonnes « + … » donnent l'apport de chaque composante (leur somme = le score). "
+            "Intensité et besoin attendu : rangs centiles du modèle bayésien empirique (D13)."
         )
 
 SOURCE_LABELS = {"adzuna": "Adzuna", "lba": "La bonne alternance"}
@@ -458,5 +511,5 @@ sources = ", ".join(SOURCE_LABELS.get(s, s) for s in sorted(offers["source"].dro
 st.caption(
     f"Offres : {sources}, collecte du {str(offers['date_collecte'].max())[:10]}. "
     "Régions : " + ", ".join(all_regions) + ". "
-    "Entreprises : SIRENE (Insee) ; score v0 (D13)."
+    "Entreprises : SIRENE (Insee) ; score D13 pondéré par tes poids (T42)."
 )
