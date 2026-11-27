@@ -21,6 +21,8 @@ from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
 
 from radar.config import FILES
+from radar.domains import classify, load_domains
+from radar.filters import SECTIONS, TAILLES, filter_companies
 from radar.geo import region_of
 from radar.geocode import Place, geocode
 from radar.process.quick_filter import load_raw_offers, prepare_offers
@@ -44,7 +46,14 @@ def get_offers() -> pd.DataFrame:
     # Adzuna donne la région de sa requête ; les autres sources (LBA) : déduite du code postal.
     from_cp = df["code_postal"].astype("string").str[:2].map(region_of)
     region = df["region_requete"] if "region_requete" in df else pd.Series(pd.NA, index=df.index)
-    return df.assign(region_requete=region.fillna(from_cp))
+    # Domaine de chaque offre (T41) : même classifieur que T13 (code ROME + titre), calculé une
+    # fois par couple (titre, ROME) distinct.
+    rome = df["code_rome"] if "code_rome" in df else pd.Series(None, index=df.index)
+    pairs = pd.DataFrame({"titre": df["titre"], "code_rome": rome}).astype(object)
+    pairs = pairs.where(pairs.notna(), None)
+    keys = list(zip(pairs["titre"], pairs["code_rome"], strict=True))
+    domains = {k: classify(*k) for k in set(keys)}
+    return df.assign(region_requete=region.fillna(from_cp), domaine=[domains[k] for k in keys])
 
 
 @st.cache_data(show_spinner="Recherche de l'adresse…", ttl=3600)
@@ -63,13 +72,14 @@ def filter_offers(
     df: pd.DataFrame,
     regions: list[str],
     contrat: str,
-    only_data: bool,
+    domaine: str | None,
     max_age: int,
     query: str,
 ) -> pd.DataFrame:
+    """Offres affichées en bleu ; `domaine=None` : tous domaines confondus."""
     out = df
-    if only_data:
-        out = out[out["is_data"]]
+    if domaine:
+        out = out[out["domaine"] == domaine]
     if regions:
         out = out[out["region_requete"].isin(regions)]
     if contrat != "Tous":
@@ -221,7 +231,8 @@ if offers.empty:
     )
     st.stop()
 
-DOMAINES = ["Data"]
+DOMAINS = load_domains()  # radar/domains.yaml : clé → Domain (libellé, ROME, mots-clés)
+DOMAINES = list(DOMAINS)
 CONTRATS = ["Tous", "Stage", "Alternance", "Emploi"]
 all_regions = sorted(offers["region_requete"].dropna().unique())
 
@@ -236,6 +247,8 @@ PROFILE_KEYS = {
     "only_data": [True, False],
     "adresse": None,
     "rayon": RAYONS,
+    "tailles": list(TAILLES),
+    "secteurs": list(SECTIONS),
 }
 # Libellés affichés dans « Mes recherches » (T49).
 PROFILE_LABELS = {
@@ -244,9 +257,11 @@ PROFILE_LABELS = {
     "regions": "Régions",
     "query": "Mot-clé",
     "max_age": "Moins de (jours)",
-    "only_data": "Seulement data",
+    "only_data": "Seulement le domaine",
     "adresse": "Adresse",
     "rayon": "Rayon (km)",
+    "tailles": "Taille",
+    "secteurs": "Secteur",
 }
 # Valeurs par défaut posées dans session_state (et non via value=) pour qu'un profil chargé
 # puisse les remplacer sans avertissement de Streamlit.
@@ -266,7 +281,11 @@ with st.sidebar:
     )
     rayon = st.select_slider("Rayon (km)", RAYONS, key="rayon")
     domaine = st.selectbox(
-        "Domaine", DOMAINES, key="domaine", help="D'autres domaines arriveront avec T6."
+        "Domaine",
+        DOMAINES,
+        key="domaine",
+        format_func=lambda k: DOMAINS[k].label,
+        help="Métiers visés (radar/domains.yaml) : filtre les offres 🔵 et choisit le score 🟠.",
     )
     contrat = st.radio("Contrat visé", CONTRATS, horizontal=True, key="contrat")
     regions = st.multiselect(
@@ -277,10 +296,26 @@ with st.sidebar:
     )
     max_age = st.slider("Publiées il y a moins de (jours)", 7, 60, step=7, key="max_age")
     only_data = st.toggle(
-        "Seulement les offres data",
+        "Seulement les offres du domaine",
         key="only_data",
-        help="Filtre v0 sur le titre, en attendant le classifieur T13. "
-        "Désactivé : toutes les offres renvoyées par la recherche « data » d'Adzuna (bruitées).",
+        help="Classement des offres par code ROME et mots-clés du titre (T13). "
+        "Désactivé : toutes les offres collectées, quel que soit le métier.",
+    )
+    st.subheader("Entreprises 🟠")
+    tailles = st.multiselect(
+        "Taille (salariés)",
+        list(TAILLES),
+        key="tailles",
+        placeholder="Toutes les tailles",
+        help="Tranche d'effectif SIRENE de l'établissement (10 salariés et plus).",
+    )
+    secteurs = st.multiselect(
+        "Secteur d'activité",
+        list(SECTIONS),
+        key="secteurs",
+        format_func=lambda c: f"{c} · {SECTIONS[c]}",
+        placeholder="Tous les secteurs",
+        help="Section NAF de l'établissement (Insee).",
     )
     st.divider()
     st.markdown(
@@ -291,7 +326,9 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-view = filter_offers(offers, regions, contrat, only_data, max_age, query.strip())
+view = filter_offers(
+    offers, regions, contrat, domaine if only_data else None, max_age, query.strip()
+)
 
 # Couche orange (T40) : adresse → géocodage → entreprises du rayon sans offre correspondante.
 place = get_place(adresse.strip()) if adresse.strip() else None
@@ -300,7 +337,8 @@ if adresse.strip() and place is None:
     st.warning(f"Adresse introuvable : « {adresse} ». Essaie une ville ou un code postal.")
 if place is not None:
     view = view[haversine_km(place.lat, place.lon, view["lat"], view["lon"]) <= rayon]
-    nearby = get_nearby(place.lat, place.lon, float(rayon), domaine.lower())
+    nearby = get_nearby(place.lat, place.lon, float(rayon), domaine)
+    nearby = filter_companies(nearby, tailles, secteurs)  # T41
     if nearby.empty and not FILES["scores"].exists():
         st.info(
             "Pas encore de `scores.parquet` : lance `uv run python scripts/build_all.py` "
@@ -373,7 +411,9 @@ with tab_spont:
     if place is None:
         st.write("Saisis ton adresse pour voir les entreprises à démarcher.")
     elif spontaneous.empty:
-        st.write("Aucune entreprise trouvée dans ce rayon : élargis-le.")
+        st.write(
+            "Aucune entreprise trouvée : élargis le rayon ou retire des filtres (taille, secteur)."
+        )
     else:
         n_col = (
             "n_offres_domaine_siren"

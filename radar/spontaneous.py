@@ -27,6 +27,8 @@ ENTREPRISE_COLS = (
     "nom",
     "nom_etablissement",
     "commune",
+    "naf",
+    "naf_section",
     "naf_libelle",
     "tranche_effectif",
     "lat",
