@@ -32,7 +32,6 @@
 
 **App**
 - [ ] T51 — 🔗T40,T17 **Recruteurs LBA dans la couche orange** : quand le contrat visé est l'alternance, marquer (ou bonifier) les entreprises présentes dans `lba_recruteurs.parquet` avec un ROME du domaine (signal « recrute des alternants sans offre publiée »)
-- [ ] T41 — 🔗T40 **Filtres** : domaine, type de contrat visé (stage / alternance / emploi), taille, secteur
 - [ ] T42 — 🔗T40 **Curseurs de poids** → recalcul du score en direct
 
 **Intégration**
@@ -77,7 +76,7 @@
 
 ## 🔵 En cours
 
-- _…_
+- [ ] T41 — 🔗T40 **Filtres** : domaine, type de contrat visé (stage / alternance / emploi), taille, secteur — @maxence
 
 
 ## ✅ Fait
