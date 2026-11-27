@@ -25,6 +25,7 @@
 | Moins indiquée | ○○○ gris | les autres |
 Seuils calibrés sur Rennes, Lyon et Guéret (5 et 20 km, stage et alternance, poids par défaut) : le palier 1 ≈ les 10 % meilleures ; le minimum ne bloque que dans les recherches faibles (Guéret alternance). Libellés de **priorité**, jamais de probabilité (« probable » écarté : confusion avec la chance de réponse simulée, D23/D31). Les points (●●○) servent de repère sans couleur (daltonisme). Le **score reste affiché** : colonne à côté de la priorité, info-bulle et fiche de la carte, sous la priorité dans la fiche.
 **Alternatives écartées :** seuils fixes seuls (presque jamais de palier haut en alternance ou en zone rurale) ; quantiles seuls (une entreprise moyenne de Guéret annoncée « prioritaire ») ; libellés « Possible / Probable / Fortement probable » proposés dans la tâche.
+**Complément (demande de Maxence) :** en plus des 4 couleurs de palier, un **dégradé continu d'orange** (clair → foncé, `score_color`) : fond de la colonne « Score » de la liste (score brut, 0 à 1) et remplissage des points de la carte. Sur la carte, le dégradé est **étalé entre le plus faible et le plus fort score affichés** : en ville, les 300 points montrés ont tous un score de 0,8 à 1 et seraient sinon de la même couleur. La taille des points suit toujours le palier.
 **Conséquences :** le palier d'une entreprise dépend de la recherche (zone, filtres, poids) : c'est voulu, il dit « par où commencer ici ». Si T69 change la distribution du score, revoir les seuils minimaux (constantes `TIERS`).
 
 ---

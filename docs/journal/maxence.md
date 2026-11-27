@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-11-27 — T65 (suite) : dégradé d'orange selon le score
+
+**Fait :**
+- À ma demande, plus de nuances : `score_color` dans `radar/paliers.py`, dégradé continu d'orange très clair (score 0) à orange foncé (score 1), texte noir ou blanc selon le fond.
+- Liste : fond de la colonne « Score » dans ce dégradé (score brut).
+- Carte : remplissage des points dans le dégradé, **étalé entre le plus faible et le plus fort score affichés** (à Rennes 20 km, les 300 points montrés vont de 0,80 à 0,99 : sans ça, tous de la même couleur). Taille des points toujours selon le palier.
+- D32 complétée.
+
+**Fichiers touchés :**
+- `radar/paliers.py`, `tests/test_paliers.py` (+1 test), `app/carte.py`, `app/vues/explorer.py`, `docs/DECISIONS.md`, `docs/TACHES.md`
+
+**Résultats :** 316 tests OK, ruff OK ; app vérifiée (accueil, Rennes).
+
+---
+
 ## 2026-11-27 — T65 : score en mots et en couleurs
 
 **Fait :**
