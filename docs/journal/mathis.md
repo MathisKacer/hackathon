@@ -2,6 +2,19 @@
 
 ---
 
+## 2026-11-27 — Exploration SIRENE (préparation de T20)
+
+**Résultats / chiffres clés :**
+- 3 fichiers parquet INSEE sur data.gouv (nov. 2026) : établissements, géolocalisation (lat/lon GPS directement), unités légales (nom). URLs dans `SOURCES.md`.
+- DuckDB + httpfs lit à distance : le comptage par tranche d'effectif prend 40 s sans rien télécharger.
+- Établissements actifs avec au moins 10 salariés : **~406 000** (≥ 1 salarié : ~1,9 M) → seuil proposé pour `entreprises.parquet`.
+
+**Points d'attention pour l'équipe :**
+- Requête d'extraction prête (jointure établissements + géoloc + unités légales) dans la conversation ; T20 reste à prendre.
+- RGPD : masquer l'adresse si `statutDiffusionEtablissement = 'P'`.
+
+---
+
 ## 2026-11-27 — Test Adzuna (T10)
 
 **Résultats / chiffres clés :**
