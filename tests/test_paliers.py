@@ -43,3 +43,20 @@ def test_add_tiers_and_texts():
     assert tier_text(np.nan) == ""
     assert tier_color(np.nan) == TIERS[-1].color
     assert "10 %" in rule_text() and "0,60" in rule_text()
+
+
+def test_score_gradient_goes_from_light_to_dark():
+    from radar.paliers import SCORE_GRADIENT, score_color, text_color_on
+
+    assert score_color(0) == SCORE_GRADIENT[0][1] and score_color(1) == SCORE_GRADIENT[-1][1]
+    assert score_color(0.75) == "#e8590c"
+
+    def lum(c):
+        return sum(w * int(c[i : i + 2], 16) for w, i in ((0.299, 1), (0.587, 3), (0.114, 5)))
+
+    lums = [lum(score_color(x / 10)) for x in range(11)]
+    assert all(a > b for a, b in zip(lums, lums[1:], strict=False))  # de plus en plus foncé
+    assert score_color(np.nan) == TIERS[-1].color
+    assert (
+        text_color_on(score_color(0.1)) == "#111111" and text_color_on(score_color(1)) == "#ffffff"
+    )

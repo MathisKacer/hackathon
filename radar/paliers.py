@@ -78,6 +78,40 @@ def tier_color(rank) -> str:
     return t.color if t else TIERS[-1].color
 
 
+# Dégradé continu du score (demande de Maxence) : orange très clair (0) → orange foncé (1).
+SCORE_GRADIENT: tuple[tuple[float, str], ...] = (
+    (0.00, "#fdebdc"),
+    (0.30, "#f9c39a"),
+    (0.55, "#f28b4c"),
+    (0.75, "#e8590c"),
+    (1.00, "#8a2c04"),
+)
+
+
+def _rgb(hex_color: str) -> tuple[int, int, int]:
+    h = hex_color.lstrip("#")
+    return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+
+
+def score_color(score) -> str:
+    """Couleur du dégradé pour un score dans [0, 1] (gris si inconnu)."""
+    if score is None or pd.isna(score):
+        return TIERS[-1].color
+    x = min(max(float(score), 0.0), 1.0)
+    for (x0, c0), (x1, c1) in zip(SCORE_GRADIENT, SCORE_GRADIENT[1:], strict=False):
+        if x <= x1:
+            t = (x - x0) / (x1 - x0)
+            rgb = [round(a + (b - a) * t) for a, b in zip(_rgb(c0), _rgb(c1), strict=True)]
+            return "#{:02x}{:02x}{:02x}".format(*rgb)
+    return SCORE_GRADIENT[-1][1]
+
+
+def text_color_on(background: str) -> str:
+    """Noir ou blanc, le plus lisible sur ce fond (luminance relative)."""
+    r, g, b = _rgb(background)
+    return "#111111" if 0.299 * r + 0.587 * g + 0.114 * b > 150 else "#ffffff"
+
+
 def rule_text() -> str:
     """Règle en une phrase, pour l'aide de l'app et la légende."""
     parts = [

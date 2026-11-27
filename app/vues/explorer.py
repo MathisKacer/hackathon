@@ -41,7 +41,7 @@ from streamlit_folium import st_folium
 
 from radar.collect.sirene import TRANCHE_LIBELLES
 from radar.filters import SECTIONS, TAILLES, filter_companies
-from radar.paliers import add_tiers, rule_text, tier_color
+from radar.paliers import add_tiers, rule_text, score_color, text_color_on, tier_color
 from radar.response.predict import add_p_reponse
 from radar.spontaneous import COMPONENTS, haversine_km, rank_spontaneous, signaled_by_lbb
 
@@ -291,6 +291,13 @@ with tab_spont:
         styled = table.style.map(
             lambda v: f"color: {tier_color(tier_colors.get(v))}; font-weight: 600",
             subset=["Priorité"],
+        ).map(  # dégradé d'orange selon le score (clair → foncé)
+            lambda v: (
+                f"background-color: {score_color(v)}; color: {text_color_on(score_color(v))}"
+                if pd.notna(v)
+                else ""
+            ),
+            subset=["Score"],
         )
         event = st.dataframe(
             styled,

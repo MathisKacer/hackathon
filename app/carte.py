@@ -16,7 +16,7 @@ from commun import BLUE, ORANGE, WEIGHT_KEYS
 from folium.plugins import MarkerCluster
 
 from radar.geocode import Place
-from radar.paliers import tier_color, tier_text
+from radar.paliers import score_color, tier_color, tier_text
 from radar.spontaneous import COMPONENTS, LBB_SOURCE
 
 FRANCE_CENTER = (46.6, 2.4)
@@ -194,18 +194,24 @@ def build_map(
 
     if spontaneous is not None and not spontaneous.empty:
         orange = folium.FeatureGroup(name="🟠 Candidature spontanée", show=True)
-        for _, r in spontaneous.head(MAX_SPONTANEOUS_ON_MAP).iloc[::-1].iterrows():
-            # T65 (D32) : couleur et taille selon le palier de priorité, score en info-bulle.
+        shown = spontaneous.head(MAX_SPONTANEOUS_ON_MAP)
+        # Dégradé étalé sur les points affichés (en ville, les 300 premiers ont tous un score
+        # de 0,8 à 1 : en absolu ils auraient la même couleur) : clair = le moins bon affiché.
+        lo, hi = float(shown["score"].min()), float(shown["score"].max())
+        for _, r in shown.iloc[::-1].iterrows():
+            # T65 (D32) : taille selon le palier, couleur selon le score, score en info-bulle.
             rank = r.get("palier", 4)
-            color = tier_color(rank)
+            t = (float(r["score"]) - lo) / (hi - lo) if hi > lo else 1.0
+            fill = score_color(0.15 + 0.85 * t)  # du orange clair au orange foncé
+            border = score_color(min(0.4 + 0.85 * t, 1.0))  # contour un peu plus foncé
             folium.CircleMarker(
                 location=(r["lat"], r["lon"]),
                 radius={1: 10, 2: 8, 3: 6}.get(int(rank) if pd.notna(rank) else 4, 4),
-                color=color,
+                color=border,
                 weight=1,
                 fill=True,
-                fill_color=color,
-                fill_opacity=0.85,
+                fill_color=fill,
+                fill_opacity=0.9,
                 tooltip=f"{r.get('nom') or ''} — {tier_text(rank, False) or 'score'} "
                 f"(score {r['score']:.2f})",
                 popup=folium.Popup(_company_popup(r), max_width=340),
