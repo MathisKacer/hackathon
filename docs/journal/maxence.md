@@ -4,6 +4,22 @@
 
 ---
 
+## 2026-11-27 — T17 : données LBA partagées sur S3 (Onyxia)
+
+**Fait :**
+- `.env` créé sur le pod Onyxia (clé LBA production) ; `uv sync`.
+- `uv run python scripts/collect_lba.py` : export du 2026-11-27 (775,8 Mo) → **12 748 offres** (87 % avec SIRET, 768 déléguées à une école) + **382 180 recruteurs potentiels**, chiffres identiques à la collecte locale.
+- `python3 scripts/share_s3.py data/raw/offres_raw/lba.parquet data/raw/lba_recruteurs.parquet` → fichiers dans l'espace S3 privé (6,2 Mo + 43,3 Mo), liens valables 24 h.
+
+**Problèmes / points d'attention pour l'équipe :**
+- `uv run python scripts/share_s3.py` échoue (`botocore` absent du venv) : utiliser le `python3` système d'Onyxia, comme indiqué dans CLAUDE.md.
+- Les liens expirent au bout de 24 h : relancer `share_s3.py` pour en régénérer.
+
+**Prochaine étape :**
+- Brancher les recruteurs LBA dans le score (opportunité cachée) et sur la carte.
+
+---
+
 ## 2026-11-27 15:00 — Fin de session locale (Windows) → bascule sur Onyxia
 
 **Fait :**

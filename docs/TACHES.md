@@ -70,10 +70,9 @@
 
 ## 🔵 En cours
 
-- [ ] T17 — 🔗T11 **Partager les données LBA sur S3** (`offres_raw/lba.parquet`, `lba_recruteurs.parquet`) : relancer `scripts/collect_lba.py` sur Onyxia puis `scripts/share_s3.py` — @maxence
-
 ## ✅ Fait
 
+- [x] T17 — 🔗T11 **Partager les données LBA sur S3** (`offres_raw/lba.parquet`, `lba_recruteurs.parquet`) : relancer `scripts/collect_lba.py` sur Onyxia puis `scripts/share_s3.py` — @maxence → déposés sur S3 (espace privé de Maxence, liens 24 h envoyés en MP) ; ⚠️ `share_s3.py` se lance avec `python3` (système Onyxia), pas `uv run` (botocore absent du venv)
 - [x] T31 — 🔗T30 **Rétrécissement bêta-binomial** : a priori par secteur NAF, a posteriori, intervalle crédible — @mathis → fusionnée dans T30 : gamma-Poisson au lieu de bêta-binomial (D13)
 - [x] T30 — 🔗T5 **Score v0** sur données factices : composantes simples (part brute des offres du domaine, opportunité cachée, distance, taille) → `scores.parquet` — @mathis → gamma-Poisson réel (D13), `scripts/build_scores.py`
 - [x] T7 — **Recruteurs LBA factices** : `make_fake_data.py` écrit aussi `data/raw/lba_recruteurs.parquet` (schéma `recruteurs_lba`, codes ROME réels de `domains.yaml`) — @emma
