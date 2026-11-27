@@ -50,7 +50,6 @@
 - [ ] T32 — Explication automatique par entreprise (« recommandée car… ») à partir des contributions au score
 - [ ] T34 — **Validation sans vérité terrain** : stabilité du classement (bootstrap), sensibilité aux poids, cohérence avec La Bonne Boîte et la tension du marché → graphiques pour les slides
 - [ ] T22 — Enrichissement finances (CA N et N-1, via Recherche d'entreprises ou les ratios INPI) → composante dynamisme (L10 : privilégier les ratios INPI en masse, pas 276 000 appels d'API)
-- [ ] T23 — BODACC : écarter ou pénaliser les entreprises en procédure collective
 - [ ] T24 — La Bonne Boîte (si l'accès est obtenu) → composante probabilité d'embauche
 - [ ] T43 — **Fiche entreprise** : décomposition du score, intervalle crédible, offres récentes, effectif, CA, lien vers l'Annuaire des entreprises
 - [ ] T9 — 🔗T6,T8 **Nouvelles catégories de métiers (domaines)** dans `radar/domains.yaml`. Pistes tirées des offres encore classées `autre` après T8 (36,6 %) : **commercial / vente** (Account Executive, SDR, conseiller commercial, business developer), **ingénierie / industrie** (CVC-PLB, automaticien, QARA, FPGA), **santé / recherche clinique** (CRA, clinical trial, pharmacovigilance), **gestion de projet / conseil** (Project Manager, PMO, Chief of Staff), **immobilier**. Pour chacune : codes ROME 4.0 vérifiés via l'API (comme T6) + mots-clés FR/EN, mesure avant/après sur les vraies offres, tests ; garder `fake_data.DOMAINS` aligné (un test le vérifie). Pour qu'une catégorie soit **notée**, il suffit techniquement de l'ajouter à `SCORED_DOMAINS` (`radar/score/build.py`, le calcul est générique), puis au choix du domaine dans l'app. ⚠️ Mais les offres Adzuna viennent toutes de la recherche « data » (D13) : pour un autre domaine, le score ne compterait que les offres qui mentionnent « data » (biais). Options : (a) noter tout de suite avec la mention « signal partiel » ; (b) s'appuyer sur La bonne alternance (offres + recruteurs, tous métiers, codes ROME) ; (c) collecter Adzuna par domaine (quota). À trancher avec @mathis (score) et @maxence (app) : **proposition D21** (LBA pour tous les domaines + Adzuna en « signal partiel »)
@@ -76,6 +75,7 @@
 
 ## 🔵 En cours
 
+- [ ] T23 — BODACC : écarter ou pénaliser les entreprises en procédure collective — @celia
 - _…_
 
 ## ✅ Fait
