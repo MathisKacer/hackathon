@@ -4,6 +4,25 @@
 
 ---
 
+## 2026-11-27 — Proposition D21 : noter les domaines autres que data
+
+**Fait :**
+- Ajout de **T9** (nouvelles catégories de métiers) dans `TACHES.md`, puis correction : j'avais d'abord écrit qu'une collecte était nécessaire pour noter un domaine, alors que le calcul du score (`radar/score/build.py`) est générique. Seule la liste `SCORED_DOMAINS` le limite à data.
+- Constat : depuis T41 (D20), l'app propose tous les domaines, mais la couche 🟠 est **vide** hors data, car `scores.parquet` ne contient que data.
+- Rédaction de **D21, une proposition à valider** : La bonne alternance comme source pour tous les domaines (tous métiers, codes ROME, sans quota), Adzuna en complément avec la mention « signal partiel ».
+
+**Fichiers touchés :**
+- `docs/DECISIONS.md`, `docs/TACHES.md`, `docs/journal/emma.md`
+
+**Problèmes / points d'attention pour l'équipe :**
+- **@mathis, @maxence :** merci de valider ou modifier D21 avant que quelqu'un ne touche au score ou à l'app. Je n'ai modifié ni `radar/score/build.py` ni l'app.
+- Pour vérifier les volumes par domaine, il faut les vraies données LBA sur S3 (T17) : mon pod n'a que des offres LBA factices.
+
+**Prochaine étape :**
+- Si D21 est validée : l'implémenter côté score (avec l'accord de Mathis), puis T9.
+
+---
+
 ## 2026-11-27 — T8 : titres anglais mal classés ✅
 
 **Fait :**

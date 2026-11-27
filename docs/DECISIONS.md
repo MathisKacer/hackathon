@@ -14,6 +14,15 @@
 
 ---
 
+### D21 — 🟡 PROPOSITION, à valider par @mathis et @maxence — Noter les domaines autres que data (2026-11-27, @emma)
+**Contexte :** depuis D20, l'app propose tous les domaines de `domains.yaml`, mais `scores.parquet` ne contient que data (`SCORED_DOMAINS = ("data",)`, D13). Si un étudiant choisit finance, marketing, rh ou informatique, **la couche 🟠 est vide** (`radar/spontaneous.py › load_nearby` filtre `s.domaine = ?`). Le calcul du score est pourtant générique. La vraie limite, c'est la donnée : toutes les offres Adzuna viennent de la recherche « data », donc pour un autre domaine on ne compterait que les offres qui mentionnent « data ».
+**Proposition :**
+1. **Source principale pour les autres domaines : La bonne alternance**, qui couvre **tous les métiers**, avec codes ROME, sur toute la France et sans quota : 12 748 offres et surtout 382 180 recruteurs potentiels (T11). Le nombre d'offres LBA du domaine (via `classify`, déjà dans `offres.parquet`) alimente l'intensité. Le fait qu'un recruteur LBA recrute un code ROME du domaine peut alimenter `c_embauche`, ce qui rejoint T24/T28.
+2. **En complément, les offres Adzuna du domaine** (biaisées vers la data), avec dans l'app la mention « **signal partiel** » pour tout domaine autre que data.
+3. Concrètement : `SCORED_DOMAINS` = toutes les clés de `domains.yaml` ; une colonne `signal` dans `scores.parquet` (`complet` pour data, `partiel` sinon), affichée par l'app.
+**Alternatives écartées :** collecter Adzuna domaine par domaine (quota ~240 appels/jour partagé, déjà juste pour data) ; laisser la couche 🟠 vide hors data (l'app promet un domaine paramétrable).
+**Conséquences si validée :** changement dans `radar/score/build.py` (@mathis, ou @emma avec son accord) et affichage du signal dans l'app (@maxence). Pour les slides, c'est une limite assumée et expliquée. Il faut les **vraies** données LBA (T17) pour vérifier les volumes par domaine avant de trancher.
+
 ### D20 — Filtres de l'app : domaines de `domains.yaml`, taille en 4 tranches, secteur = section NAF (2026-11-27, @maxence)
 **Contexte :** T41 : filtrer par domaine, contrat, taille et secteur.
 **Décision :** liste des domaines lue dans `radar/domains.yaml` (ajouter un domaine = l'ajouter au fichier, T9) ; les offres 🔵 sont classées dans l'app par le même classifieur que T13 (`radar.domains.classify`, ROME + titre), à la place du filtre « data » v0 par mots-clés ; le score 🟠 est celui du domaine choisi. Taille : 4 tranches lisibles (10–49, 50–249, 250–999, 1 000 et plus) regroupant les codes INSEE ; secteur : **section NAF** (21 lettres), prise dans `naf_section` ou déduite du code NAF. Choix multiples, liste vide = pas de filtre ; taille/secteur inconnus écartés dès qu'on filtre. Code : `radar/filters.py`. Réglages enregistrés dans le profil (`tailles`, `secteurs`).
