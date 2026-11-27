@@ -26,6 +26,7 @@
 15 bis. [Effectifs : site et entreprise (T73)](#15-bis-effectifs--site-et-entreprise-t73)
 15. [Niveau d'études attendu (T67)](#15-niveau-détudes-attendu-t67-d34)
 16. [Adéquation avec ton CV (T45)](#16-adéquation-avec-ton-cv-t45-d37)
+17. [Administrateurs et gestion des comptes (T79)](#17-administrateurs-et-gestion-des-comptes-t79-d39)
 
 ---
 
@@ -239,6 +240,11 @@ uv run pytest -q tests/test_sirene.py                  # tests SIRENE
 uv run pytest -q tests/test_bodacc.py                  # tests BODACC (28)
 uv run pytest -q tests/test_accounts.py tests/test_compte_ui.py   # tests comptes, historique, sécurité
 rm data/app/radar.db                                   # repartir de zéro côté comptes
+
+uv run python scripts/admin.py liste                   # comptes et administrateurs (T79)
+uv run python scripts/admin.py promouvoir <identifiant>   # nommer un administrateur (équipe seulement)
+uv run python scripts/admin.py retirer <identifiant>      # retirer le rôle
+uv run python scripts/admin.py journal                 # dernières actions d'administration
 ```
 
 ---
@@ -443,3 +449,36 @@ Case vide quand SIRENE n'a pas l'information. **Pas de total calculé** : additi
 **Réglages.** Liste et expressions : `SKILLS` (avec les choix prudents : pas « C » ni « Go », « R » seulement en majuscule isolée, « recrutement » de présentation écarté) ; lissage : `M_SECTOR`, `M_COMPANY` ; seuil de l'explication : `radar/explain.py`. Tests : `tests/test_competences.py` (ajouter un cas avant de modifier une expression).
 
 **Limites et suites.** Adéquation au niveau du secteur, descriptions tronquées, PDF scannés illisibles (L29). Suites : proposer le domaine et le niveau d'études à partir du CV ; lettre de candidature (T46).
+
+---
+
+## 17. Administrateurs et gestion des comptes (T79, D39)
+
+**Qui.** Seuls les **membres de l'équipe** (4 au plus) sont administrateurs. On le devient **uniquement** avec le script ci-dessous, dans le terminal du pod : aucun bouton du site ne le permet. Tous les autres comptes sont **classiques**.
+
+**Devenir administrateur (à faire une fois, sur ton pod)** — la base des comptes est propre à chaque pod (L17) :
+
+1. Lancer l'app (`uv run streamlit run app/streamlit_app.py`), aller dans **Se connecter** (page Mon espace) et **créer ton compte**.
+2. Dans le terminal du pod (VS Code Onyxia) :
+   ```bash
+   uv run python scripts/admin.py promouvoir <ton identifiant>
+   uv run python scripts/admin.py liste      # vérifier : « ADMIN  <ton identifiant> »
+   ```
+3. Dans l'app, **se déconnecter puis se reconnecter** : l'onglet **Administration** apparaît en haut.
+
+**Ce que fait un administrateur** (page Administration) :
+
+| Action | Quand | Remarques |
+|---|---|---|
+| Voir les comptes | toujours | Nombres seulement (recherches, favoris, profil) : jamais le contenu (vie privée) |
+| **Débloquer** | compte bloqué après 5 échecs de connexion | Possible sur tout compte |
+| **Mot de passe provisoire** | l'utilisateur a oublié son mot de passe | Généré au hasard, **affiché une seule fois** : le transmettre en **message privé**. L'utilisateur voit un bandeau qui l'invite à le changer (Mon espace → « Changer mon mot de passe ») |
+| **Supprimer** | compte à retirer | Comptes classiques seulement ; efface profil, historique et favoris |
+| Journal | toujours | Qui a fait quoi et quand ; aussi `scripts/admin.py journal` |
+
+Un administrateur ne peut **ni réinitialiser ni supprimer** le compte d'un autre administrateur, ni se supprimer depuis cette page : entre membres de l'équipe, on passe par le script (`retirer`), et chacun supprime son propre compte dans Mon espace.
+
+**Pour tout le monde.** « Changer mon mot de passe » dans Mon espace (ancien mot de passe demandé, mêmes règles qu'à la création, D16).
+
+**Code et tests.** `radar/admin.py` (règles), `app/admin_ui.py` et `app/vues/administration.py` (page), `scripts/admin.py` (nommer), `tests/test_admin.py`. Détails de sécurité : `docs/SECURITE.md` › Administrateurs.
+
