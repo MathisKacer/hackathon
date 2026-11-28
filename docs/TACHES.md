@@ -98,13 +98,12 @@
 
 ## 🔵 En cours
 
-- [ ] T95 — **Harmoniser l'apparence** des pages Entreprises, Mon compte, Se connecter et S'inscrire avec l'accueil et la page de la carte (plus de bandeau en dégradé, chiffres de Mon compte plus sobres) et rendre le logo visible en mode sombre — @celia (branche `celia/interface`)
-
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
 - _…_
 
 ## ✅ Fait
 
+- [x] T95 — **Apparence harmonisée** — @celia : pages Entreprises, Mon compte, Se connecter et S'inscrire dans le style de l'accueil (plus de bandeau en dégradé), chiffres de Mon compte dans une seule carte sobre, logo qui prend la couleur du texte (mode sombre)
 - [x] T93 — **Interface « Compass »** (essais sur `emma/interface-riche`, fusionnés dans `main` à la demande d'Emma) — @emma → D46 : accueil (logo, slogan, recherche centrée), barre du haut maison (Se connecter / S'inscrire ou Mon compte, logo qui garde la session), page Recherche en deux blocs (filtres | carte) puis listes, pages connexion et inscription séparées, thème clair/sombre, logos d'Emma ; candidatures spontanées sans ville (France entière) ; retirés de la page de résultats : bandeau, « Comment ça marche », tuiles, meilleures cibles, tableau de bord. ⚠️ À valider avec l'équipe : nom Compass, éléments retirés (@celia T70/T85)
 - [x] T91 — **Télécharger ses candidatures** — @celia : bouton dans « Mes candidatures » → CSV (nom, type, statut, envoyée le, relancée le, ville, note, lien de l'offre), lisible dans Excel en français ; formules neutralisées (`radar/export.py`)
 - [x] T90 — **Rappels de relance** — @celia : cocher « Candidaté » note la date d'envoi ; « **À relancer** » après **15 jours** au statut Envoyée ou Relancée (candidature en tête, message, tuile affichée seulement s'il y en a) ; bouton « J'ai relancé » (statut Relancée, le compte repart de zéro). Candidatures cochées avant : date de mise en favori, indiquée « ajoutée aux favoris le … »

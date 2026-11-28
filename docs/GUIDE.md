@@ -451,10 +451,11 @@ Case vide quand SIRENE n'a pas l'information. **Pas de total calculé** : additi
 
 ## Mon espace : la présentation (T85)
 
-- **Sans compte** : à gauche « Pourquoi créer un compte ? », à droite la carte « Connexion / Créer un compte » ; les favoris temporaires en dessous.
-- **Connecté** : bandeau avec l'initiale, 4 chiffres en couleur, puis les onglets **Mes candidatures** (statut en pastille de couleur), **Mes favoris** (Entreprises / Offres), **Mes recherches** et **Mon profil** (compétences et CV, mot de passe, suppression du compte tout en bas).
+- **Sans compte** : seulement le formulaire « Se connecter » (T93).
+- **Connecté** : en-tête avec l'initiale, les chiffres réunis dans une carte (un point orange pour « à relancer »), puis les onglets **Mes candidatures** (statut en pastille de couleur), **Mes favoris** (Entreprises / Offres), **Mes recherches** et **Mon profil** (compétences et CV, mot de passe, suppression du compte tout en bas).
+- **Style commun (T95)** : titre centré avec un trait orange (`hero`, `profile_header`), pas de bandeau coloré ; blocs en cartes (`st.container(key="espace_…")`) ; chiffres avec `stat_bar`. La page Entreprises suit le même style. Le logo de la barre du haut est dessiné dans la couleur du texte du thème (`LOGO_LAYERS`, `app/style.py`), donc visible en clair comme en sombre.
 - Les libellés d'onglets n'ont **pas de compteurs** : un libellé qui change ramènerait au premier onglet.
-- Code : `account_page` (`app/compte.py`), sections de `app/vues/mon_espace.py`, styles dans `app/style.py` (`profile_header`, blocs à clé `espace_…`).
+- Code : `account_page` (`app/compte.py`), sections de `app/vues/mon_espace.py`, styles dans `app/style.py`.
 
 ---
 

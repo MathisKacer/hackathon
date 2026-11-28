@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-11-28 — Tâche T95 : harmoniser l'apparence
+
+**Fait :**
+- Entreprises, Mon compte, Se connecter et S'inscrire dans le style de l'accueil : bandeau en dégradé remplacé par un titre centré, contenus en cartes.
+- Chiffres de Mon compte dans une seule carte sobre ; logo visible en mode sombre.
+
+**Résultats / chiffres clés :**
+- 396 tests OK.
+
+**Points d'attention pour l'équipe :**
+- `app/style.py` et `app/entete.py` modifiés : `hero(titre, phrase)` n'a plus d'options, `kpi_tiles` est remplacé par `stat_bar`.
+
+---
+
 ## 2026-11-28 — Tâche T91 : télécharger ses candidatures
 
 **Fait :**
