@@ -45,6 +45,7 @@
 **Pourquoi :** validation temporelle (`docs/EVAL_SCORE.md`) : la note LLM apporte une information significative au-delà des autres covariables (AUC besoin caché +0,025, IC 90 % [+0,012 ; +0,037]) alors que les indicatrices NAF non (+0,010 [−0,016 ; +0,036]) ; LLM − NAF = +0,013 (dans le bruit). Moins de paramètres, et surtout transposable aux domaines sans offres.
 **Alternatives écartées :** NAF + note LLM (pas mieux que NAF seul, colinéaire) ; note LLM seule sans offres ni covariables (AUC 0,81, en dessous du v1).
 **Conséquences :** le LLM qualifie des **secteurs** (jamais une entreprise) ; afficher « d'après le secteur et la taille ». Grille dans `data/processed/grille_domaines.parquet` (hors Git, à partager). Relecture humaine à l'aveugle à faire (`data/relecture_grille.csv`). Ouvre la voie aux 5 domaines (D21).
+**Mise à jour (28/11, 05 h) :** grille complète, **718 NAF** (14 360 lignes, 100 % des établissements notés sur leur propre NAF, plus de repli). AUC besoin caché 0,845 (contre 0,843 avec 360 NAF ; témoin 0,819, NAF 0,830), besoin futur 0,889 (0,887). Coefficients stables (≥ 1 ×3,74 ; ≥ 2 ×1,45 ; ≥ 3 ×3,91). Conclusion inchangée.
 
 ### D44 — Compétences du profil modifiées une à une et enregistrées aussitôt (2026-11-27, @emma)
 **Contexte :** T86, demande d'Emma : pouvoir supprimer et enregistrer les compétences une à une, et retirer le bouton « Enregistrer mes compétences » (D41, D42).

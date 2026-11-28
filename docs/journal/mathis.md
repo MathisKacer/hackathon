@@ -340,3 +340,8 @@
 
 - `seuil_carte` (Auto ou ≥ 0,30 … 0,90) dans Filtres › Classement, légende sous la carte ; `spontaneous_on_map(df, min_score)`. Vérifié dans l'app (AppTest, Rennes) : Auto 108 points, ≥ 0,60 107 points, sur 4 281.
 - Note « 📣 À lire » en tête de `docs/TACHES.md` (D47–D49, qui doit faire quoi) ; § « Score et carte » dans `docs/GUIDE.md`.
+
+## 2026-11-28 — T77 : grille complète (718 NAF)
+
+- `grille_domaines.parquet` : 718 NAF × 4 tailles × 5 domaines = 14 360 lignes, aucun manquant, doublon ni note invalide, justification partout ; qwen2.5:14b, consigne v3.
+- Scores reconstruits (note du NAF propre pour 100 % des établissements) ; `eval_score` : AUC besoin caché 0,845, futur 0,889, conclusion de D45 inchangée.

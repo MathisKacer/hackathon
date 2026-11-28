@@ -16,11 +16,11 @@ retire l'avantage mécanique des grandes entreprises (qui publient plus).
 | v1 : covariables seules (a priori) | 0.83 | 0.817 | 8.0 |
 | v1 : covariables + offres, bayésien classique | 0.809 | 0.798 | 1.0 |
 | v1 : covariables + offres, à sens unique (production) | 0.83 | 0.817 | 8.0 |
-| note LLM seule (secteur × taille) | 0.812 | 0.72 | 9.0 |
+| note LLM seule (secteur × taille) | 0.788 | 0.701 | 9.0 |
 | v1 sans NAF ni note LLM (témoin) | 0.819 | 0.791 | 9.0 |
-| v1 : note LLM à la place du NAF | 0.843 | 0.827 | 9.0 |
-| v1 : NAF + note LLM | 0.83 | 0.818 | 8.0 |
-| GBM (arbres boostés), hors échantillon | 0.589 | 0.6 | 3.0 |
+| v1 : note LLM à la place du NAF | 0.845 | 0.828 | 9.0 |
+| v1 : NAF + note LLM | 0.83 | 0.818 | 7.0 |
+| GBM (arbres boostés), hors échantillon | 0.447 | 0.439 | 1.0 |
 | v0 : volume attendu (× effectif) | 0.924 | 0.81 | 14.0 |
 | v1 : volume attendu (× effectif), sens unique | 0.906 | 0.831 | 29.0 |
 | témoin : effectif seul | 0.875 | 0.589 | 18.0 |
@@ -34,11 +34,11 @@ retire l'avantage mécanique des grandes entreprises (qui publient plus).
 | v1 : covariables seules (a priori) | 0.856 | 0.841 | 12.0 |
 | v1 : covariables + offres, bayésien classique | 0.866 | 0.854 | 60.0 |
 | v1 : covariables + offres, à sens unique (production) | 0.877 | 0.863 | 54.0 |
-| note LLM seule (secteur × taille) | 0.826 | 0.734 | 22.0 |
+| note LLM seule (secteur × taille) | 0.809 | 0.722 | 22.0 |
 | v1 sans NAF ni note LLM (témoin) | 0.871 | 0.848 | 51.0 |
-| v1 : note LLM à la place du NAF | 0.887 | 0.872 | 48.0 |
-| v1 : NAF + note LLM | 0.877 | 0.864 | 49.0 |
-| GBM (arbres boostés), hors échantillon | 0.624 | 0.636 | 6.0 |
+| v1 : note LLM à la place du NAF | 0.889 | 0.873 | 48.0 |
+| v1 : NAF + note LLM | 0.877 | 0.863 | 48.0 |
+| GBM (arbres boostés), hors échantillon | 0.461 | 0.458 | 1.0 |
 | v0 : volume attendu (× effectif) | 0.947 | 0.858 | 71.0 |
 | v1 : volume attendu (× effectif), sens unique | 0.937 | 0.877 | 74.0 |
 | témoin : effectif seul | 0.878 | 0.593 | 33.0 |
@@ -69,11 +69,11 @@ Note 0–3 donnée par un LLM (Qwen 2.5 14B, consigne v3) pour chaque NAF × tai
 
 |  | coef | IC bas | IC haut | effet × |
 |---|---|---|---|---|
-| llm_ge1 | 1.354 | 0.814 | 1.894 | 3.87 |
-| llm_ge2 | 0.295 | -0.345 | 0.936 | 1.34 |
-| llm_ge3 | 1.388 | 0.813 | 1.963 | 4.01 |
+| llm_ge1 | 1.32 | 0.783 | 1.856 | 3.74 |
+| llm_ge2 | 0.37 | -0.236 | 0.976 | 1.45 |
+| llm_ge3 | 1.364 | 0.792 | 1.936 | 3.91 |
 
-Source de la note (entreprises) : naf 94.7%, division 5.0%, taille 0.3% (division / taille = repli pour les NAF non notés).
+Source de la note (entreprises) : naf 100.0% (division / taille = repli pour les NAF non notés).
 
 Écarts d'AUC par bootstrap apparié (300 tirages, IC à 90 %, mesurés le 28/11) : note LLM à la place du NAF − production v1 = +0,013 [−0,010 ; +0,038] (besoin caché), +0,009 [−0,005 ; +0,025] (besoin futur) ; note LLM − témoin sans secteur = +0,025 [+0,012 ; +0,037] et +0,017 [+0,008 ; +0,025] ; NAF − témoin = +0,010 [−0,016 ; +0,036] et +0,006 [−0,012 ; +0,024]. **La note LLM apporte une information sectorielle significative, les ~60 indicatrices NAF non** ; l'écart LLM − NAF est positif mais dans le bruit. Choix (D45) : la note LLM remplace le NAF en production.
 
@@ -82,11 +82,11 @@ Source de la note (entreprises) : naf 94.7%, division 5.0%, taille 0.3% (divisio
 | Hypothèse | Mesure | Verdict |
 |---|---|---|
 | Offres indépendantes (pas de doublons) | 9.7% de doublons bruts (même entreprise, même titre) | corrigé : comptés une fois |
-| Exposition ∝ effectif (élasticité 1) | coef. log effectif = 0.081 (IC -0.159 ; 0.322) | écart faible, absorbé par la covariable |
-| Surdispersion bien modélisée | Pearson Poisson 6.03 → binomiale négative 4.7 (≈ 1 attendu) | voir ci-dessous |
-| φ constant selon la taille | φ par tranche d'effectif : {'0–20': 403.426, '20–50': 173.047, '50–250': 38.715, '250–1000': 12.719, '1000–inf': 6.237} | non → φ estimé par tranche |
-| Nombre de zéros | 149,698 observés, 149,713 attendus | ✅ |
-| Calibration (observé / prédit par décile) | [0.0, 0.0, 0.0, 3.21, 1.98, 2.5, 1.0, 0.42, 1.18, 0.99] | haut de distribution ✅ |
+| Exposition ∝ effectif (élasticité 1) | coef. log effectif = -0.181 (IC -0.383 ; 0.021) | écart faible, absorbé par la covariable |
+| Surdispersion bien modélisée | Pearson Poisson 7.06 → binomiale négative 4.75 (≈ 1 attendu) | voir ci-dessous |
+| φ constant selon la taille | φ par tranche d'effectif : {'0–20': 403.426, '20–50': 285.134, '50–250': 64.375, '250–1000': 19.967, '1000–inf': 10.692} | non → φ estimé par tranche |
+| Nombre de zéros | 149,698 observés, 149,710 attendus | ✅ |
+| Calibration (observé / prédit par décile) | [0.92, 1.47, 0.35, 2.1, 0.15, 1.89, 1.04, 1.01, 1.7, 0.96] | haut de distribution ✅ |
 | Erreurs-types | sandwich (HC0) | ✅ |
 
 Non testables ici (à assumer) : probabilité de détection identique pour toutes les entreprises
