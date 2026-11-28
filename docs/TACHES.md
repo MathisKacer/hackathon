@@ -86,13 +86,13 @@
 
 ## 🔵 En cours
 
-- [ ] T90 — **Rappels de relance** : dans « Mes candidatures », date d'envoi et alerte **« À relancer »** après 15 jours sans réponse — @celia
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
 - [ ] T93 — **Essais d'une interface plus riche** (moins épurée que D30), sur la branche `emma/interface-riche` : rien n'est fusionné dans `main` sans accord de l'équipe (@celia : apparence, T70) — @emma
 - _…_
 
 ## ✅ Fait
 
+- [x] T90 — **Rappels de relance** — @celia : cocher « Candidaté » note la date d'envoi ; « **À relancer** » après **15 jours** au statut Envoyée ou Relancée (candidature en tête, message, tuile affichée seulement s'il y en a) ; bouton « J'ai relancé » (statut Relancée, le compte repart de zéro). Candidatures cochées avant : date de mise en favori, indiquée « ajoutée aux favoris le … »
 - [x] T89 — **Fiche plus claire** — @celia : en-tête (initiale, nom, pastilles lieu / taille / priorité, ou sites / taille / catégorie pour l'entreprise), alerte, lien vers l'entreprise ; une ligne de boutons (étoile, site web, page recrutement, LinkedIn) ; onglets **Résumé, Offres, Infos** (fiche entreprise : + **Sites (N)**). Présentation seulement : blocs de T76, T78, T80 inchangés. ℹ️ @maxence @emma : vos blocs sont dans l'onglet « Résumé »
 - [x] T88 — **« Comment la contacter ? » dans la fiche** — @celia : trois boutons (fiche site et fiche entreprise) ouvrant une recherche pré-remplie : « Son site web », « Sa page recrutement », « Sur LinkedIn » (`radar.fiche.contact_searches`). Pas de lien direct vers les sites : le champ `site_web` de La bonne alternance est **vide** (0 sur 382 180 recruteurs)
 - [x] T87 — 🔗T80 **Correspondance plus visible** : message quand aucune compétence n'est reconnue (liste, fenêtre de la carte, fiche) ; colonne « Correspondance » juste après « Priorité » ; correspondance juste sous la priorité dans la fenêtre de la carte (demandée par @emma, qui ne la voyait pas : profil avec une seule compétence non reconnue) — @emma → `NO_MATCH_MESSAGE` (`radar/competences.py`, colonne `correspondance_info`), colonne déplacée, ligne 🎯 sous la priorité dans la carte

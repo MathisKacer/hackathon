@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-11-28 — Tâche T90 : rappels de relance
+
+**Fait :**
+- Colonnes `envoyee_le` et `relancee_le` (migration automatique), règle `a_relancer` (15 jours), affichage et bouton « J'ai relancé » dans « Mes candidatures ».
+
+**Résultats / chiffres clés :**
+- Vérifié dans l'app avec une candidature antidatée de 20 jours. 386 tests OK.
+
+---
+
 ## 2026-11-28 — Tâche T89 : fiche plus claire (T92 ajoutée)
 
 **Fait :**

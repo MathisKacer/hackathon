@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import streamlit as st
 from commun import PAGES_DIR, PROFILE_LABELS, get_offers, profile_keys, saved_profile_keys
-from compte import _con, account_page, current_user
+from compte import TZ, _con, account_page, current_user
 from cv_ui import profile_skills_editor
 from favoris import favorites, remove
 from fiche_ui import open_fiche
@@ -142,12 +142,36 @@ def favorites_section() -> None:
             open_fiche(to_open, None, domaine)
 
 
+def _mark_followed_up(kind: str, ref: str, key: str) -> None:
+    st.session_state[key] = "Relancée"
+    _save_statut(kind, ref, key)
+
+
+def _dates(f: dict) -> str:
+    """« envoyée le 12/11 · relancée le 27/11 » (T90)."""
+    sent = f["envoyee_le"].astimezone(TZ).strftime("%d/%m")
+    label = "ajoutée aux favoris le" if f["date_estimee"] else "envoyée le"
+    text = f"{label} {sent}"
+    if f["relancee_le"]:
+        text += f" · relancée le {f['relancee_le'].astimezone(TZ).strftime('%d/%m')}"
+    return text
+
+
 def candidatures_section() -> None:
     """Favoris cochés « Candidaté » (T82), avec leur statut en couleur."""
     applied = [f for f in favorites() if f["candidate"]]
     if not applied:
         st.write("Coche « Candidaté » sur un favori pour le retrouver ici et suivre sa réponse.")
         return
+    due = {(f["kind"], f["ref"]) for f in applied if accounts.a_relancer(f)}
+    if due:
+        s = "s" if len(due) > 1 else ""
+        st.warning(
+            f"{len(due)} candidature{s} à relancer : "
+            f"{accounts.RELANCE_DELAY.days} jours ou plus sans réponse.",
+            icon=":material/schedule_send:",
+        )
+    applied.sort(key=lambda f: (f["kind"], f["ref"]) not in due)  # à relancer en premier
     for f in applied:
         kind_ref = f"{f['kind']}_{f['ref']}"
         key = f"fav_statut_{kind_ref}"
@@ -156,11 +180,12 @@ def candidatures_section() -> None:
             left, middle, right = st.columns([3, 1.3, 1.5], vertical_alignment="center")
             left.markdown(f"**{f['label']}**")
             kind = "Entreprise" if f["kind"] == "entreprise" else "Offre"
-            left.caption(kind + (f" · {f['note']}" if f["note"] else ""))
+            left.caption(" · ".join(x for x in (kind, _dates(f), f["note"]) if x))
             statut = st.session_state[key]
-            middle.markdown(
-                pill(statut, STATUT_COLORS.get(statut, "#6B7280")), unsafe_allow_html=True
-            )
+            pills = pill(statut, STATUT_COLORS.get(statut, "#6B7280"))
+            if (f["kind"], f["ref"]) in due:
+                pills += " " + pill("À relancer", "#c2410c")
+            middle.markdown(pills, unsafe_allow_html=True)
             right.selectbox(
                 "Statut",
                 accounts.CANDIDATURE_STATUTS,
@@ -169,6 +194,16 @@ def candidatures_section() -> None:
                 args=(f["kind"], f["ref"], key),
                 label_visibility="collapsed",
             )
+            if (f["kind"], f["ref"]) in due:
+                # Bouton nécessaire pour une 2e relance : le statut est déjà « Relancée »
+                right.button(
+                    "J'ai relancé",
+                    key=f"fav_relance_{kind_ref}",
+                    icon=":material/send:",
+                    on_click=_mark_followed_up,
+                    args=(f["kind"], f["ref"], key),
+                    width="stretch",
+                )
 
 
 account_page(

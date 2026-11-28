@@ -107,6 +107,7 @@ SEARCH_TOP_MAX = 5
 FAVORITE_KINDS = ("offre", "entreprise")
 FAVORITES_MAX_PER_USER = 500
 NOTE_MAX = 500
+RELANCE_DELAY = timedelta(days=15)  # T90 : au-delà, sans réponse → « À relancer »
 # Recherches enregistrées à la demande (T84) : les réglages seulement, ni entreprises ni résultats.
 SAVED_SEARCH_MAX = 20
 SAVED_SEARCH_NAME_MAX = 80
@@ -168,6 +169,8 @@ CREATE TABLE IF NOT EXISTS favoris (
     note       TEXT    NOT NULL DEFAULT '',
     candidate  INTEGER NOT NULL DEFAULT 0,
     statut     TEXT    NOT NULL DEFAULT '',
+    envoyee_le  TEXT   NOT NULL DEFAULT '',
+    relancee_le TEXT   NOT NULL DEFAULT '',
     created_at TEXT    NOT NULL,
     UNIQUE (user_id, kind, ref)
 );
@@ -244,6 +247,9 @@ def _migrate(con: sqlite3.Connection) -> None:
         fav_cols = {r[1] for r in con.execute("PRAGMA table_info(favoris)")}
         if fav_cols and "statut" not in fav_cols:
             con.execute("ALTER TABLE favoris ADD COLUMN statut TEXT NOT NULL DEFAULT ''")
+        for col in ("envoyee_le", "relancee_le"):  # T90 : dates de candidature
+            if fav_cols and col not in fav_cols:
+                con.execute(f"ALTER TABLE favoris ADD COLUMN {col} TEXT NOT NULL DEFAULT ''")
 
 
 def normalize_username(username: str) -> str:
@@ -514,8 +520,19 @@ def update_favorite(
     note: str | None = None,
     candidate: bool | None = None,
     statut: str | None = None,
+    now: datetime | None = None,
 ) -> None:
-    """Modifie la note libre, la case « candidaté » et/ou le statut de candidature (T82)."""
+    """Modifie la note libre, la case « candidaté » et/ou le statut de candidature (T82).
+
+    T90 : cocher « candidaté » note la date d'envoi (décocher l'efface) ; passer au statut
+    « Relancée » note la date de relance.
+    """
+    if statut == "Relancée":
+        with con:
+            con.execute(
+                "UPDATE favoris SET relancee_le = ? WHERE user_id = ? AND kind = ? AND ref = ?",
+                (_now(now), user_id, kind, str(ref)),
+            )
     if statut is not None:
         if statut not in CANDIDATURE_STATUTS:
             raise AccountError(f"Statut inconnu : {statut!r}.")
@@ -533,18 +550,26 @@ def update_favorite(
                 (note, user_id, kind, str(ref)),
             )
     if candidate is not None:
+        where = "WHERE user_id = ? AND kind = ? AND ref = ?"
         with con:
-            con.execute(
-                "UPDATE favoris SET candidate = ? WHERE user_id = ? AND kind = ? AND ref = ?",
-                (int(bool(candidate)), user_id, kind, str(ref)),
-            )
+            if candidate:
+                con.execute(  # la date n'est posée que quand la case passe de décochée à cochée
+                    "UPDATE favoris SET envoyee_le = CASE WHEN candidate = 0 THEN ? "
+                    f"ELSE envoyee_le END, candidate = 1 {where}",
+                    (_now(now), user_id, kind, str(ref)),
+                )
+            else:
+                con.execute(
+                    f"UPDATE favoris SET candidate = 0, envoyee_le = '', relancee_le = '' {where}",
+                    (user_id, kind, str(ref)),
+                )
 
 
 def list_favorites(con: sqlite3.Connection, user_id: int, kind: str | None = None) -> list[dict]:
     """Favoris de l'utilisateur, les plus récents d'abord (tous types si `kind` est None)."""
     query = (
-        "SELECT kind, ref, label, details, note, candidate, created_at, statut FROM favoris "
-        "WHERE user_id = ?"
+        "SELECT kind, ref, label, details, note, candidate, created_at, statut, envoyee_le, "
+        "relancee_le FROM favoris WHERE user_id = ?"
     )
     params: list = [user_id]
     if kind is not None:
@@ -563,9 +588,23 @@ def list_favorites(con: sqlite3.Connection, user_id: int, kind: str | None = Non
             "created_at": datetime.fromisoformat(r[6]),
             # T82 : une candidature cochée sans statut choisi est « Envoyée »
             "statut": r[7] or (CANDIDATURE_STATUTS[0] if r[5] else ""),
+            # T90 : candidatures cochées avant T90 → date de mise en favori, signalée estimée
+            "envoyee_le": datetime.fromisoformat(r[8] or r[6]),
+            "date_estimee": bool(r[5]) and not r[8],
+            "relancee_le": datetime.fromisoformat(r[9]) if r[9] else None,
         }
         for r in rows
     ]
+
+
+def a_relancer(favorite: dict, now: datetime | None = None) -> bool:
+    """T90 : candidature envoyée ou relancée depuis au moins RELANCE_DELAY, sans suite."""
+    if not favorite.get("candidate") or favorite.get("statut") not in ("Envoyée", "Relancée"):
+        return False
+    since = favorite.get("envoyee_le")
+    if favorite["statut"] == "Relancée" and favorite.get("relancee_le"):
+        since = favorite["relancee_le"]
+    return since is not None and (now or datetime.now(UTC)) - since >= RELANCE_DELAY
 
 
 def favorite_refs(con: sqlite3.Connection, user_id: int, kind: str) -> set[str]:
