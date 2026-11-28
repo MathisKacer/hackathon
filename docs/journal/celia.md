@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-11-28 — Tâche T96 : boussole de chargement
+
+**Fait :**
+- L'indicateur de chargement de Streamlit montre une boussole qui tourne au lieu des pictogrammes de sport (`app/style.py`).
+
+**Résultats / chiffres clés :**
+- 396 tests OK.
+
+---
+
 ## 2026-11-28 — Tâche T95 : harmoniser l'apparence
 
 **Fait :**

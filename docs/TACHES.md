@@ -103,6 +103,7 @@
 
 ## ✅ Fait
 
+- [x] T96 — **Indicateur de chargement en boussole** — @celia : en haut à droite, une boussole qui tourne (grise, comme avant) remplace les pictogrammes de sport de Streamlit
 - [x] T95 — **Apparence harmonisée** — @celia : pages Entreprises, Mon compte, Se connecter et S'inscrire dans le style de l'accueil (plus de bandeau en dégradé), chiffres de Mon compte dans une seule carte sobre, logo qui prend la couleur du texte (mode sombre)
 - [x] T93 — **Interface « Compass »** (essais sur `emma/interface-riche`, fusionnés dans `main` à la demande d'Emma) — @emma → D46 : accueil (logo, slogan, recherche centrée), barre du haut maison (Se connecter / S'inscrire ou Mon compte, logo qui garde la session), page Recherche en deux blocs (filtres | carte) puis listes, pages connexion et inscription séparées, thème clair/sombre, logos d'Emma ; candidatures spontanées sans ville (France entière) ; retirés de la page de résultats : bandeau, « Comment ça marche », tuiles, meilleures cibles, tableau de bord. ⚠️ À valider avec l'équipe : nom Compass, éléments retirés (@celia T70/T85)
 - [x] T91 — **Télécharger ses candidatures** — @celia : bouton dans « Mes candidatures » → CSV (nom, type, statut, envoyée le, relancée le, ville, note, lien de l'offre), lisible dans Excel en français ; formules neutralisées (`radar/export.py`)
