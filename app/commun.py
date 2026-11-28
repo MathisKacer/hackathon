@@ -25,7 +25,7 @@ from radar.niveau import LEVEL_LABELS, LEVELS, add_levels, matches_levels
 from radar.process.quick_filter import load_raw_offers, prepare_offers
 from radar.recruteurs import mark_lba_recruiters
 from radar.response.predict import load_coefficients
-from radar.spontaneous import COMPONENTS, DEFAULT_WEIGHTS, load_nearby
+from radar.spontaneous import COMPONENTS, DEFAULT_WEIGHTS, load_nearby, load_top
 
 PAGES_DIR = (
     Path(__file__).resolve().parent / "vues"
@@ -154,6 +154,14 @@ def get_nearby(lat: float, lon: float, radius_km: float, domaine: str) -> pd.Dat
         return pd.DataFrame()
     # T51 : marque les recruteurs potentiels LBA sur un métier du domaine (`recruteur_lba`).
     return mark_lba_recruiters(load_nearby(lat, lon, radius_km, domaine), domaine)
+
+
+@st.cache_data(show_spinner="Recherche des meilleures entreprises de France…")
+def get_top(domaine: str) -> pd.DataFrame:
+    """T93 (essai) : sans ville, les meilleures entreprises de France entière."""
+    if not (FILES["entreprises"].exists() and FILES["scores"].exists()):
+        return pd.DataFrame()
+    return mark_lba_recruiters(load_top(domaine), domaine)
 
 
 def filter_offers(

@@ -546,7 +546,9 @@ def _company_candidature(siren: str, domaine: str | None = None) -> None:
     others = mine.iloc[1:6]
     for _, o in others.iterrows():
         st.markdown(
-            f"· {_site_label(o)} — {o['distance_km']:.1f} km · {_tier_html(o)}",
+            f"· {_site_label(o)}"
+            + (f" — {o['distance_km']:.1f} km" if pd.notna(o.get("distance_km")) else "")
+            + f" · {_tier_html(o)}",
             unsafe_allow_html=True,
         )
     if n > 6:

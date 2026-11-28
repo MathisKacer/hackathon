@@ -65,3 +65,27 @@ def test_weights_change_the_ranking():
 def test_hidden_opportunity_weight_promotes_companies_with_other_offers():
     out = rank_spontaneous(_scores(), *RENNES, 20, "Stage", {"c_cachee": 5, "c_intensite": 1})
     assert out["nom"].iloc[0] == "EmploiData"
+
+
+def test_rank_without_city_ignores_proximity():
+    """T93 (essai) : sans ville, pas de distance ni de proximité, mais un classement quand même."""
+    import pandas as pd
+
+    from radar.spontaneous import DEFAULT_WEIGHTS, rank_spontaneous
+
+    df = pd.DataFrame(
+        {
+            "siret": ["1", "2"],
+            "lat": [48.1, 43.6],
+            "lon": [-1.6, 1.4],
+            "c_intensite": [0.9, 0.2],
+            "c_embauche": [0.8, 0.3],
+            "n_offres_domaine": [0, 0],
+            "n_stage_domaine": [0, 0],
+            "n_alternance_domaine": [0, 0],
+        }
+    )
+    out = rank_spontaneous(df, None, None, None, "stage", DEFAULT_WEIGHTS)
+    assert list(out["siret"]) == ["1", "2"]
+    assert out["distance_km"].isna().all()
+    assert out["apport_c_proximite"].isna().all()  # proximité ignorée

@@ -12,8 +12,10 @@
 - **Logo « Compass »** (nom choisi par Emma, sur la branche seulement) : d'abord des SVG faits par Claude, puis remplacés par **les logos d'Emma** : `app/static/compass-logo-4-o-boussole.svg` (le mot, O en boussole) en haut à gauche, `compass-logo-5-cap.svg` (C-boussole + mot) pour l'onglet et les petits écrans ; `st.logo` dans `app/streamlit_app.py`. Puis versions recadrées d'Emma : `logo-compass-{clair,sombre}.svg` (le mot, en permanence dans la barre du haut, agrandi par CSS) et `icone-compass-{clair,sombre}.svg` (C-boussole seul : onglet, petits écrans, et **dans le bandeau à la place du radar animé**, demande d'Emma), choisies selon le thème.
 - Tableau de bord (`app/tableau_bord.py`, nouveau) sous les tuiles d'Explorer : 4 graphiques Altair (priorité, correspondance avec le CV, secteurs, tailles), barres fines, info-bulles, couleurs déjà utilisées dans la liste. Deux tuiles en plus : correspondance forte avec le CV, distance médiane.
 
+- **Candidatures spontanées sans ville** (demande d'Emma, sur la branche seulement) : `load_top` (`radar/spontaneous.py`, 5 000 meilleurs établissements de France au score D13, DuckDB) + `get_top` (`app/commun.py`) ; `rank_spontaneous(df, None, None, None, …)` : pas de distance, proximité ignorée ; Explorer affiche tuiles, tableau de bord, meilleures cibles, carte et liste « Partout en France » (colonne Distance masquée). Rennes inchangé. La chance de réponse n'est pas affichée sans ville (le modèle dépend de la distance).
+
 **Fichiers touchés :**
-- `.streamlit/config.toml`, `app/style.py`, `app/tableau_bord.py` (nouveau), `app/vues/explorer.py`, `docs/journal/emma.md`
+- `.streamlit/config.toml`, `app/style.py`, `app/tableau_bord.py` (nouveau), `app/vues/explorer.py`, `app/commun.py`, `app/carte.py`, `app/fiche_ui.py`, `radar/spontaneous.py`, `tests/test_weights.py`, `docs/journal/emma.md`
 
 **Résultats / chiffres clés :**
 - Rennes, compétences Python/SQL/Statistiques : 4 graphiques affichés, pas d'erreur sur les 3 pages ; 384 tests passent. Pas de navigateur sur le pod : rendu à regarder par Emma.

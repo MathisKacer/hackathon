@@ -92,6 +92,38 @@ def load_nearby(
     return con.execute(query, [domaine, lat_min, lat_max, lon_min, lon_max]).df()
 
 
+# T93 (essai, branche emma/interface-riche) : sans ville, les meilleures de France entière.
+NATIONAL_LIMIT = 5000
+
+
+def load_top(
+    domaine: str,
+    limit: int = NATIONAL_LIMIT,
+    entreprises_path: Path = FILES["entreprises"],
+    scores_path: Path = FILES["scores"],
+) -> pd.DataFrame:
+    """Sans ville : les `limit` établissements de France au meilleur score D13 (moyenne
+    géométrique intensité × embauche), avec les mêmes colonnes que `load_nearby`. Ils sont
+    ensuite classés par `rank_spontaneous(df, None, None, None, …)` (sans proximité)."""
+    con = duckdb.connect()
+    ent_cols = {
+        r[0] for r in con.execute(f"DESCRIBE SELECT * FROM '{entreprises_path}'").fetchall()
+    }
+    score_cols = {r[0] for r in con.execute(f"DESCRIBE SELECT * FROM '{scores_path}'").fetchall()}
+    wanted = [c for c in ENTREPRISE_COLS if c in ent_cols and c not in score_cols]
+    select_e = ", ".join(f'e."{c}"' for c in wanted)
+    suspect = "AND NOT coalesce(s.volume_suspect, false)" if "volume_suspect" in score_cols else ""
+    query = f"""
+        SELECT s.*, {select_e}
+        FROM '{scores_path}' s
+        JOIN '{entreprises_path}' e USING (siret)
+        WHERE s.domaine = ? AND e.lat IS NOT NULL {suspect}
+        ORDER BY sqrt(greatest(s.c_intensite, 0) * greatest(s.c_embauche, 0)) DESC
+        LIMIT ?
+    """
+    return con.execute(query, [domaine, int(limit)]).df()
+
+
 def matching_offers(df: pd.DataFrame, contrat: str) -> pd.Series:
     """Nombre d'offres du domaine qui correspondent au contrat visé ("tous" = tout contrat).
 
@@ -180,10 +212,13 @@ def applicable_weights(weights: dict[str, float], contrat: str) -> dict[str, flo
     return {k: v for k, v in weights.items() if c in COMPONENT_CONTRACTS.get(k, (c,))}
 
 
-def add_user_components(df: pd.DataFrame, radius_km: float, contrat: str) -> pd.DataFrame:
+def add_user_components(df: pd.DataFrame, radius_km: float | None, contrat: str) -> pd.DataFrame:
     """Composantes qui dépendent de l'étudiant : proximité, opportunité cachée, recruteur LBA."""
     out = df.copy()
-    out["c_proximite"] = (1 - out["distance_km"] / max(radius_km, 1e-9)).clip(0, 1)
+    # Sans ville (radius_km None) : NaN, composante ignorée par le score pondéré (T93)
+    out["c_proximite"] = (
+        (1 - out["distance_km"] / max(radius_km, 1e-9)).clip(0, 1) if radius_km else np.nan
+    )
     suffix = "_siren" if "n_offres_domaine_siren" in out.columns else ""
     has_domain_offers = out[f"n_offres_domaine{suffix}"].fillna(0) > 0
     no_matching = matching_offers(out, contrat.lower()).fillna(0) == 0
@@ -225,9 +260,9 @@ def weighted_score(df: pd.DataFrame, weights: dict[str, float]) -> pd.DataFrame:
 
 def rank_spontaneous(
     df: pd.DataFrame,
-    lat: float,
-    lon: float,
-    radius_km: float,
+    lat: float | None,
+    lon: float | None,
+    radius_km: float | None,
     contrat: str = "tous",
     weights: dict[str, float] | None = None,
     show_liquidation: bool = False,
@@ -243,8 +278,11 @@ def rank_spontaneous(
     if df.empty:
         return df.assign(distance_km=[], score=[], url_annuaire=[])
     out = df.dropna(subset=["lat", "lon"]).copy()
-    out["distance_km"] = haversine_km(lat, lon, out["lat"], out["lon"])
-    out = out[out["distance_km"] <= radius_km]
+    if lat is None or lon is None:  # T93 : sans ville (France entière), pas de distance
+        out["distance_km"] = np.nan
+    else:
+        out["distance_km"] = haversine_km(lat, lon, out["lat"], out["lon"])
+        out = out[out["distance_km"] <= radius_km]
     if "volume_suspect" in out.columns:
         out = out[~out["volume_suspect"].fillna(False).astype(bool)]
     out = add_user_components(out, radius_km, contrat)

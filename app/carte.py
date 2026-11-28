@@ -84,7 +84,8 @@ def _company_popup(r: pd.Series) -> str:
     legal = str(r.get("nom") or "Entreprise")
     title = html.escape(f"{name} ({legal})" if name and name != legal else legal)
     lines = [
-        html.escape(str(r.get("commune") or "")) + f" · {r['distance_km']:.1f} km",
+        html.escape(str(r.get("commune") or ""))
+        + (f" · {r['distance_km']:.1f} km" if pd.notna(r.get("distance_km")) else ""),
         html.escape(str(r.get("naf_libelle") or "Secteur inconnu")),
     ]
     if pd.notna(r.get("tranche_effectif")):

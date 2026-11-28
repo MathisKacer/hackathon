@@ -39,6 +39,7 @@ from commun import (
     get_offers,
     get_place,
     get_skill_profile,
+    get_top,
     profile_keys,
     reset_weights,
 )
@@ -201,6 +202,8 @@ view = filter_offers(
 )
 place = get_place(ville)
 spontaneous = pd.DataFrame()
+# T93 (essai) : sans ville, les meilleures candidatures spontanées de France entière (sans
+# distance ni proximité) ; avec une ville, celles du rayon comme avant.
 if place is not None:
     view = view[haversine_km(place.lat, place.lon, view["lat"], view["lon"]) <= rayon]
     nearby = filter_companies(
@@ -209,6 +212,10 @@ if place is not None:
     spontaneous = rank_spontaneous(
         nearby, place.lat, place.lon, rayon, contrat, weights, show_liquidation
     )
+else:
+    nearby = filter_companies(get_top(domaine), tailles, secteurs)
+    spontaneous = rank_spontaneous(nearby, None, None, None, contrat, weights, show_liquidation)
+if not spontaneous.empty:
     spontaneous = add_p_reponse(spontaneous, domaine, contrat, get_coefficients())
     # T26 (D36) : offres publiées par les autres sociétés du même groupe (familles de marque) ;
     # signalées seulement (« Groupe … : N offres »), jamais masquées : tout reste sur la carte.
@@ -255,7 +262,7 @@ contrat_txt = {
     "Alternance": " en alternance",
     "Emploi": " en emploi",
 }[contrat]
-if place is None:
+if place is None and spontaneous.empty:
     # Comment ça marche, en 3 cartes
     steps = [
         (":material/location_on:", "Choisis ta ville", "et le contrat que tu vises, en haut."),
@@ -290,7 +297,13 @@ else:
         n_sites = len(spontaneous)
     n_off = len(view)
     n_prio = int((spontaneous.get("palier", pd.Series(dtype=int)) == 1).sum())
-    st.caption(f"Autour de **{place.label}** · {rayon} km{contrat_txt}")
+    if place is not None:
+        st.caption(f"Autour de **{place.label}** · {rayon} km{contrat_txt}")
+    else:
+        st.caption(
+            f"**Partout en France**{contrat_txt} · les {fmt_int(len(spontaneous))} meilleures "
+            "entreprises. Choisis ta ville pour voir celles qui sont proches de toi."
+        )
     tiles = [
         Tile(
             fmt_int(n_ent),
@@ -319,7 +332,7 @@ else:
     ):
         n_forte = int((spontaneous["correspondance_palier"] == "Forte").sum())
         tiles.append(Tile(fmt_int(n_forte), "en correspondance forte avec ton CV", "#7048E8", "🧩"))
-    if not spontaneous.empty:
+    if not spontaneous.empty and spontaneous["distance_km"].notna().any():
         d = float(spontaneous["distance_km"].median())
         tiles.append(
             Tile(f"{d:.1f} km".replace(".", ","), "distance médiane des cibles", "#1098AD", "📍")
@@ -342,7 +355,7 @@ if not (view.empty and spontaneous.empty):
     )
 
 # ------------------------------------------------------------------ meilleures cibles
-if place is not None and not spontaneous.empty:
+if not spontaneous.empty:
     st.markdown("#### :material/workspace_premium: Les meilleures cibles")
     top = spontaneous.head(4)
     for col, (i, r) in zip(st.columns(len(top)), top.iterrows(), strict=True):
@@ -358,7 +371,7 @@ if place is not None and not spontaneous.empty:
             )
             sub_bits = [
                 str(r.get("commune") or "").title(),
-                f"{r['distance_km']:.1f} km",
+                f"{r['distance_km']:.1f} km" if pd.notna(r["distance_km"]) else "",
                 tranche_display(r.get("tranche_effectif")),
             ]
             sub_txt = " · ".join(b for b in sub_bits if b)
@@ -383,9 +396,7 @@ tab_spont, tab_offers = st.tabs(
     ]
 )
 with tab_spont:
-    if place is None:
-        st.write("Choisis ta ville pour voir les entreprises à démarcher.")
-    elif spontaneous.empty:
+    if spontaneous.empty:
         st.write("Aucune entreprise trouvée : élargis le rayon ou retire des filtres.")
     else:
         # T71 : on n'affiche (et ne colore) que les premières lignes du classement. La mise en
@@ -446,6 +457,8 @@ with tab_spont:
             table = table.drop(columns="Autres sites")
         if not table["★"].astype(bool).any():
             table = table.drop(columns="★")
+        if table["Distance"].isna().all():  # T93 : sans ville, pas de distance
+            table = table.drop(columns="Distance")
         if table["Situation"].isna().all():
             table = table.drop(columns="Situation")
         if not table["La Bonne Boîte"].astype(bool).any():
