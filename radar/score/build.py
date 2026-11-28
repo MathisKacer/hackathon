@@ -120,10 +120,14 @@ def _siret_counts(offres: pd.DataFrame, domain: str) -> pd.DataFrame:
 
 
 def _intensity(
-    comp: pd.DataFrame, ent: pd.DataFrame, features: pd.DataFrame | None
+    comp: pd.DataFrame, ent: pd.DataFrame, features: pd.DataFrame | None, domain: str = "data"
 ) -> pd.DataFrame:
     """Intensité a posteriori par SIREN : v1 (covariables, T69, D33) si les caractéristiques
-    sont disponibles, sinon v0 (a priori par secteur NAF seulement, D13)."""
+    sont disponibles, sinon v0 (a priori par secteur NAF seulement, D13).
+
+    Si la note LLM secteur × taille du domaine existe (T77, D45), elle remplace les indicatrices
+    de division NAF : meilleure AUC hors échantillon (docs/EVAL_SCORE.md), 3 paramètres au lieu
+    d'une soixantaine, et utilisable pour les domaines sans offres."""
     if features is not None:
         try:
             f = comp.set_index("siren").join(
@@ -132,9 +136,14 @@ def _intensity(
                     errors="ignore",
                 )
             )
-            post = CovariateModel().fit(f).posterior(f)
+            llm = f"note_llm_{domain}"
+            if llm in f and f[llm].notna().any():
+                model, version = CovariateModel(llm=llm, naf=False), "v1_covariables_llm"
+            else:
+                model, version = CovariateModel(), "v1_covariables"
+            post = model.fit(f).posterior(f)
             out = comp.set_index("siren").join(post).reset_index()
-            out["score_version"] = "v1_covariables"
+            out["score_version"] = version
             return out
         except Exception as e:  # données incomplètes : on garde un score, celui de D13
             log.warning("Score v1 impossible (%s) : repli sur v0 (D13)", e)
@@ -156,7 +165,7 @@ def build_scores(
     frames = []
     for domain in SCORED_DOMAINS:
         comp = _company_table(ent, offres, domain, cov)
-        comp = _intensity(comp, ent, features)
+        comp = _intensity(comp, ent, features, domain)
         # Plus d'offres du domaine que la moitié de l'effectif en 60 jours : invraisemblable pour
         # un employeur direct (intermédiaire non repéré, ou offres d'un groupe rattachées à une
         # petite entité juridique — SIRENE ne relie pas les sociétés d'un même groupe).

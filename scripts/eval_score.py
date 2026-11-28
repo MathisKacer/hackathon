@@ -34,6 +34,7 @@ from radar.score.features import build_features
 from radar.score.intensity import fit_priors, posterior
 
 DOMAIN = "data"
+LLM_COL = f"note_llm_{DOMAIN}"
 REPORT = PATHS.root / "docs" / "EVAL_SCORE.md"
 SIZE_BANDS = [0, 20, 50, 250, 1000, np.inf]
 
@@ -109,7 +110,8 @@ def main() -> None:
         .set_index("siren")
         .join(feats.drop(columns=["naf_section", "naf_division", "effectif_entreprise"]))
     )
-    diag = CovariateModel().fit(full).diagnostics(full)
+    prod = CovariateModel(llm=LLM_COL, naf=False) if LLM_COL in full else CovariateModel()
+    diag = prod.fit(full).diagnostics(full)
     dup = adz[(adz["domaine"] == DOMAIN) & adz["siren_match"].notna()]
     dup_rate = dup.duplicated(["siren_match", "titre"]).mean()
     main_dep = (
@@ -120,6 +122,21 @@ def main() -> None:
     )
     f["departement"] = main_dep.reindex(f.index)
     gbm = gbm_rate_oof(f)  # validation croisée par département (sinon il apprend par cœur)
+    # T77 : note LLM secteur × taille (grille de docs/PISTE_DOMAINES_LLM.md), si elle existe
+    llm_cands, llm_models = {}, {}
+    if LLM_COL in f:
+
+        def post(**kw):
+            mod = CovariateModel(**kw).fit(f)
+            llm_models[str(kw)] = mod
+            return pd.Series(mod.posterior(f)["intensite_post"], index=f.index)
+
+        llm_cands = {
+            "note LLM seule (secteur × taille)": f[LLM_COL],
+            "v1 sans NAF ni note LLM (témoin)": post(naf=False),
+            "v1 : note LLM à la place du NAF": post(llm=LLM_COL, naf=False),
+            "v1 : NAF + note LLM": post(llm=LLM_COL),
+        }
     eff = f["effectif_entreprise"]
     cands = {
         "v0 : moyenne du secteur (NAF)": v0["prior_moyenne"],
@@ -131,6 +148,7 @@ def main() -> None:
         "v1 : covariables + offres, à sens unique (production)": pd.Series(
             v1["intensite_post"], index=f.index
         ),
+        **llm_cands,
         "GBM (arbres boostés), hors échantillon": gbm,
         # volume attendu (intensité × effectif) : ce que classe c_embauche
         "v0 : volume attendu (× effectif)": v0["intensite_post"] * eff,
@@ -153,6 +171,32 @@ def main() -> None:
     coefs = coefs.drop(index=[c for c in coefs.index if c.startswith("naf_")]).round(3)
     coefs["effet ×"] = np.exp(coefs["coef"]).round(2)
 
+    llm_txt = "Grille LLM absente (`scripts/build_grille_llm.py`) : section non calculée."
+    key = str({"llm": LLM_COL, "naf": False})
+    if key in llm_models:
+        lm = llm_models[key].res
+        lc = pd.DataFrame(
+            {"coef": lm.params, "IC bas": lm.conf_int()[0], "IC haut": lm.conf_int()[1]}
+        )
+        lc = lc.loc[[c for c in lc.index if c.startswith("llm_")]].round(3)
+        lc["effet ×"] = np.exp(lc["coef"]).round(2)
+        src = f.get("note_llm_source", pd.Series(dtype=object)).value_counts(normalize=True)
+        llm_txt = (
+            "Note 0–3 donnée par un LLM (Qwen 2.5 14B, consigne v3) pour chaque NAF × taille "
+            "d'établissement, **sans voir aucune offre** (méthode : `docs/PISTE_DOMAINES_LLM.md`). "
+            "Entrée en indicatrices cumulées (note ≥ 1, ≥ 2, ≥ 3) : « effet × » de chaque marche.\n\n"
+            + md(lc)
+            + "\n\nSource de la note (entreprises) : "
+            + ", ".join(f"{k} {v:.1%}" for k, v in src.items())
+            + " (division / taille = repli pour les NAF non notés).\n\n"
+            "Écarts d'AUC par bootstrap apparié (300 tirages, IC à 90 %, mesurés le 28/11) : "
+            "note LLM à la place du NAF − production v1 = +0,013 [−0,010 ; +0,038] (besoin caché), "
+            "+0,009 [−0,005 ; +0,025] (besoin futur) ; note LLM − témoin sans secteur = +0,025 "
+            "[+0,012 ; +0,037] et +0,017 [+0,008 ; +0,025] ; NAF − témoin = +0,010 [−0,016 ; "
+            "+0,036] et +0,006 [−0,012 ; +0,024]. **La note LLM apporte une information "
+            "sectorielle significative, les ~60 indicatrices NAF non** ; l'écart LLM − NAF est "
+            "positif mais dans le bruit. Choix (D45) : la note LLM remplace le NAF en production."
+        )
     head = (
         f"Coupure au {cut.date()} : {len(before):,} offres avant, {len(after):,} après. "
         f"Besoin caché : {int(y_hid.sum())} entreprises sur {len(y_hid):,} ; "
@@ -189,6 +233,10 @@ retire l'avantage mécanique des grandes entreprises (qui publient plus).
 (surdispersion).
 
 {md(coefs)}
+
+## Note LLM secteur × taille (T77)
+
+{llm_txt}
 
 ## Hypothèses du modèle : vérification (modèle de production, toutes les offres)
 

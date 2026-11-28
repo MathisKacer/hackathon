@@ -14,6 +14,13 @@
 
 ---
 
+### D45 — Note LLM secteur × taille à la place des indicatrices NAF dans le score v1 (2026-11-28, @mathis)
+**Contexte :** T77 (piste d'Emma, `docs/PISTE_DOMAINES_LLM.md`) : grille NAF × 4 tailles d'établissement × 5 domaines, note 0–3, remplie par Qwen 2.5 14B (consigne v3, Colab GPU) pour les 360 NAF qui couvrent 95 % des établissements (les 358 autres en cours). Rouvre D21 (domaines autres que data).
+**Décision :** dans le score v1 (D33), si la note du domaine existe, elle **remplace** les ~60 indicatrices de division NAF (3 indicatrices cumulées : note ≥ 1, ≥ 2, ≥ 3). NAF non noté → moyenne de sa division (même taille), puis de la taille. `score_version = "v1_covariables_llm"`. Sans grille : v1 inchangé.
+**Pourquoi :** validation temporelle (`docs/EVAL_SCORE.md`) : la note LLM apporte une information significative au-delà des autres covariables (AUC besoin caché +0,025, IC 90 % [+0,012 ; +0,037]) alors que les indicatrices NAF non (+0,010 [−0,016 ; +0,036]) ; LLM − NAF = +0,013 (dans le bruit). Moins de paramètres, et surtout transposable aux domaines sans offres.
+**Alternatives écartées :** NAF + note LLM (pas mieux que NAF seul, colinéaire) ; note LLM seule sans offres ni covariables (AUC 0,81, en dessous du v1).
+**Conséquences :** le LLM qualifie des **secteurs** (jamais une entreprise) ; afficher « d'après le secteur et la taille ». Grille dans `data/processed/grille_domaines.parquet` (hors Git, à partager). Relecture humaine à l'aveugle à faire (`data/relecture_grille.csv`). Ouvre la voie aux 5 domaines (D21).
+
 ### D44 — Compétences du profil modifiées une à une et enregistrées aussitôt (2026-11-27, @emma)
 **Contexte :** T86, demande d'Emma : pouvoir supprimer et enregistrer les compétences une à une, et retirer le bouton « Enregistrer mes compétences » (D41, D42).
 **Décision :** Mon espace › Mon profil › Mes compétences (`app/cv_ui.py › profile_skills_editor`) : **une étiquette par compétence avec ✕** (clic → retirée du profil tout de suite) ; un champ « **Ajouter une compétence** » (liste ou texte libre, `accept_new_options`) qui l'enregistre dès qu'on la choisit puis se vide ; le **dépôt du CV** ajoute ses compétences au profil d'un coup (chacune reste supprimable). **Plus de bouton « Enregistrer ».** Chaque changement est aussi répercuté sur la recherche en cours (liste d'Explorer). `account_page(profile_editor=)` reçoit `(profile, save)` ; `save` écrit aussitôt (`app/compte.py`). La liste d'Explorer (Filtres › Ton CV) ne change que la recherche, pas le profil (choix par défaut, la question restait ouverte).
