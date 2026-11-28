@@ -364,3 +364,4 @@
 ## 2026-11-28 — T62 : vidéo « parcours complet »
 
 - `scripts/demo_compte.py` (compte de démo, 6 candidatures aux statuts variés, une à relancer) et `scripts/demo_video_complet.py` (intro → Mon compte → logo → Rechercher → zoom + point orange → Entreprises « Apple »). Résultat `data/demo/demo_complet.mp4`, 54 s.
+- Ordre revu : Mon compte à la fin ; compte « moussaillon » (affiché « Bonjour Moussaillon » : `profile_header` met la 1re lettre en majuscule, l'identifiant reste en minuscules) ; boussole de chargement (T96) visible dans la vidéo. 51 s.

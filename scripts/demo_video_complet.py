@@ -1,15 +1,15 @@
-"""T62 — Vidéo de démo « parcours complet » : intro → Mon compte → accueil → carte → Entreprises.
+"""T62 — Vidéo de démo « parcours complet » : intro → accueil → carte → Entreprises → Mon compte.
 
     uv run python scripts/demo_compte.py     # compte de démo + candidatures (une fois)
     uv run --with playwright --with imageio-ffmpeg python scripts/demo_video_complet.py
     # → data/demo/demo_complet.mp4 (avec data/demo/intro.mp4 devant, si elle existe)
     # --essai : captures d'écran de chaque étape, sans vidéo
 
-Parcours (compte déjà connecté, hors vidéo) :
-1. « Mon compte » : les candidatures (statuts variés, une à relancer) ;
-2. clic sur le logo Compass (en haut à gauche) → accueil déjà rempli (Rennes, stage, data) ;
-3. « Rechercher » → carte ; zoom sur Rennes, clic sur un point orange (fenêtre de l'entreprise) ;
-4. « Entreprises » (en haut à droite) → « Apple » → résultats.
+Parcours (compte « moussaillon » déjà connecté, hors vidéo) :
+1. accueil déjà rempli (Rennes, stage, data) → « Rechercher » → carte ;
+2. zoom sur Rennes, clic sur un point orange (fenêtre de l'entreprise) ;
+3. « Entreprises » (en haut à droite) → « Apple » → résultats ;
+4. « Mon compte » (en haut à droite) : les candidatures (statuts variés, une à relancer).
 """
 
 from __future__ import annotations
@@ -128,30 +128,18 @@ def main() -> None:
         page = ctx.new_page()
         t_page = time.monotonic()
         d = Demo(page, shots)
-        # Hors vidéo : connexion, accueil rempli, puis « Mon compte »
+        # Hors vidéo : connexion, puis accueil rempli
         login(d, a.url)
         page.get_by_role("link", name="Compass").first.click()
-        d.idle()
-        fill(d, a.ville, a.contrat)
-        page.get_by_role("link", name="Mon compte").first.click()
-        page.get_by_text("Où en sont tes candidatures").first.wait_for(timeout=60_000)
-        d.idle()
-        page.mouse.move(W * 0.7, H * 0.8)
-        t0 = time.monotonic() - t_page
-
-        # 1. Mon compte : les candidatures
-        d.snap("compte")
-        cards = page.locator('[class*="st-key-espace_candidature_"]')
-        for i in range(min(cards.count(), 3)):
-            d.move_to(cards.nth(i), 0.3, 0.5)
-            d.pause(a.pause_compte / 3)
-        # 2. Logo Compass → accueil
-        d.click(page.get_by_role("link", name="Compass").first)
         page.get_by_role("button", name="Rechercher").wait_for(timeout=60_000)
         d.idle()
+        fill(d, a.ville, a.contrat)
+        page.mouse.move(W * 0.5, H * 0.75)
+        t0 = time.monotonic() - t_page
+
+        # 1. Accueil → Rechercher → carte, zoom, point orange
         d.snap("accueil")
         d.pause(a.pause_accueil)
-        # 3. Rechercher → carte, zoom, point orange
         launch(d)
         d.snap("carte")
         d.pause(a.pause_carte)
@@ -166,7 +154,7 @@ def main() -> None:
         d.pause(0.8)
         d.snap("point")
         d.pause(a.pause_point)
-        # 4. Entreprises → Apple
+        # 3. Entreprises → Apple
         d.click(page.get_by_role("link", name="Entreprises").first)
         d.idle()
         d.click(page.get_by_label("Entreprise", exact=True))
@@ -177,6 +165,16 @@ def main() -> None:
         d.pause(0.8)
         d.snap("entreprises")
         d.pause(a.pause_entreprises)
+        # 4. Mon compte : les candidatures
+        d.click(page.get_by_role("link", name="Mon compte").first)
+        page.get_by_text("Où en sont tes candidatures").first.wait_for(timeout=60_000)
+        d.idle()
+        d.snap("compte")
+        cards = page.locator('[class*="st-key-espace_candidature_"]')
+        for i in range(min(cards.count(), 3)):
+            d.move_to(cards.nth(i), 0.3, 0.5)
+            d.pause(a.pause_compte / 3)
+        d.pause(1.0)
         raw = None if a.essai else Path(page.video.path())
         ctx.close()
         browser.close()

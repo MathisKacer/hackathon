@@ -42,8 +42,8 @@ INIT_JS = """
     document.addEventListener('mousedown', () => { c.style.width = c.style.height = '14px'; }, true);
     document.addEventListener('mouseup', () => { c.style.width = c.style.height = '22px'; }, true);
     const s = document.createElement('style');
-    s.textContent = '[data-testid="stStatusWidget"],[data-testid="stToolbar"],'
-      + '[data-testid="stDecoration"]{visibility:hidden!important}';
+    // la boussole de chargement (T96) reste visible ; seule la barre colorée du haut est masquée
+    s.textContent = '[data-testid="stDecoration"]{visibility:hidden!important}';
     document.head.appendChild(s);
   };
   document.addEventListener('DOMContentLoaded', add);

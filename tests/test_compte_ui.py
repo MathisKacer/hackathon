@@ -192,7 +192,7 @@ def test_full_app_runs_with_account_box(tmp_path, monkeypatch):
     at.switch_page(str(app_dir / "vues" / "mon_espace.py"))
     at.run()
     assert not at.exception, at.exception
-    assert any("<h1>Bonjour celia</h1>" in m.value for m in at.markdown)
+    assert any("<h1>Bonjour Celia</h1>" in m.value for m in at.markdown)  # majuscule affichée
     assert "Mon compte" in [p.label for p in at.get("page_link")]  # barre du haut, connecté
     assert any(s.value == "Mes compétences" for s in at.subheader)  # T81 : profil = compétences
     st.cache_data.clear()

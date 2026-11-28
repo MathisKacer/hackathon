@@ -1,6 +1,6 @@
 """T62 — Compte de démo avec des candidatures variées (vidéo : scripts/demo_video_complet.py).
 
-    uv run python scripts/demo_compte.py      # (re)crée le compte « demo.compass »
+    uv run python scripts/demo_compte.py      # (re)crée le compte « moussaillon »
 
 Le compte est recréé à chaque fois (seul ce compte est touché, dans data/app/radar.db, hors Git).
 Son mot de passe est tiré au hasard et écrit dans data/demo/.compte_demo (hors Git) : il ne sert
@@ -18,7 +18,7 @@ from radar import accounts
 
 ROOT = Path(__file__).resolve().parents[1]
 CRED_FILE = ROOT / "data" / "demo" / ".compte_demo"
-USERNAME = "demo.compass"
+USERNAME = "moussaillon"  # affiché « Moussaillon » (identifiants en minuscules)
 
 # (libellé, siret, siren, commune, secteur, taille, statut, envoyée il y a N jours, note)
 CANDIDATURES = [
@@ -57,6 +57,10 @@ def main() -> None:
     ).fetchone()
     if old:
         accounts.delete_user(con, old[0])
+    for legacy in ("demo.compass",):  # ancien nom du compte de démo
+        row = con.execute("SELECT id FROM users WHERE username = ?", (legacy,)).fetchone()
+        if row:
+            accounts.delete_user(con, row[0])
     password = new_password()
     uid = accounts.create_user(con, USERNAME, password)
     now = datetime.now(UTC)

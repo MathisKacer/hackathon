@@ -247,7 +247,8 @@ def profile_header(username: str, tagline: str) -> None:
     initial = html.escape(username[:1].upper() or "?")
     st.markdown(
         f"<div class='page-head'><span class='page-avatar'>{initial}</span>"
-        f"<h1>Bonjour {html.escape(username)}</h1><p>{html.escape(tagline)}</p></div>",
+        f"<h1>Bonjour {html.escape(username[:1].upper() + username[1:])}</h1>"
+        f"<p>{html.escape(tagline)}</p></div>",
         unsafe_allow_html=True,
     )
 
