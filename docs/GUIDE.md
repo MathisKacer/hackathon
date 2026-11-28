@@ -471,3 +471,26 @@ Case vide quand SIRENE n'a pas l'information. **Pas de total calculé** : additi
 
 Dans la fiche d'un site et dans la fiche d'une entreprise, bloc **« Comment la contacter ? »** : « Son site web » et « Sa page recrutement » (recherches Google), « Sur LinkedIn » (recherche d'entreprises ; LinkedIn demande d'être connecté). Rien n'est envoyé tant qu'on ne clique pas. Nos données ne contiennent aucune adresse de site (L30). Code : `radar.fiche.contact_searches`, `_how_to_contact` (`app/fiche_ui.py`).
 
+---
+
+## La fiche : en-tête et onglets (T89)
+
+- **En-tête** : initiale, nom, activité ; pastilles (site : lieu et distance, taille du site, priorité ; entreprise : nombre de sites, taille officielle, catégorie) ; alerte si l'entreprise est en difficulté ; « Fait partie de … · Voir toute l'entreprise ».
+- **Boutons** : favori, « Son site web », « Sa page recrutement », « Sur LinkedIn ».
+- **Onglets** : *Résumé* (candidature spontanée, pourquoi elle est recommandée, besoin dans le domaine), *Offres*, *Sites (N)* (fiche entreprise seulement), *Infos* (adresse, SIRET, liens, BODACC ; pour l'entreprise : taille officielle et Annuaire).
+- Code : `app/fiche_ui.py` (`_identity`, `_actions`, `fiche_content`, `company_content`), `fiche_header` et `chip` dans `app/style.py`. Un nouveau bloc va dans l'onglet qui lui correspond.
+
+---
+
+## Rappels de relance (T90)
+
+Dans **Mon espace › Mes candidatures** : date d'envoi (posée quand on coche « Candidaté ») et de dernière relance. Après **15 jours** sans suite (statut *Envoyée* ou *Relancée*) : pastille « À relancer », candidature en tête, message et tuile « à relancer ». **« J'ai relancé »** passe au statut *Relancée* et relance le compte de 15 jours. Décocher « Candidaté » efface les dates. Les candidatures cochées avant T90 partent de la date de mise en favori (indiqué à l'écran). Aucun e-mail ni notification : le rappel se voit en ouvrant Mon espace.
+
+Code : `radar/accounts.py` (`RELANCE_DELAY`, `a_relancer`, colonnes `envoyee_le`, `relancee_le` ajoutées automatiquement aux bases existantes), `app/vues/mon_espace.py`.
+
+---
+
+## Télécharger ses candidatures (T91)
+
+Dans **Mon espace › Mes candidatures**, « Télécharger mes candidatures » donne un fichier CSV (`candidatures_AAAA-MM-JJ.csv`) : nom, type, statut, envoyée le, relancée le, ville, note, lien de l'offre. Séparateur « ; » et UTF-8 avec BOM (colonnes et accents corrects dans Excel en français). Une cellule qui commencerait comme une formule est précédée d'une apostrophe (injection CSV). Code : `radar/export.py` ; tests : `tests/test_export.py`.
+

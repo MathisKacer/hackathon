@@ -7,7 +7,8 @@ Toutes les sources sont ouvertes et sans clé ; chaque collecte est mise en cach
 - `sirene_extra()` : date de création, catégorie juridique, ESS, société à mission ;
 - `data_density()` : nombre d'établissements de secteurs data (NAF 62, 63.1, 72.19, 73.20, 58.2)
   à moins de `radius_km` (effet d'agglomération : technopôles) ;
-- `build_features()` : une ligne par SIREN, prête pour la régression.
+- `build_features()` : une ligne par SIREN, prête pour la régression ; ajoute la note LLM
+  secteur × taille de l'établissement principal (`note_llm_<domaine>`, T77) si la grille existe.
 """
 
 from __future__ import annotations
@@ -23,6 +24,7 @@ import requests
 from radar.collect.bodacc import EXPORT_URL
 from radar.collect.sirene import URL_UNITES_LEGALES
 from radar.config import PATHS, USER_AGENT
+from radar.score.llm_grid import establishment_notes, load_grid
 
 log = logging.getLogger(__name__)
 
@@ -126,6 +128,11 @@ def build_features(ent: pd.DataFrame, today: date | None = None) -> pd.DataFrame
         densite_data=("densite_data", "max"),
     )
     f = agg.join(main[["naf_section", "naf_division", "naf", "categorie"]])
+    # T77 : note LLM (secteur × taille) de l'établissement principal, si la grille existe
+    grid = load_grid()
+    if grid is not None:
+        notes = establishment_notes(main.reset_index(), grid).set_index(main.index)
+        f = f.join(notes)
 
     extra = sirene_extra(f.index.tolist()).set_index("siren")
     f = f.join(extra)

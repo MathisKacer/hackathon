@@ -340,3 +340,42 @@ def test_old_favoris_table_gets_statut(tmp_path):
     c = connect(path)
     assert "statut" in {r[1] for r in c.execute("PRAGMA table_info(favoris)")}
     c.close()
+
+
+def test_relance_after_15_days(con):
+    """T90 : « À relancer » après 15 jours ; la relance fait repartir le compte."""
+    from radar.accounts import a_relancer, add_favorite, list_favorites, update_favorite
+
+    uid = create_user(con, "celia", "Radar-Demo-2026")
+    add_favorite(con, uid, "entreprise", "1", "ACME", now=T0 - timedelta(days=40))
+
+    def fav():
+        return list_favorites(con, uid)[0]
+
+    def days(n):
+        return T0 + timedelta(days=n)
+
+    assert not a_relancer(fav(), days(100))  # pas candidaté
+    update_favorite(con, uid, "entreprise", "1", candidate=True, now=T0)
+    update_favorite(con, uid, "entreprise", "1", candidate=True, now=days(9))  # date gardée
+    assert fav()["envoyee_le"] == T0 and not fav()["date_estimee"]
+    assert not a_relancer(fav(), days(14)) and a_relancer(fav(), days(15))
+    update_favorite(con, uid, "entreprise", "1", statut="Relancée", now=days(16))
+    assert not a_relancer(fav(), days(30)) and a_relancer(fav(), days(31))
+    update_favorite(con, uid, "entreprise", "1", statut="Entretien")
+    assert not a_relancer(fav(), days(200))  # il y a une suite
+    update_favorite(con, uid, "entreprise", "1", candidate=False)
+    assert con.execute("SELECT envoyee_le, relancee_le FROM favoris").fetchone() == ("", "")
+
+
+def test_old_candidature_uses_favorite_date(con):
+    """Candidature cochée avant T90 : date de mise en favori, signalée comme estimée."""
+    from radar.accounts import a_relancer, add_favorite, list_favorites
+
+    uid = create_user(con, "celia", "Radar-Demo-2026")
+    add_favorite(con, uid, "offre", "x", "Stage", now=T0)
+    with con:
+        con.execute("UPDATE favoris SET candidate = 1")
+    f = list_favorites(con, uid)[0]
+    assert f["date_estimee"] and f["envoyee_le"] == T0
+    assert a_relancer(f, T0 + timedelta(days=15))

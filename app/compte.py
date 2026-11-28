@@ -325,6 +325,7 @@ def account_page(
     favs = accounts.list_favorites(con, user["id"])
     applied = [f for f in favs if f["candidate"]]
     interviews = sum(f["statut"] == "Entretien" for f in applied)
+    n_due = sum(accounts.a_relancer(f) for f in applied)  # T90
     searches = accounts.list_saved_searches(con, user["id"])
     counts = (
         (len(applied), "candidature", "#1a56db"),
@@ -332,12 +333,13 @@ def account_page(
         (len(favs), "favori", "#e8590c"),
         (len(searches), "recherche enregistrée", NAVY),
     )
-    kpi_tiles(
-        [
-            Tile(str(n), " ".join(w + ("s" if n > 1 else "") for w in words.split()), color)
-            for n, words, color in counts
-        ]
-    )
+    tiles = [
+        Tile(str(n), " ".join(w + ("s" if n > 1 else "") for w in words.split()), color)
+        for n, words, color in counts
+    ]
+    if n_due:  # T90 : tuile affichée seulement quand il y a quelque chose à faire
+        tiles.insert(0, Tile(str(n_due), "à relancer", "#c2410c"))
+    kpi_tiles(tiles)
 
     names = [":material/send: Mes candidatures", ":material/star: Mes favoris"]
     names += [":material/history: Mes recherches", ":material/person: Mon profil"]

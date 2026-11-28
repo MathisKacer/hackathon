@@ -47,8 +47,17 @@ NUMERIC = [
 # séparation complète (coefficient → −∞, elles ne seraient jamais recommandées).
 
 
-def design(f: pd.DataFrame, divisions: list[str] | None = None) -> tuple[pd.DataFrame, list[str]]:
-    """Matrice des covariables (une ligne par SIREN). `divisions` : modalités retenues."""
+def design(
+    f: pd.DataFrame,
+    divisions: list[str] | None = None,
+    llm: str | None = None,
+    naf: bool = True,
+) -> tuple[pd.DataFrame, list[str]]:
+    """Matrice des covariables (une ligne par SIREN). `divisions` : modalités retenues.
+
+    `llm` : colonne de la note LLM du domaine (T77, 0–3), ajoutée en indicatrices (note ≥ 1,
+    ≥ 2, ≥ 3 : échelle ordinale, pas d'intervalle supposé). `naf=False` : sans les indicatrices
+    de division NAF (la note LLM porte alors seule l'information du secteur)."""
     x = pd.DataFrame(index=f.index)
     x["log_effectif"] = np.log(f["effectif_entreprise"].clip(lower=10))
     x["log_n_etab"] = np.log(f["n_etab"].clip(lower=1))
@@ -60,6 +69,12 @@ def design(f: pd.DataFrame, divisions: list[str] | None = None) -> tuple[pd.Data
     x["ess"] = f["ess"].fillna(False).astype(float)
     for c in ("ETI", "GE"):
         x[f"cat_{c}"] = (f["categorie"] == c).astype(float)
+    if llm:
+        note = f[llm].fillna(f[llm].median()).round()
+        for k in (1, 2, 3):
+            x[f"llm_ge{k}"] = (note >= k).astype(float)
+    if not naf:
+        return sm.add_constant(x.astype(float), has_constant="add"), []
     div = f["naf_division"].fillna("?").astype(str)
     if divisions is None:
         counts = div.value_counts()
@@ -99,13 +114,16 @@ def mle_phi(y: np.ndarray, m: np.ndarray) -> float:
 class CovariateModel:
     one_sided: bool = True  # a posteriori à sens unique (D33), voir posterior()
 
+    def __init__(self, llm: str | None = None, naf: bool = True):
+        self.llm, self.naf = llm, naf
+
     """Régression de Poisson (offset log E), erreurs-types **robustes** (sandwich, la variance
     réelle dépasse celle de Poisson) ; dispersion φ par maximum de vraisemblance binomiale
     négative, **par tranche d'effectif** (elle n'est pas constante, D33) → a priori Gamma."""
 
     def fit(self, f: pd.DataFrame) -> CovariateModel:
         fit_rows = f[f["E"] > 0]
-        x, self.divisions = design(fit_rows)
+        x, self.divisions = design(fit_rows, llm=self.llm, naf=self.naf)
         # Colonnes constantes (ex. aucune société à mission dans l'échantillon) : matrice
         # singulière pour IRLS → retirées ; coefficient 0 à la prédiction (reindex/fillna).
         x = x.loc[:, (x.std() > 0) | (x.columns == "const")]
@@ -129,7 +147,7 @@ class CovariateModel:
 
     def prior_mean(self, f: pd.DataFrame) -> np.ndarray:
         """μ_i : offres du domaine attendues pour 100 salariés, d'après les covariables."""
-        x, _ = design(f, self.divisions)
+        x, _ = design(f, self.divisions, llm=self.llm, naf=self.naf)
         return np.exp(x.to_numpy(float) @ self.res.params.reindex(x.columns).fillna(0).to_numpy())
 
     def posterior(self, f: pd.DataFrame) -> pd.DataFrame:

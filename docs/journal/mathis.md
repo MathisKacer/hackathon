@@ -315,3 +315,10 @@
 
 **Prochaine étape :**
 - Pitch du projet → remplir `docs/PROJET.md` et découper en tâches dans `docs/TACHES.md`.
+
+## 2026-11-28 — T77 : grille LLM secteur × taille × domaine, branchée dans le score
+
+- Reprise de la piste d'Emma (`docs/PISTE_DOMAINES_LLM.md`). `radar/score/llm_grid.py` + `scripts/build_grille_llm.py` (API compatible OpenAI, cache par NAF, JSON validé) + carnet `notebooks/grille_llm_colab.ipynb` (Ollama sur GPU Colab).
+- Qwen 2.5 7B sur CPU : trop lent (~35 s/NAF) et notes fausses (banques data 0). Qwen 2.5 14B sur T4 Colab : bon. Consignes v1 (trop de 3) → v2 (cœur de métier sous-noté) → **v3** (retenue). 360 NAF (95 % des établissements) en ~1 h 50 ; les 358 autres en cours.
+- Branchement (D45) : la note remplace les indicatrices NAF dans le v1. Validation temporelle : note LLM − témoin +0,025 AUC (significatif), NAF − témoin +0,010 (non) ; LLM − NAF +0,013 (bruit). `docs/EVAL_SCORE.md` mis à jour.
+- À faire : relecture à l'aveugle (`data/relecture_grille.csv`), remplacer la grille par les 718 NAF, partager le fichier, afficher la note dans la fiche (@maxence), étendre aux 5 domaines (D21).

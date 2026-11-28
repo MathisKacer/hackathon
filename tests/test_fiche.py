@@ -207,7 +207,7 @@ def test_render_fiche(monkeypatch):
     at.run()
     assert not at.exception
     md = [m.value for m in at.markdown]
-    assert "### ACME" in md
+    assert any("<div class='fiche-title'>ACME</div>" in m for m in md)  # en-tête (T89)
     assert any("Recommandée car" in i.value for i in at.info)  # colonne T32
     assert any(m.startswith("Niveau de preuve") and "moyen" in m for m in md)
     assert any("intervalle crédible à 90 %" in m for m in md)
@@ -342,8 +342,9 @@ open_fiche("11111111100029", None, "data")
     assert any(m.value.startswith("Fait partie de **ACME** · 3 sites") for m in at.markdown)
     next(b for b in at.button if b.label == "Voir toute l'entreprise").click()
     at.run()
-    assert "### ACME" in [m.value for m in at.markdown]
-    assert any("3 sites en France" in c.value for c in at.caption)
+    assert any("<div class='fiche-title'>ACME</div>" in m.value for m in at.markdown)
+    assert any("3 sites en France</span>" in m.value for m in at.markdown)  # pastille (T89)
+    assert [t.label for t in at.tabs] == ["Résumé", "Offres", "Sites (3)", "Infos"]
     assert any(b.label == "← Retour au site" for b in at.button)
     next(b for b in at.button if b.label == "← Retour au site").click()
     at.run()

@@ -110,6 +110,19 @@ _CSS = """
 /* Logo « Compass » de la barre du haut, un peu plus grand que la taille « large » de Streamlit */
 img[data-testid="stLogo"], [data-testid="stHeaderLogo"] img {{
     height: 2.4rem !important; max-height: 2.4rem !important; width: auto !important; }}
+
+/* En-tête des fiches (T89, @celia) : initiale, nom, pastilles — couleurs du thème (T93) */
+.fiche-head {{ display: flex; align-items: center; gap: .9rem; margin-bottom: .55rem; }}
+.fiche-avatar {{ width: 3.1rem; height: 3.1rem; border-radius: 14px; flex: none;
+                display: flex; align-items: center; justify-content: center;
+                font-size: 1.4rem; font-weight: 700; color: #fff;
+                background: linear-gradient(135deg, #1B2A6B, #3B5BDB); }}
+.fiche-title {{ font-size: 1.35rem; font-weight: 700; color: {title}; line-height: 1.25; }}
+.fiche-sub {{ font-size: .88rem; color: {muted}; }}
+.fiche-chips {{ display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .6rem; }}
+.fiche-chips .radar-pill {{ font-size: .8rem; }}
+.radar-chip {{ display: inline-block; padding: .12rem .6rem; border-radius: 999px;
+              font-size: .8rem; color: {title}; background: rgba(59, 91, 219, {tint}); }}
 </style>
 """
 
@@ -159,6 +172,23 @@ def profile_header(username: str, tagline: str) -> None:
         f"<div class='radar-hero compact'><div class='who'><span class='radar-avatar'>{initial}"
         f"</span><div><h1>Bonjour {html.escape(username)}</h1><p>{html.escape(tagline)}</p>"
         "</div></div></div>",
+        unsafe_allow_html=True,
+    )
+
+
+def chip(text: str) -> str:
+    """Pastille grise (HTML) pour une information neutre."""
+    return f"<span class='radar-chip'>{html.escape(text)}</span>"
+
+
+def fiche_header(title: str, subtitle: str, chips: list[str]) -> None:
+    """En-tête d'une fiche (T89). `chips` : HTML déjà échappé (chip ou pill)."""
+    initial = html.escape(next((c for c in title if c.isalnum()), "?").upper())
+    st.markdown(
+        f"<div class='fiche-head'><span class='fiche-avatar'>{initial}</span><div>"
+        f"<div class='fiche-title'>{html.escape(title)}</div>"
+        f"<div class='fiche-sub'>{html.escape(subtitle)}</div></div></div>"
+        f"<div class='fiche-chips'>{''.join(chips)}</div>",
         unsafe_allow_html=True,
     )
 

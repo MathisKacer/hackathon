@@ -20,7 +20,7 @@ import streamlit as st
 from carte import _family_html, _tier_html, offer_signal
 from commun import CHANCE_HELP, MATCH_HELP, get_families, get_place
 from favoris import star_button
-from style import LINK_STYLE
+from style import LINK_STYLE, chip, fiche_header, pill
 
 from radar import fiche
 from radar.candidature import candidature_facts, load_company_scores
@@ -28,7 +28,7 @@ from radar.collect.sirene import tranche_display
 from radar.competences import match_summary
 from radar.domains import load_domains
 from radar.familles import family_signal, mark_family_offers
-from radar.paliers import rule_text, tier_text
+from radar.paliers import rule_text, tier_color, tier_text
 from radar.recruteurs import lba_recruiter_sirets
 from radar.spontaneous import COMPONENTS
 
@@ -85,22 +85,26 @@ def _value(*vals) -> str | None:
 
 
 def _identity(r: pd.Series, c: pd.Series) -> None:
+    """En-tête d'un site (T89) : nom, activité, pastilles lieu / taille / priorité, alerte."""
     name = _value(c.get("nom"), r.get("nom")) or "Entreprise"
     etab = _value(c.get("nom_etablissement"), r.get("nom_etablissement"))
-    st.markdown(f"### {name}" + (f" · {etab}" if etab and etab != name else ""))
-    bits = [
-        _value(c.get("naf_libelle"), r.get("naf_libelle")),
-        tranche_display(_value(c.get("tranche_effectif"), r.get("tranche_effectif"))),
-        {
-            "PME": "PME",
-            "ETI": "ETI (entreprise de taille intermédiaire)",
-            "GE": "Grande entreprise",
-        }.get(str(c.get("categorie")), None),
-        ("Siège" if c.get("siege") is True else "Établissement secondaire")
-        if c.get("siege") is not None and pd.notna(c.get("siege"))
-        else None,
-    ]
-    st.caption(" · ".join(b for b in bits if b))
+    kind = None
+    if c.get("siege") is not None and pd.notna(c.get("siege")):
+        kind = "Siège" if bool(c.get("siege")) else "Établissement secondaire"
+    category = {"PME": "PME", "ETI": "ETI", "GE": "Grande entreprise"}.get(str(c.get("categorie")))
+    activity = _value(c.get("naf_libelle"), r.get("naf_libelle"))
+    place = str(_value(c.get("commune"), r.get("commune")) or "").title()
+    if place and r.get("distance_km") is not None and pd.notna(r.get("distance_km")):
+        place += f" · {r['distance_km']:.1f} km".replace(".", ",")
+    size = tranche_display(_value(c.get("tranche_effectif"), r.get("tranche_effectif")))
+    chips = [chip(x) for x in (place, size) if x]
+    if r.get("palier") is not None and pd.notna(r.get("palier")):
+        chips.append(pill(tier_text(r.get("palier"), with_dots=False), tier_color(r.get("palier"))))
+    fiche_header(
+        f"{name} · {etab}" if etab and etab != name else name,
+        " · ".join(x for x in (activity, category, kind) if x),
+        chips,
+    )
     alerte = _value(r.get("alerte"))
     if alerte:
         coef = r.get("coef_procedure")
@@ -110,7 +114,7 @@ def _identity(r: pd.Series, c: pd.Series) -> None:
             else ""
         )
         (st.error if alerte.startswith("🔴") else st.warning)(
-            f"{alerte}.{reduit} Détail dans « Situation »."
+            f"{alerte}.{reduit} Détail dans l'onglet « Infos »."
         )
 
 
@@ -290,15 +294,23 @@ CONTACT_ICONS = {
 }
 
 
-def _how_to_contact(name: str | None, commune: str | None = None) -> None:
-    """T88 : trois recherches pré-remplies pour trouver à qui envoyer sa candidature."""
+def _actions(name: str | None, commune: str | None, favorite) -> None:
+    """Une ligne de boutons (T89) : l'étoile, puis les recherches pour la contacter (T88).
+
+    `favorite` : fonction qui affiche le bouton favori.
+    """
     searches = fiche.contact_searches(name, commune)
-    if not searches:
-        return
-    st.markdown("#### Comment la contacter ?")
-    for col, (label, url) in zip(st.columns(len(searches)), searches.items(), strict=True):
-        col.link_button(label, url, icon=CONTACT_ICONS.get(label), width="stretch")
-    st.caption("Chaque bouton ouvre une recherche avec le nom de l'entreprise.")
+    cols = st.columns(1 + len(searches))
+    with cols[0]:
+        favorite()
+    for col, (label, url) in zip(cols[1:], searches.items(), strict=True):
+        col.link_button(
+            label,
+            url,
+            icon=CONTACT_ICONS.get(label),
+            width="stretch",
+            help="Ouvre une recherche avec le nom de l'entreprise.",
+        )
 
 
 def _contact(r: pd.Series, c: pd.Series) -> None:
@@ -345,17 +357,22 @@ def fiche_content(siret: str, row: pd.Series | None = None, domaine: str | None 
     _identity(row, c)
     if NAV_KEY in st.session_state and siren:
         _parent_company(siren)
-    _star(siret, row, c)
-    _how_to_contact(
-        _value(c.get("nom"), row.get("nom")), _value(c.get("commune"), row.get("commune"))
+    _actions(
+        _value(c.get("nom"), row.get("nom")),
+        _value(c.get("commune"), row.get("commune")),
+        partial(_star, siret, row, c),
     )
-    if row.get("score") is None or pd.isna(row.get("score")):
-        _site_not_candidate(siret, siren, row, domaine)  # l'essentiel, même sans ville (T78)
-    _why(row)
-    _need(row, domaine)
-    _offers_block(siren, siret)
-    _situation(siren)
-    _contact(row, c)
+    tab_summary, tab_offers, tab_info = st.tabs(["Résumé", "Offres", "Infos"])
+    with tab_summary:
+        if row.get("score") is None or pd.isna(row.get("score")):
+            _site_not_candidate(siret, siren, row, domaine)  # l'essentiel, même sans ville (T78)
+        _why(row)
+        _need(row, domaine)
+    with tab_offers:
+        _offers_block(siren, siret)
+    with tab_info:
+        _contact(row, c)
+        _situation(siren)
 
 
 # --- Entreprise (SIREN) et site (SIRET) dans la même fenêtre (T57) -----------------------
@@ -574,26 +591,21 @@ def company_content(siren: str, domaine: str | None = None) -> None:
         st.write("Entreprise introuvable dans le référentiel (sites d'au moins 10 salariés).")
         return
     s = fiche.company_summary(sites, siren)
-    st.markdown(f"### {s['nom']}")
-    cat = {
-        "PME": "PME",
-        "ETI": "ETI (entreprise de taille intermédiaire)",
-        "GE": "Grande entreprise",
-    }
-    bits = [
-        cat.get(s["categorie"]),
-        s["activite"],
-        f"{s['n_sites']} site{'s' if s['n_sites'] > 1 else ''} en France",
-        f"siège à {s['siege_commune'].title()}" if s["siege_commune"] else None,
-    ]
-    st.caption(" · ".join(b for b in bits if b))
-    _company_headcount(s)
+    category = {"PME": "PME", "ETI": "ETI", "GE": "Grande entreprise"}.get(s["categorie"])
+    head = f"siège à {s['siege_commune'].title()}" if s["siege_commune"] else None
+    n = s["n_sites"]
+    chips = [chip(f"{n} site{'s' if n > 1 else ''} en France")]
+    chips += [chip(x) for x in (s.get("tranche_entreprise"), category) if x]
+    fiche_header(s["nom"], " · ".join(x for x in (s["activite"], head) if x), chips)
     if s["procedure_type"]:
         from radar.procedures import alert_text
 
         txt = alert_text(s["procedure_type"], s["procedure_date"])
-        (st.error if txt.startswith("🔴") else st.warning)(f"{txt}. Détail dans « Situation ».")
-    star_button(
+        (st.error if txt.startswith("🔴") else st.warning)(
+            f"{txt}. Détail dans l'onglet « Infos »."
+        )
+    favorite = partial(
+        star_button,
         "entreprise",
         f"siren:{siren}",
         f"{s['nom']} (toute l'entreprise)",
@@ -605,9 +617,23 @@ def company_content(siren: str, domaine: str | None = None) -> None:
         },
         key=f"fav_entreprise_{siren}",
     )
-    _how_to_contact(s["nom"])
-    _company_candidature(siren, domaine)
+    _actions(s["nom"], None, favorite)
+    tab_summary, tab_offers, tab_sites, tab_info = st.tabs(
+        ["Résumé", "Offres", f"Sites ({len(sites)})", "Infos"]
+    )
+    with tab_summary:
+        _company_candidature(siren, domaine)
+    with tab_offers:
+        _company_offers(siren)
+    with tab_sites:
+        _company_sites_table(siren, sites, place)
+    with tab_info:
+        _company_headcount(s)
+        st.markdown(f"[Annuaire des entreprises]({s['url_annuaire']})")
+        _situation(siren)
 
+
+def _company_offers(siren: str) -> None:
     st.markdown("#### Offres de l'entreprise (tous ses sites)")
     offers = _offers(siren, None)
     if offers.empty:
@@ -631,6 +657,8 @@ def company_content(siren: str, domaine: str | None = None) -> None:
             column_config={"Annonce": st.column_config.LinkColumn("Annonce", display_text="Voir")},
         )
 
+
+def _company_sites_table(siren: str, sites: pd.DataFrame, place) -> None:
     st.markdown(f"#### Ses sites ({len(sites)})")
     # T72 : le nom du site est un lien (clic → fiche du site) ; sans nom propre, « Site de <ville> »
     own = sites["nom_etablissement"].fillna("")
@@ -668,9 +696,6 @@ def company_content(siren: str, domaine: str | None = None) -> None:
         ("Les plus proches de ta ville d'abord. " if place is not None else "")
         + "Sites d'au moins 10 salariés. Clique sur le nom d'un site pour ouvrir sa fiche."
     )
-
-    _situation(siren)
-    st.markdown(f"[Annuaire des entreprises]({s['url_annuaire']})")
 
 
 def _close_fiche() -> None:

@@ -4,6 +4,37 @@
 
 ---
 
+## 2026-11-28 — Tâche T91 : télécharger ses candidatures
+
+**Fait :**
+- `radar/export.py` (CSV pour Excel français, formules neutralisées), bouton dans « Mes candidatures », 4 tests.
+
+**Résultats / chiffres clés :**
+- 390 tests OK.
+
+---
+
+## 2026-11-28 — Tâche T90 : rappels de relance
+
+**Fait :**
+- Colonnes `envoyee_le` et `relancee_le` (migration automatique), règle `a_relancer` (15 jours), affichage et bouton « J'ai relancé » dans « Mes candidatures ».
+
+**Résultats / chiffres clés :**
+- Vérifié dans l'app avec une candidature antidatée de 20 jours. 386 tests OK.
+
+---
+
+## 2026-11-28 — Tâche T89 : fiche plus claire (T92 ajoutée)
+
+**Fait :**
+- En-tête avec pastilles, ligne de boutons, onglets Résumé / Offres / (Sites) / Infos, d'après un croquis validé. Présentation seulement.
+- Ajouté au tableau : adresses des sites web à retravailler (T92).
+
+**Résultats / chiffres clés :**
+- Vérifié avec les vraies données (site, entreprise, entreprise en redressement). 384 tests OK.
+
+---
+
 ## 2026-11-27 — Tâche T88 : « Comment la contacter ? » (T89 à T91 ajoutées)
 
 **Fait :**

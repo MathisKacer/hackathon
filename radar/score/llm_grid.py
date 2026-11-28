@@ -184,3 +184,35 @@ def to_long(responses: list[dict]) -> pd.DataFrame:
 def size_class(tranche_effectif: pd.Series) -> pd.Series:
     """Code INSEE de tranche → libellé de taille de la grille (NaN si < 10 salariés)."""
     return tranche_effectif.map(_TRANCHE_TO_SIZE_KEY).map(SIZE_KEYS)
+
+
+def load_grid(path: Path = GRID_FILE) -> pd.DataFrame | None:
+    """Grille du LLM (format long), ou None si elle n'a pas encore été calculée."""
+    return pd.read_parquet(path) if path.exists() else None
+
+
+def establishment_notes(ent: pd.DataFrame, grid: pd.DataFrame) -> pd.DataFrame:
+    """Note LLM de chaque établissement, une colonne `note_llm_<domaine>` par domaine.
+
+    Clé : NAF × taille de l'établissement. NAF absent de la grille → moyenne de sa division NAF
+    (même taille), puis moyenne de la taille. Colonne `note_llm_source` : "naf", "division",
+    "taille" (repli) ou NaN (établissement de moins de 10 salariés)."""
+    wide = grid.pivot_table(index=["naf", "taille"], columns="domaine", values="note_llm")
+    wide = wide.add_prefix("note_llm_")
+    cols = list(wide.columns)
+    e = pd.DataFrame(
+        {"naf": ent["naf"], "taille": size_class(ent["tranche_effectif"])}, index=ent.index
+    )
+    e["division"] = e["naf"].str[:2]
+    out = e.join(wide, on=["naf", "taille"])
+    src = pd.Series(pd.NA, index=e.index, dtype="object")
+    src[out[cols[0]].notna()] = "naf"
+    g = wide.reset_index().assign(division=lambda d: d["naf"].str[:2])
+    for level, keys in (("division", ["division", "taille"]), ("taille", ["taille"])):
+        means = g.groupby(keys)[cols].mean()
+        miss = out[cols[0]].isna() & e["taille"].notna()
+        fill = e.loc[miss, keys].join(means, on=keys)[cols]
+        out.loc[miss, cols] = fill.to_numpy()
+        src[miss & out[cols[0]].notna()] = level
+    out["note_llm_source"] = src
+    return out[[*cols, "note_llm_source"]]
