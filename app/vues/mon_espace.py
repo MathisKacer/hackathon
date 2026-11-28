@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 import streamlit as st
 from commun import PAGES_DIR, PROFILE_LABELS, get_offers, profile_keys, saved_profile_keys
 from compte import TZ, _con, account_page, current_user
@@ -12,6 +14,7 @@ from recherches import saved_section
 from style import GREEN, RED, pill
 
 from radar import accounts
+from radar.export import candidatures_csv
 
 STATUT_COLORS = {
     "Envoyée": "#1a56db",
@@ -172,6 +175,14 @@ def candidatures_section() -> None:
             icon=":material/schedule_send:",
         )
     applied.sort(key=lambda f: (f["kind"], f["ref"]) not in due)  # à relancer en premier
+    st.download_button(  # T91
+        "Télécharger mes candidatures",
+        data=candidatures_csv(applied),
+        file_name=f"candidatures_{datetime.now(TZ):%Y-%m-%d}.csv",
+        mime="text/csv",
+        icon=":material/download:",
+        help="Tableau à ouvrir dans Excel, LibreOffice ou Google Sheets.",
+    )
     for f in applied:
         kind_ref = f"{f['kind']}_{f['ref']}"
         key = f"fav_statut_{kind_ref}"

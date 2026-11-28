@@ -488,3 +488,9 @@ Dans **Mon espace › Mes candidatures** : date d'envoi (posée quand on coche �
 
 Code : `radar/accounts.py` (`RELANCE_DELAY`, `a_relancer`, colonnes `envoyee_le`, `relancee_le` ajoutées automatiquement aux bases existantes), `app/vues/mon_espace.py`.
 
+---
+
+## Télécharger ses candidatures (T91)
+
+Dans **Mon espace › Mes candidatures**, « Télécharger mes candidatures » donne un fichier CSV (`candidatures_AAAA-MM-JJ.csv`) : nom, type, statut, envoyée le, relancée le, ville, note, lien de l'offre. Séparateur « ; » et UTF-8 avec BOM (colonnes et accents corrects dans Excel en français). Une cellule qui commencerait comme une formule est précédée d'une apostrophe (injection CSV). Code : `radar/export.py` ; tests : `tests/test_export.py`.
+

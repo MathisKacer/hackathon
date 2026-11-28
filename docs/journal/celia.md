@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-11-28 — Tâche T91 : télécharger ses candidatures
+
+**Fait :**
+- `radar/export.py` (CSV pour Excel français, formules neutralisées), bouton dans « Mes candidatures », 4 tests.
+
+**Résultats / chiffres clés :**
+- 390 tests OK.
+
+---
+
 ## 2026-11-28 — Tâche T90 : rappels de relance
 
 **Fait :**
