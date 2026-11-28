@@ -10,6 +10,7 @@
 - **Score plus discriminant (D48)** : intensité et besoin attendu en échelle log au lieu de rangs centiles. Médiane à Rennes 0,60 → 0,21 ; ≥ 0,8 : 289 → 59 entreprises. **0,5 est maintenant un bon score** (à dire au pitch). En alternance, max ≈ 0,7.
 - **Paliers plus sélectifs (D47)** : seuil absolu de besoin attendu en plus. Cibles prioritaires : Rennes 370 → ~57, Lyon 1 055 → ~195, Guéret 0.
 - **Encore (05 h 30, D48 bis, D50)** : collecte Adzuna sur **toute la France** (zone couverte 54 % → 97 %, Île-de-France encore à 35 %) ; poids par défaut **intensité 2 / besoin 4** ; échelle plafonnée au 99,9e centile ; score affiché validé : AUC 0,92 (besoin caché) et 0,95 (besoin futur). **Relancer `build_all.py`.**
+- **Page Entreprises (05 h, @mathis)** : résultats classés par ressemblance (une recherche « AVISIA » montrait d'abord 10 entreprises multi-sites moins proches) ; la ligne « toute l'entreprise » reste juste avant ses sites. « Bonjour … » de Mon compte prend une majuscule.
 - **Carte (D47, D49)** : par défaut seulement les meilleures cibles (20 à 150 points) ; nouveau curseur **« Score minimal sur la carte »** dans Filtres › Classement ; légende sous la carte. La liste garde tout.
 - **@celia (T94)** : seuils à valider (chiffres dans D47 et `GUIDE.md` § « Score et carte »). Reste le bouton « Voir plus » de la liste.
 - **@maxence (D32, paliers)** : `radar/paliers.py` a un 3ᵉ critère par palier (`min_need`) ; `rule_text()` le décrit. La légende de couleur de la carte est inchangée.

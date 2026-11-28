@@ -366,3 +366,5 @@
 - `scripts/demo_compte.py` (compte de démo, 6 candidatures aux statuts variés, une à relancer) et `scripts/demo_video_complet.py` (intro → Mon compte → logo → Rechercher → zoom + point orange → Entreprises « Apple »). Résultat `data/demo/demo_complet.mp4`, 54 s.
 - Ordre revu : Mon compte à la fin ; compte « moussaillon » (affiché « Bonjour Moussaillon » : `profile_header` met la 1re lettre en majuscule, l'identifiant reste en minuscules) ; boussole de chargement (T96) visible dans la vidéo. 51 s.
 - Ajouts : clic sur la fiche Apple Retail France dans Entreprises ; outro animée (`scripts/demo_outro.js` : « O » du logo → bateau, aiguille qui se fixe au départ, logo + slogan). 71 s avec l'intro.
+- Vidéo : recherche « AVISIA » ; outro avec le « O » en personnage qui saute dans le bateau. 74 s.
+- Correction page Entreprises (`radar/recherche.py › with_companies`) : les lignes « toute l'entreprise » passaient toutes devant, une correspondance exacte à un seul site (AVISIA) se retrouvait 11e derrière AVIS LOCATION, PICOTY… ; maintenant tout est classé par ressemblance, l'entreprise juste avant ses sites. Test ajouté.

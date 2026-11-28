@@ -128,13 +128,19 @@ def search_companies(
 
 
 def with_companies(hits: pd.DataFrame, max_companies: int = 10) -> pd.DataFrame:
-    """Résultats regroupés (T57) : d'abord une ligne « entreprise » par SIREN qui a plusieurs
-    sites (toute l'entreprise), dans l'ordre des meilleurs résultats, puis les sites un par un.
+    """Résultats regroupés (T57) : une ligne « entreprise » (toute l'entreprise) par SIREN qui a
+    plusieurs sites, placée juste avant ses sites, puis les sites un par un.
 
+    Tout est classé par ressemblance avec la recherche (`_score` ; une ligne entreprise prend le
+    score de son meilleur site) : une correspondance exacte à un seul site (« AVISIA ») n'est plus
+    repoussée derrière dix entreprises multi-sites moins ressemblantes (« AVIS LOCATION… »).
     Colonne `_type` : "entreprise" ou "site". Une entreprise à un seul site n'a que sa ligne site.
     """
     if hits.empty:
         return hits.assign(_type=pd.Series(dtype=str))
     multi = hits[hits["_n_sites"].fillna(1) > 1]
     companies = multi.drop_duplicates("siren").head(max_companies).assign(_type="entreprise")
-    return pd.concat([companies, hits.assign(_type="site")], ignore_index=True)
+    rows = pd.concat([companies, hits.assign(_type="site")], ignore_index=True)
+    rows["_ordre"] = rows.index  # à score égal : l'ordre d'avant (entreprise avant ses sites)
+    rows = rows.sort_values(["_score", "_ordre"], ascending=[False, True], kind="stable")
+    return rows.drop(columns="_ordre").reset_index(drop=True)

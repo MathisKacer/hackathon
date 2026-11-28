@@ -71,3 +71,28 @@ def test_with_companies_puts_whole_company_first(tmp_path):
     # une entreprise à un seul site n'a pas de ligne « entreprise »
     assert with_companies(search_companies(idx, "societe generale"))["_type"].tolist() == ["site"]
     assert with_companies(search_companies(idx, "zzzzqqq")).empty
+
+
+def test_with_companies_keeps_exact_single_site_match_first(tmp_path):
+    """« AVISIA » (un seul site) passe devant « AVIS LOCATION » (plusieurs sites, moins proche)."""
+    from radar.recherche import with_companies
+
+    p = tmp_path / "entreprises.parquet"
+    pd.DataFrame(
+        {
+            "siret": ["44444444400011", "55555555500011", "55555555500029"],
+            "siren": ["444444444", "555555555", "555555555"],
+            "nom": ["AVISIA", "AVIS LOCATION", "AVIS LOCATION"],
+            "commune": ["PARIS", "NICE", "LYON"],
+            "code_postal": ["75008", "06000", "69000"],
+            "effectif_estime": [30.0, 500.0, 400.0],
+        }
+    ).to_parquet(p)
+    out = with_companies(search_companies(load_index(p), "avisia"))
+    assert out["nom"].tolist() == ["AVISIA", "AVIS LOCATION", "AVIS LOCATION", "AVIS LOCATION"]
+    assert out["_type"].tolist() == [
+        "site",
+        "entreprise",
+        "site",
+        "site",
+    ]  # entreprise avant ses sites

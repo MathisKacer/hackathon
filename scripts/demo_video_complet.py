@@ -8,7 +8,7 @@
 Parcours (compte « moussaillon » déjà connecté, hors vidéo) :
 1. accueil déjà rempli (Rennes, stage, data) → « Rechercher » → carte ;
 2. zoom sur Rennes, clic sur un point orange (fenêtre de l'entreprise) ;
-3. « Entreprises » (en haut à droite) → « Apple » → résultats → clic sur la 1re fiche ;
+3. « Entreprises » (en haut à droite) → « AVISIA » → résultats → clic sur la 1re fiche ;
 4. « Mon compte » (en haut à droite) : les candidatures (statuts variés, une à relancer) ;
 5. outro (scripts/demo_outro.js) : le « O » boussole du logo grossit, monte dans un bateau,
    l'aiguille se fixe quand le bateau démarre, puis logo et slogan.
@@ -96,7 +96,7 @@ def main() -> None:
     p.add_argument("--fondu", type=float, default=0.5)
     p.add_argument("--ville", default="Rennes")
     p.add_argument("--contrat", default="Stage")
-    p.add_argument("--entreprise", default="Apple")
+    p.add_argument("--entreprise", default="AVISIA")
     p.add_argument("--zoom", type=int, default=2, help="niveaux de zoom sur la carte")
     p.add_argument("--pause-compte", type=float, default=6)
     p.add_argument("--pause-accueil", type=float, default=2)
@@ -161,7 +161,7 @@ def main() -> None:
         d.pause(0.8)
         d.snap("point")
         d.pause(a.pause_point)
-        # 3. Entreprises → Apple
+        # 3. Entreprises → AVISIA
         d.click(page.get_by_role("link", name="Entreprises").first)
         d.idle()
         d.click(page.get_by_label("Entreprise", exact=True))
@@ -203,7 +203,7 @@ def main() -> None:
             logo = LOGO_SVG.read_text(encoding="utf-8")
             logo = logo.replace('width="1022" height="216"', 'height="100%"')
             page.evaluate(OUTRO_JS.read_text(encoding="utf-8"), logo)
-            for i, sec in enumerate((1.3, 1.4, 1.4, 1.4, 1.6, 2.4)):  # ~9,5 s
+            for i, sec in enumerate((1.3, 1.4, 1.2, 1.2, 1.4, 1.6, 2.4)):  # ~10,5 s
                 d.pause(sec)
                 d.snap(f"outro_{i}")
         raw = None if a.essai else Path(page.video.path())
