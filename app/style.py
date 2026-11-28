@@ -132,6 +132,17 @@ header[data-testid="stHeader"] button, header[data-testid="stHeader"] a,
 .st-key-entete_inscription [data-testid="stPageLink"] a p {{ color: #fff !important;
     font-weight: 700; }}
 
+/* T96 : indicateur de chargement de Streamlit (pictogrammes de sport) → boussole qui tourne,
+   dans le même gris (couleur du texte à 60 %). Les pictogrammes sont seulement masqués. */
+[data-testid="stStatusWidgetRunningIcon"] {{ position: relative; }}
+[data-testid="stStatusWidgetRunningIcon"] > * {{ opacity: 0 !important; }}
+[data-testid="stStatusWidgetRunningIcon"]::before {{
+    content: ""; position: absolute; inset: 0; background-color: currentColor; opacity: .6;
+    -webkit-mask: url("{boussole}") center / contain no-repeat;
+    mask: url("{boussole}") center / contain no-repeat;
+    animation: boussole-tourne 1.1s linear infinite; }}
+@keyframes boussole-tourne {{ to {{ transform: rotate(360deg); }} }}
+
 /* T93 : page d'accueil — logo en grand, slogan à côté, phrase, recherche centrée */
 .accueil-head {{ display: flex; align-items: center; justify-content: center; gap: 1.6rem;
                 flex-wrap: wrap; margin: 2.2rem 0 .4rem 0; }}
@@ -195,6 +206,14 @@ def _logo_layers() -> dict[str, str]:
 
 
 LOGO_LAYERS = _logo_layers()
+# Boussole de l'indicateur de chargement (T96) : anneau et aiguille, dont la moitié sud est plus
+# pâle pour qu'on la voie tourner. Sert de masque : seule la transparence compte.
+LOADING_COMPASS = _data_uri(
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'>"
+    "<circle cx='30' cy='30' r='26' fill='none' stroke='#000' stroke-width='6'/>"
+    "<path d='M30 9 L37 30 L23 30 Z'/><path d='M30 51 L37 30 L23 30 Z' fill-opacity='.4'/></svg>"
+)
+CSS_IMAGES = {**LOGO_LAYERS, "boussole": LOADING_COMPASS}
 
 
 def _palette() -> dict[str, str]:
@@ -207,12 +226,12 @@ def _palette() -> dict[str, str]:
 
 
 CSS = _CSS.format(
-    **PALETTES["light"], **LOGO_LAYERS
+    **PALETTES["light"], **CSS_IMAGES
 )  # version claire, pour qui l'importe directement
 
 
 def inject_css() -> None:
-    st.markdown(_CSS.format(**_palette(), **LOGO_LAYERS), unsafe_allow_html=True)
+    st.markdown(_CSS.format(**_palette(), **CSS_IMAGES), unsafe_allow_html=True)
 
 
 def hero(title: str, tagline: str) -> None:
