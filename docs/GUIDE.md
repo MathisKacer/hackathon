@@ -471,3 +471,12 @@ Case vide quand SIRENE n'a pas l'information. **Pas de total calculé** : additi
 
 Dans la fiche d'un site et dans la fiche d'une entreprise, bloc **« Comment la contacter ? »** : « Son site web » et « Sa page recrutement » (recherches Google), « Sur LinkedIn » (recherche d'entreprises ; LinkedIn demande d'être connecté). Rien n'est envoyé tant qu'on ne clique pas. Nos données ne contiennent aucune adresse de site (L30). Code : `radar.fiche.contact_searches`, `_how_to_contact` (`app/fiche_ui.py`).
 
+---
+
+## La fiche : en-tête et onglets (T89)
+
+- **En-tête** : initiale, nom, activité ; pastilles (site : lieu et distance, taille du site, priorité ; entreprise : nombre de sites, taille officielle, catégorie) ; alerte si l'entreprise est en difficulté ; « Fait partie de … · Voir toute l'entreprise ».
+- **Boutons** : favori, « Son site web », « Sa page recrutement », « Sur LinkedIn ».
+- **Onglets** : *Résumé* (candidature spontanée, pourquoi elle est recommandée, besoin dans le domaine), *Offres*, *Sites (N)* (fiche entreprise seulement), *Infos* (adresse, SIRET, liens, BODACC ; pour l'entreprise : taille officielle et Annuaire).
+- Code : `app/fiche_ui.py` (`_identity`, `_actions`, `fiche_content`, `company_content`), `fiche_header` et `chip` dans `app/style.py`. Un nouveau bloc va dans l'onglet qui lui correspond.
+

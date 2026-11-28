@@ -92,6 +92,18 @@ CSS = f"""
     box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 4px 14px rgba(16,24,40,.05);
 }}
 
+/* En-tête des fiches (T89) : initiale, nom, pastilles */
+.fiche-head {{ display: flex; align-items: center; gap: .9rem; margin-bottom: .55rem; }}
+.fiche-avatar {{ width: 3.1rem; height: 3.1rem; border-radius: 14px; flex: none;
+                display: flex; align-items: center; justify-content: center;
+                font-size: 1.4rem; font-weight: 700; color: #fff; background: {NAVY}; }}
+.fiche-title {{ font-size: 1.35rem; font-weight: 700; color: #111827; line-height: 1.25; }}
+.fiche-sub {{ font-size: .88rem; color: #6B7280; }}
+.fiche-chips {{ display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .6rem; }}
+.fiche-chips .radar-pill {{ font-size: .8rem; }}
+.radar-chip {{ display: inline-block; padding: .12rem .6rem; border-radius: 999px;
+              font-size: .8rem; color: #374151; background: #EEF1F5; }}
+
 /* Onglets un peu plus marqués */
 [data-testid="stTab"] p {{ font-size: 1rem; font-weight: 600; }}
 </style>
@@ -118,6 +130,23 @@ def profile_header(username: str, tagline: str) -> None:
         f"<div class='radar-hero compact'><div class='who'><span class='radar-avatar'>{initial}"
         f"</span><div><h1>Bonjour {html.escape(username)}</h1><p>{html.escape(tagline)}</p>"
         "</div></div></div>",
+        unsafe_allow_html=True,
+    )
+
+
+def chip(text: str) -> str:
+    """Pastille grise (HTML) pour une information neutre."""
+    return f"<span class='radar-chip'>{html.escape(text)}</span>"
+
+
+def fiche_header(title: str, subtitle: str, chips: list[str]) -> None:
+    """En-tête d'une fiche (T89). `chips` : HTML déjà échappé (chip ou pill)."""
+    initial = html.escape(next((c for c in title if c.isalnum()), "?").upper())
+    st.markdown(
+        f"<div class='fiche-head'><span class='fiche-avatar'>{initial}</span><div>"
+        f"<div class='fiche-title'>{html.escape(title)}</div>"
+        f"<div class='fiche-sub'>{html.escape(subtitle)}</div></div></div>"
+        f"<div class='fiche-chips'>{''.join(chips)}</div>",
         unsafe_allow_html=True,
     )
 

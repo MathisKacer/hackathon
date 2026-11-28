@@ -4,6 +4,17 @@
 
 ---
 
+## 2026-11-28 — Tâche T89 : fiche plus claire (T92 ajoutée)
+
+**Fait :**
+- En-tête avec pastilles, ligne de boutons, onglets Résumé / Offres / (Sites) / Infos, d'après un croquis validé. Présentation seulement.
+- Ajouté au tableau : adresses des sites web à retravailler (T92).
+
+**Résultats / chiffres clés :**
+- Vérifié avec les vraies données (site, entreprise, entreprise en redressement). 384 tests OK.
+
+---
+
 ## 2026-11-27 — Tâche T88 : « Comment la contacter ? » (T89 à T91 ajoutées)
 
 **Fait :**
