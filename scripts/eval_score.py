@@ -28,7 +28,7 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score
 
 from radar.config import FILES, PATHS
-from radar.score.build import EXCLUDED_NAF_PREFIX, _company_table, load_coverage
+from radar.score.build import EXCLUDED_NAF_PREFIX, _company_table, load_coverage, log_scale
 from radar.score.covariates import CovariateModel, gbm_rate_oof
 from radar.score.features import build_features
 from radar.score.intensity import fit_priors, posterior
@@ -138,6 +138,27 @@ def main() -> None:
             "v1 : NAF + note LLM": post(llm=LLM_COL),
         }
     eff = f["effectif_entreprise"]
+    # Score AFFICHÉ (couche orange, D48) : moyenne pondérée des composantes. Sur le besoin
+    # caché (aucune offre avant), « opportunité cachée » vaut 0 partout et la proximité dépend
+    # de l'étudiant : le classement ne dépend que du mélange intensité / besoin attendu
+    # (poids des curseurs). Niveau entreprise ; sans La Bonne Boîte (~1 300 établissements).
+    lam = llm_cands.get("v1 : note LLM à la place du NAF")
+    lam = pd.Series(v1["intensite_post"], index=f.index) if lam is None else lam
+    c_int, c_emb = log_scale(lam), log_scale(lam * eff)
+    shown = {
+        f"score affiché, poids intensité {wi} / besoin {we}"
+        + (" (défaut)" if (wi, we) == (2, 4) else ""): (wi * c_int + we * c_emb) / (wi + we)
+        for wi, we in ((2, 4), (3, 3), (1, 5), (0, 1), (1, 0))
+    }
+    for hi in (0.995, 1.0):  # autres plafonds (D48 : 99,5 % laissait des ex æquo à 1 en tête)
+        ci, ce = log_scale(lam, quantiles=(0.5, hi)), log_scale(lam * eff, quantiles=(0.5, hi))
+        for wi, we in ((3, 3), (2, 4)):
+            shown[f"score affiché {wi} / {we}, échelle plafonnée à {hi:.1%}"] = (
+                wi * ci + we * ce
+            ) / (wi + we)
+    shown["score affiché 3 / 3, ancienne échelle (rangs centiles)"] = (
+        lam.rank(pct=True) + (lam * eff).rank(pct=True)
+    ) / 2
     cands = {
         "v0 : moyenne du secteur (NAF)": v0["prior_moyenne"],
         "v0 : + offres de l'entreprise (D13, actuel)": v0["intensite_post"],
@@ -149,14 +170,15 @@ def main() -> None:
             v1["intensite_post"], index=f.index
         ),
         **llm_cands,
-        "GBM (arbres boostés), hors échantillon": gbm,
         # volume attendu (intensité × effectif) : ce que classe c_embauche
         "v0 : volume attendu (× effectif)": v0["intensite_post"] * eff,
         "v1 : volume attendu (× effectif), sens unique": pd.Series(
             v1["intensite_post"], index=f.index
         )
         * eff,
+        "GBM (arbres boostés) : volume attendu, hors échantillon": gbm * eff,
         "témoin : effectif seul": eff,
+        **shown,
     }
     zone = f["couverture"] > 0
     y_all = (k_after.reindex(f.index).fillna(0) > 0)[zone]

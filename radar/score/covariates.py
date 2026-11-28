@@ -208,13 +208,23 @@ class CovariateModel:
 
 
 def gbm_rate(train: pd.DataFrame, test: pd.DataFrame) -> np.ndarray:
-    """Référence non linéaire : arbres boostés, perte de Poisson sur k/E pondérée par E."""
+    """Référence non linéaire : arbres boostés, perte de Poisson sur le **nombre** d'offres k,
+    log E en variable (pas d'offset possible), puis taux = k prédit / E.
+
+    Ancienne version (k/E pondéré par E) : prédictions quasi constantes avec ~300 entreprises
+    positives sur 150 000, AUC 0,45 (sous le hasard) même sur ses données d'entraînement ;
+    feuilles d'au moins 200 entreprises pour ne pas apprendre le bruit des rares positifs."""
     tr = train[train["E"] > 0]
     xtr, divs = design(tr)
     xte, _ = design(test, divs)
-    model = HistGradientBoostingRegressor(loss="poisson", max_iter=300, learning_rate=0.05)
-    model.fit(xtr, tr["k"] / tr["E"], sample_weight=tr["E"])
-    return model.predict(xte)
+    e_te = test["E"].clip(lower=1e-6)
+    xtr = xtr.assign(log_E=np.log(tr["E"]))
+    xte = xte.assign(log_E=np.log(e_te))
+    model = HistGradientBoostingRegressor(
+        loss="poisson", max_iter=200, learning_rate=0.05, min_samples_leaf=200, random_state=0
+    )
+    model.fit(xtr, tr["k"])
+    return model.predict(xte) / e_te.to_numpy()
 
 
 def gbm_rate_oof(f: pd.DataFrame, n_folds: int = 5, seed: int = 0) -> pd.Series:

@@ -11,8 +11,9 @@ Règle **mixte** : une entreprise atteint un palier si elle est à la fois
   centiles (médiane ~0,6 avant D48) : sans ce seuil, 10 % d'une grande ville (1 000 entreprises à
   Lyon) étaient « prioritaires ». Avec lui, Rennes 20 km ≈ 55 cibles prioritaires, Lyon ≈ 190,
   Guéret aucune (zone sans besoin data mesurable : c'est la vérité à montrer).
-Le score est une moyenne pondérée de composantes dans [0, 1] (D48), pas une probabilité : les libellés parlent
-de **priorité**, jamais de « chance » (la chance de réponse simulée est affichée à part, D23).
+Le score est une moyenne pondérée de composantes dans [0, 1] (D48), pas une probabilité :
+les libellés parlent de **priorité**, jamais de « chance » (la chance de réponse simulée
+est affichée à part, D23).
 """
 
 from __future__ import annotations

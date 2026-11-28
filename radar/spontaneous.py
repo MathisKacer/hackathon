@@ -178,8 +178,10 @@ COMPONENTS: dict[str, tuple[str, str]] = {
 }
 # Poids par défaut (curseurs 0 à 5) : proches du classement D13, avec un peu de proximité.
 DEFAULT_WEIGHTS: dict[str, int] = {
-    "c_intensite": 3,
-    "c_embauche": 3,
+    # D48 bis : validation temporelle du score affiché (docs/EVAL_SCORE.md) — le besoin attendu
+    # prédit mieux que l'intensité par salarié : 2 / 4 > 3 / 3 (top 200 : 72 contre 68)
+    "c_intensite": 2,
+    "c_embauche": 4,
     "c_proximite": 1,
     "c_cachee": 1,
     "c_recruteur_lba": 2,

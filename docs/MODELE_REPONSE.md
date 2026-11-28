@@ -7,19 +7,19 @@
 ## Simulation
 
 - 3,000 étudiants simulés, 45,000 candidatures spontanées vers
-  38,591 établissements réels (score T30, positions SIRENE).
+  38,683 établissements réels (score T30, positions SIRENE).
 - Règle (hypothèses de l'équipe) : `radar/response/params.yaml` ; effet entreprise non observé
   σ = 0.5.
-- Taux de réponse positive simulé : 19.1%.
+- Taux de réponse positive simulé : 19.3%.
 
 ## Résultats (étudiants jamais vus à l'entraînement)
 
 | Indicateur | Valeur |
 |---|---|
-| AUC | **0.626** |
-| AUC de la vraie règle (plafond) | 0.686 |
-| Score de Brier | 0.1486 |
-| Paramètres retrouvés (vrai atténué dans l'IC 95 %) | **7 / 7** |
+| AUC | **0.632** |
+| AUC de la vraie règle (plafond) | 0.676 |
+| Score de Brier | 0.1496 |
+| Paramètres retrouvés (vrai atténué dans l'IC 95 %) | **6 / 7** |
 
 L'écart d'AUC au plafond vient de l'effet propre à chaque entreprise, que le modèle
 n'observe pas. Ce même effet atténue les coefficients d'une logistique d'un facteur
@@ -30,28 +30,28 @@ vrais coefficients atténués.
 
 | variable | vrai | vrai_attenue | estime | ic95_bas | ic95_haut | vrai_attenue_dans_ic |
 | --- | --- | --- | --- | --- | --- | --- |
-| const | -2.3 | -2.207 | -2.264 | -2.482 | -2.046 | True |
-| c_intensite | 1.4 | 1.343 | 1.443 | 0.968 | 1.918 | True |
-| c_embauche | 0.5 | 0.48 | 0.298 | -0.187 | 0.782 | True |
-| log10_effectif | -0.45 | -0.432 | -0.337 | -0.457 | -0.218 | True |
-| distance_10km | -0.15 | -0.144 | -0.138 | -0.175 | -0.101 | True |
-| alternance | 0.35 | 0.336 | 0.309 | 0.254 | 0.365 | True |
-| a_offre_domaine | 0.4 | 0.384 | 0.367 | 0.23 | 0.503 | True |
+| const | -2.3 | -2.207 | -2.152 | -2.374 | -1.93 | True |
+| c_intensite | 1.4 | 1.343 | 1.589 | 1.111 | 2.067 | True |
+| c_embauche | 0.5 | 0.48 | 0.135 | -0.345 | 0.616 | True |
+| log10_effectif | -0.45 | -0.432 | -0.417 | -0.537 | -0.297 | True |
+| distance_10km | -0.15 | -0.144 | -0.141 | -0.179 | -0.103 | True |
+| alternance | 0.35 | 0.336 | 0.309 | 0.253 | 0.364 | True |
+| a_offre_domaine | 0.4 | 0.384 | 0.64 | 0.512 | 0.768 | False |
 
 ### Calibration (déciles de probabilité prédite)
 
 | decile | predit | observe | n |
 | --- | --- | --- | --- |
-| 0 | 0.0756 | 0.0764 | 1125 |
-| 1 | 0.1178 | 0.1156 | 1125 |
-| 2 | 0.1461 | 0.1413 | 1125 |
-| 3 | 0.1681 | 0.1564 | 1125 |
-| 4 | 0.1871 | 0.1671 | 1125 |
-| 5 | 0.2043 | 0.2027 | 1125 |
-| 6 | 0.221 | 0.2284 | 1125 |
-| 7 | 0.239 | 0.2284 | 1125 |
-| 8 | 0.2603 | 0.2596 | 1125 |
-| 9 | 0.308 | 0.3129 | 1125 |
+| 0 | 0.0735 | 0.0667 | 1125 |
+| 1 | 0.1137 | 0.112 | 1125 |
+| 2 | 0.1426 | 0.1253 | 1125 |
+| 3 | 0.1654 | 0.1831 | 1125 |
+| 4 | 0.1853 | 0.1858 | 1125 |
+| 5 | 0.2039 | 0.1964 | 1125 |
+| 6 | 0.2214 | 0.2284 | 1125 |
+| 7 | 0.2405 | 0.2356 | 1125 |
+| 8 | 0.2644 | 0.2684 | 1125 |
+| 9 | 0.3243 | 0.312 | 1125 |
 
 ## Pour le pitch
 

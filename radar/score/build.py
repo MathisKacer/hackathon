@@ -6,7 +6,7 @@ data/raw/offres_raw/adzuna_couverture.json (couverture de la collecte par régio
 
 Composantes (v0, D13) :
 - c_intensite : intensité a posteriori (offres du domaine / 100 salariés) en **échelle log
-                absolue** (D48) : 0 à la médiane nationale, 1 au 99,5e centile ;
+                absolue** (D48) : 0 à la médiane nationale, 1 au 99,9e centile ;
 - c_embauche  : La Bonne Boîte d'abord (`lbb_potentiel`), puis le proxy « besoin attendu »
                 (intensité × effectif local, même échelle log) pour les autres →
                 `c_embauche_source` (T28, D27) ;
@@ -61,13 +61,16 @@ def pct_rank(s: pd.Series) -> pd.Series:
 # D48 : bornes de l'échelle log (quantiles nationaux du domaine). Un rang centile écrasait tout :
 # en ville presque toutes les entreprises sont au-dessus de la médiane nationale (score médian
 # ~0,6 à Rennes, 300 entreprises au-dessus de 0,8) ; en log, un besoin ×10 se voit.
-LOG_SCALE_QUANTILES = (0.5, 0.995)
+LOG_SCALE_QUANTILES = (0.5, 0.999)  # 99,5 % laissait ~0,5 % d'ex æquo à 1 en tête (D48 bis)
 
 
-def log_scale(x: pd.Series, ref: pd.Series | None = None) -> pd.Series:
-    """log10(x) ramené dans [0, 1] : 0 au quantile 50 % de `ref`, 1 au quantile 99,5 %."""
+def log_scale(
+    x: pd.Series, ref: pd.Series | None = None, quantiles: tuple[float, float] | None = None
+) -> pd.Series:
+    """log10(x) ramené dans [0, 1] : 0 et 1 aux quantiles `LOG_SCALE_QUANTILES` de `ref`."""
     ref = x if ref is None else ref
-    lo, hi = np.log10(ref.quantile(list(LOG_SCALE_QUANTILES)).clip(lower=1e-9).to_numpy())
+    q = list(quantiles or LOG_SCALE_QUANTILES)
+    lo, hi = np.log10(ref.quantile(q).clip(lower=1e-9).to_numpy())
     if hi <= lo:
         return pd.Series(0.5, index=x.index)
     return ((np.log10(x.astype(float).clip(lower=1e-9)) - lo) / (hi - lo)).clip(0, 1)

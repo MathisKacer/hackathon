@@ -99,13 +99,13 @@ def test_collect_paginates_and_deduplicates():
 
 
 def test_log_scale_spreads_the_top():
-    """D48 : 0 à la médiane, 1 au 99,5e centile, et un besoin ×10 se voit (pas un rang)."""
+    """D48 : 0 à la médiane, 1 au 99,9e centile, et un besoin ×10 se voit (pas un rang)."""
     import numpy as np
 
     from radar.score.build import log_scale
 
     x = pd.Series(np.logspace(-4, 1, 1001))
     c = log_scale(x)
-    assert c.iloc[:500].eq(0).all() and c.iloc[-5:].eq(1).all()
+    assert c.iloc[:500].eq(0).all() and c.iloc[-1] == 1 and c.iloc[-10] < 1
     assert c.is_monotonic_increasing
     assert 0.4 < c.iloc[800] < 0.7  # 80e centile : bien en dessous de 0,8 (un rang donnerait 0,8)

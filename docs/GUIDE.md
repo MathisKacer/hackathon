@@ -490,7 +490,7 @@ Dans **Mon espace › Mes candidatures**, « Télécharger mes candidatures » d
 
 **Ce que voit l'utilisateur.** Sur la carte, par défaut, seules les **meilleures cibles** (« Cible prioritaire » et « Bonne cible ») : au moins les 20 meilleures, 150 au plus. Le curseur **« Score minimal sur la carte »** (Filtres › Classement) permet de choisir un seuil (de 0,30 à 0,90) : toutes les entreprises qui l'atteignent, 300 au plus. Une ligne sous la carte dit combien sont affichées ; la **liste garde toujours toutes les entreprises**.
 
-**Comment lire le score.** Moyenne pondérée de critères dans [0, 1]. L'intensité data et le besoin attendu sont sur une **échelle logarithmique** (0 = médiane des entreprises françaises, 1 = les 0,5 % les plus fortes) : **0,5 est déjà un bon score**. En alternance, le maximum tourne autour de 0,7 (le critère « recruteur d'alternants » vaut 0 pour la plupart des entreprises).
+**Comment lire le score.** Moyenne pondérée de critères dans [0, 1]. L'intensité data et le besoin attendu sont sur une **échelle logarithmique** (0 = médiane des entreprises françaises, 1 = les 0,1 % les plus fortes) : **0,5 est déjà un bon score**. Poids par défaut : intensité 2, besoin attendu (potentiel d'embauche) 4, choisis par validation temporelle (D48 bis). En alternance, le maximum tourne autour de 0,7 (le critère « recruteur d'alternants » vaut 0 pour la plupart des entreprises).
 
 **Paliers.** « Cible prioritaire » demande d'être dans les 10 % meilleures de la recherche, un score ≥ 0,60 **et** un besoin attendu ≥ 0,2 offre du domaine sur la période observée (≈ 2 mois) ; « Bonne cible » : 30 %, 0,45 et 0,05 ; « À considérer » : 60 %, 0,30 et 0,01. Une zone sans besoin data (ex. Guéret) n'a donc aucune cible prioritaire.
 

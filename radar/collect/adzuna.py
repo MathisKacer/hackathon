@@ -49,6 +49,10 @@ REGIONS = [
     "Corse",
 ]
 
+# Libellés propres à Adzuna (location1) quand ils diffèrent des nôtres (radar.geo.region_of) :
+# « Grand Est » et « Centre-Val de Loire » renvoient HTTP 400 (testé le 28/11).
+ADZUNA_LABELS = {"Grand Est": "Grand-Est", "Centre-Val de Loire": "Centre"}
+
 # Colonnes du contrat `offres_raw` (docs/ARCHITECTURE.md) + colonnes propres à Adzuna.
 ADZUNA_EXTRA_COLUMNS = [
     "contrat_temps", "categorie", "salaire_min", "salaire_max", "salaire_predit",
@@ -145,7 +149,7 @@ class AdzunaClient:
         """Itère sur les pages de résultats : (count total, résultats de la page)."""
         params: dict = {"what": what, "max_days_old": max_days_old, "sort_by": "date"}
         if region:
-            params |= {"location0": "France", "location1": region}
+            params |= {"location0": "France", "location1": ADZUNA_LABELS.get(region, region)}
         for page in range(1, max_pages + 1):
             data = self._get(page, params)
             results = data.get("results", [])
@@ -217,6 +221,12 @@ def collect(
             coverage[region] = {"collectees": len(rows) - n_before, "total": total}
             log.warning("Arrêt : %s", e)
             break
+        except RuntimeError as e:  # ex. HTTP 400 (libellé de région refusé) : région suivante
+            got = len(rows) - n_before
+            status[region] = f"erreur ({got} offres) — {str(e)[:80]}"
+            coverage[region] = {"collectees": got, "total": None}  # couverture inconnue → 0
+            log.warning("%s : %s", region, status[region])
+            continue
         log.info("%s : %s", region, status[region])
     for region in regions or REGIONS:
         status.setdefault(region, "non commencé")

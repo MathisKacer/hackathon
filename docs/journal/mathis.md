@@ -345,3 +345,10 @@
 
 - `grille_domaines.parquet` : 718 NAF × 4 tailles × 5 domaines = 14 360 lignes, aucun manquant, doublon ni note invalide, justification partout ; qwen2.5:14b, consigne v3.
 - Scores reconstruits (note du NAF propre pour 100 % des établissements) ; `eval_score` : AUC besoin caché 0,845, futur 0,889, conclusion de D45 inchangée.
+
+## 2026-11-28 — Collecte France entière (D50), score affiché validé (D48 bis), GBM corrigé
+
+- Adzuna : 8 régions ajoutées (libellés « Grand-Est », « Centre »), 15 633 offres, zone couverte 97 %. Île-de-France toujours plafonnée (5 000 / 14 385).
+- `eval_score` : lignes « score affiché » (mélange des composantes, plusieurs poids et plafonds). Choix : plafond 99,9 %, poids 2 / 4 → AUC 0,921 / 0,948, top 200 futur 72 (41 avant).
+- GBM : Poisson sur le nombre d'offres + log E ; comparé en volume (0,885 / 0,899).
+- Après : Rennes 20 km stage, 49 cibles prioritaires, carte 135 points (80 % du besoin) ; Lyon carte 54 % (49 %), Paris 31 % (24 %).
