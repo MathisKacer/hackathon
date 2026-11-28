@@ -373,3 +373,4 @@
 
 - Lien qui renvoie le SIRET via `window.Streamlit.setComponentValue` (iframe streamlit-folium) ; `explorer.py` ouvre `open_fiche` une fois par clic (horodatage). Testé avec Playwright : bonne fiche, pas de réouverture au rerun suivant.
 - Vidéo : accueil plus long (5 s de pause), fiche ouverte depuis la fenêtre du point orange (« Voir la fiche »), étape page Entreprises supprimée. 68 s.
+- Outro raccourcie : ~10 s → ~6 s (personnage à bord en 2,3 s). Vidéo 64 s.

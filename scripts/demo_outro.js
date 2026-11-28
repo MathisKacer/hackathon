@@ -1,4 +1,4 @@
-// T62 — Outro de la vidéo de démo (injectée par scripts/demo_video_complet.py, ~9,5 s).
+// T62 — Outro de la vidéo de démo (injectée par scripts/demo_video_complet.py, ~5,5 s).
 // Le « O » boussole du logo (en haut à gauche) se détache et devient un petit personnage : il
 // grossit en tournant l'aiguille, des yeux, des bras et des jambes lui poussent ; un bateau arrive,
 // il saute à bord et se tient sur le pont ; son aiguille se fixe et il montre le cap quand le
@@ -111,7 +111,7 @@
   let angle = 45, speed = 0, last = performance.now(), stop = null;
   const spin = now => {
     const dt = (now - last) / 1000; last = now;
-    if (!stop) { speed = Math.min(speed + 900 * dt, 720); angle += speed * dt; }
+    if (!stop) { speed = Math.min(speed + 1500 * dt, 720); angle += speed * dt; }
     else {
       const p = Math.min((now - stop.t) / stop.ms, 1);
       angle = stop.a0 + (stop.target - stop.a0) * (1 - Math.pow(1 - p, 3));
@@ -126,44 +126,44 @@
     [{ transform: `rotate(${-a}deg)` }, { transform: `rotate(${a}deg)` }],
     { duration: ms, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out' });
 
-  // 1) 0 → 2,4 s : il grossit jusqu'au centre ; à 1,2 s, yeux, bras et jambes apparaissent
+  // 1) 0 → 1,4 s : il grossit jusqu'au centre ; à 0,6 s, yeux, bras et jambes apparaissent
   const big = Math.min(W, H) * 0.30;
-  veil.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1400, delay: 400, fill: 'forwards' });
+  veil.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 900, delay: 200, fill: 'forwards' });
   C.animate([at(O.cx, O.cy, O.size), at(W / 2, H * 0.36, big)],
-    { duration: 2400, easing: ease, fill: 'forwards' });
+    { duration: 1400, easing: ease, fill: 'forwards' });
   let moves = [];
-  later(1200, () => {
+  later(600, () => {
     for (const s of ['.limbs', '.eyes']) {
-      part(s).animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, fill: 'forwards' });
+      part(s).animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, fill: 'forwards' });
     }
     // il fait coucou et piétine d'impatience
     moves = [swing('.arm-r', 35, 260), swing('.leg-l', 8, 300), swing('.leg-r', -8, 300)];
   });
-  later(2000, () => part('.eyes').animate(  // clignement des yeux
+  later(1100, () => part('.eyes').animate(  // clignement des yeux
     [{ transform: 'scaleY(1)' }, { transform: 'scaleY(.1)' }, { transform: 'scaleY(1)' }],
     { duration: 220 }));
 
-  // 2) 2,2 → 3,5 s : la mer et le bateau arrivent ; il regarde le bateau
-  later(2200, () => {
+  // 2) 1,0 → 1,9 s : la mer et le bateau arrivent ; il regarde le bateau
+  later(1000, () => {
     sea.animate([{ transform: 'translateY(100%)' }, { transform: 'translateY(0)' }],
-      { duration: 1200, easing: ease, fill: 'forwards' });
+      { duration: 900, easing: ease, fill: 'forwards' });
     waves.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-50%)' }],
       { duration: 6000, iterations: Infinity });
     boat.animate([{ transform: `translateY(${H}px)` }, { transform: 'translateY(0)' }],
-      { duration: 1300, easing: ease, fill: 'forwards' });
+      { duration: 900, easing: ease, fill: 'forwards' });
     C.querySelectorAll('.pupil').forEach(p => p.animate(
       [{ transform: 'translate(0,0)' }, { transform: 'translate(1px,3px)' }],
       { duration: 400, fill: 'forwards' }));
   });
 
-  // 3) 3,6 → 4,7 s : il saute à bord et se pose sur le pont, à droite du mât
+  // 3) 1,8 → 2,6 s : il saute à bord et se pose sur le pont, à droite du mât
   const RING = 84;  // taille de l'anneau une fois à bord ; pieds à y = 86 dans son repère
   const deck = { cx: BOAT.left + 255 / 420 * BW,
                  cy: BOAT.top + 258 / 360 * BH - (86 - 30) * RING / 60 };
   const jump = (sel, a) => part(sel).animate(
     [{ transform: 'rotate(0)' }, { transform: `rotate(${a}deg)` }, { transform: 'rotate(0)' }],
-    { duration: 1100 });
-  later(3600, () => {
+    { duration: 800 });
+  later(1800, () => {
     moves.forEach(m => m.cancel());
     jump('.leg-l', 25); jump('.leg-r', -25); jump('.arm-l', 60); jump('.arm-r', -60);
     const from = C.getBoundingClientRect();
@@ -173,24 +173,24 @@
         height: `${from.height}px` },
       { ...mid, offset: 0.45, easing: 'ease-in' },
       at(deck.cx, deck.cy, RING),
-    ], { duration: 1100, easing: 'ease-out', fill: 'forwards' });
+    ], { duration: 800, easing: 'ease-out', fill: 'forwards' });
   });
-  later(4700, () => {  // il atterrit : le bateau s'enfonce un peu et tangue
+  later(2600, () => {  // il atterrit : le bateau s'enfonce un peu et tangue
     boat.animate([{ transform: 'translateY(0) rotate(0)' },
       { transform: 'translateY(8px) rotate(1.5deg)' }, { transform: 'translateY(0) rotate(0)' }],
-      { duration: 700, easing: 'ease-out' });
+      { duration: 500, easing: 'ease-out' });
   });
 
-  // 4) 4,9 s : l'aiguille se fixe, il montre le cap → 5,6 s : le bateau démarre vers la droite
-  later(4900, () => {
-    stop = { t: performance.now(), ms: 1000, a0: angle,
+  // 4) 2,7 s : l'aiguille se fixe, il montre le cap → 3,2 s : le bateau démarre vers la droite
+  later(2700, () => {
+    stop = { t: performance.now(), ms: 700, a0: angle,
              target: Math.ceil((angle - 45) / 360 + 1) * 360 + 45 };
     part('.arm-r').animate([{ transform: 'rotate(0)' }, { transform: 'rotate(-55deg)' }],
-      { duration: 500, easing: ease, fill: 'forwards' });
+      { duration: 400, easing: ease, fill: 'forwards' });
   });
-  later(5600, () => {
+  later(3200, () => {
     const go = W * 0.8;
-    const opts = { duration: 2600, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' };
+    const opts = { duration: 1800, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' };
     boat.animate([{ transform: 'translateX(0) rotate(0)' },
       { transform: `translateX(${go}px) rotate(-3deg)` }], opts);
     const s = at(deck.cx, deck.cy, RING);
@@ -198,12 +198,12 @@
       top: `${parseFloat(s.top) - 10}px` }], opts);
   });
 
-  // 5) 7,6 s : logo et slogan
+  // 5) 4,4 s : logo et slogan
   const brand = el('div', `position:fixed;z-index:2147483645;left:0;right:0;top:${H * 0.28}px;
     text-align:center;opacity:0;font-family:Inter,system-ui,sans-serif;`, `
     <div style="height:${H * 0.17}px;display:inline-block">${logoSvg}</div>
     <div style="margin-top:18px;font-size:${H * 0.036}px;font-style:italic;color:#4b5563">
       Oser l'audace, fini l'impasse</div>`);
-  later(7600, () => brand.animate([{ opacity: 0, transform: 'translateY(16px)' },
-    { opacity: 1, transform: 'translateY(0)' }], { duration: 900, easing: ease, fill: 'forwards' }));
+  later(4400, () => brand.animate([{ opacity: 0, transform: 'translateY(16px)' },
+    { opacity: 1, transform: 'translateY(0)' }], { duration: 700, easing: ease, fill: 'forwards' }));
 }

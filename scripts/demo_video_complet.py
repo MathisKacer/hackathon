@@ -188,7 +188,7 @@ def main() -> None:
             logo = LOGO_SVG.read_text(encoding="utf-8")
             logo = logo.replace('width="1022" height="216"', 'height="100%"')
             page.evaluate(OUTRO_JS.read_text(encoding="utf-8"), logo)
-            for i, sec in enumerate((1.3, 1.4, 1.2, 1.2, 1.4, 1.6, 2.4)):  # ~10,5 s
+            for i, sec in enumerate((0.8, 0.9, 0.9, 0.9, 1.1, 1.6)):  # ~6,2 s
                 d.pause(sec)
                 d.snap(f"outro_{i}")
         raw = None if a.essai else Path(page.video.path())
