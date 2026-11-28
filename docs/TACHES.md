@@ -90,6 +90,7 @@
 - [ ] T89 — **Fiche plus claire** : en-tête avec l'essentiel (nom, pastilles taille / ville / priorité, étoile, boutons de contact de T88) puis onglets **Résumé, Offres, Sites, Situation** ; présentation seulement. Proposer un croquis avant de coder — @celia
   Croquis validé par Celia : en-tête (initiale, pastilles, alerte, lien entreprise), étoile + boutons de contact, onglets **Résumé, Offres, (Sites), Infos** (Infos = coordonnées, liens, BODACC).
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
+- [ ] T93 — **Essais d'une interface plus riche** (moins épurée que D30), sur la branche `emma/interface-riche` : rien n'est fusionné dans `main` sans accord de l'équipe (@celia : apparence, T70) — @emma
 - _…_
 
 ## ✅ Fait
