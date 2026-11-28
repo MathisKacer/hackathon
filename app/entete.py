@@ -6,6 +6,7 @@ puis à droite « Entreprises » et « Se connecter » / « S'inscrire », ou «
 connecté (et « Administration » pour les administrateurs).
 
     header(pages, current="accueil", user=user, is_admin=False)
+    page("recherche"); go("recherche")      # dans une page : lien, rappel de bouton
 """
 
 from __future__ import annotations
@@ -27,25 +28,37 @@ def logo_svg() -> str:
     return f.read_text(encoding="utf-8") if f.exists() else "<b>Compass</b>"
 
 
+PAGES_KEY = "_pages"
+GO_PAGE_KEY = "_go_page"  # même clé que app/compte.py
+
+
+def page(name: str):
+    """La page `name` (accueil, recherche, entreprises, compte, connexion, inscription…) de la
+    session en cours, enregistrée par app/streamlit_app.py."""
+    return st.session_state[PAGES_KEY][name]
+
+
+def go(name: str) -> None:
+    """À utiliser en rappel de bouton : ouvre la page `name` au passage suivant."""
+    st.session_state[GO_PAGE_KEY] = name
+
+
 def header(pages: dict, current: str, user: dict | None, is_admin: bool = False) -> None:
     """`pages` : nom → st.Page (accueil, recherche, entreprises, compte, admin)."""
     with st.container(key="entete"):
         left, _, right = st.columns([2.2, 3, 4.2], vertical_alignment="center")
         if current != "accueil":
-            # lien relatif : marche aussi derrière le proxy d'Onyxia (…/proxy/8501/)
-            left.markdown(
-                f"<a class='entete-logo' href='./' target='_self'>{logo_svg()}</a>",
-                unsafe_allow_html=True,
-            )
+            # Le logo est un lien Streamlit (même session : on reste connecté), dont le texte
+            # est remplacé par l'image en CSS (app/static/, servi par Streamlit).
+            with left, st.container(key=f"entete_logo_{_mode()}"):
+                st.page_link(pages["accueil"], label="Compass")
         with right, st.container(horizontal=True, horizontal_alignment="right", gap="small"):
             if current != "accueil":
                 st.page_link(pages["entreprises"], label="Entreprises", icon=":material/apartment:")
             if user is None:
-                st.page_link(pages["compte"], label="Se connecter", icon=":material/login:",
-                             query_params={"mode": "connexion"})  # fmt: skip
+                st.page_link(pages["connexion"], label="Se connecter", icon=":material/login:")
                 with st.container(key="entete_inscription"):
-                    st.page_link(pages["compte"], label="S'inscrire",
-                                 query_params={"mode": "inscription"})  # fmt: skip
+                    st.page_link(pages["inscription"], label="S'inscrire")
             else:
                 if is_admin and "admin" in pages:
                     st.page_link(pages["admin"], label="Administration",

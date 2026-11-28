@@ -93,6 +93,10 @@ def _flush_temp_searches(user_id: int) -> tuple[int, int]:
     return saved, lost
 
 
+# T93 (essai) : page à ouvrir au prochain passage (lu par app/streamlit_app.py)
+GO_PAGE_KEY = "_go_page"
+
+
 def _log_in(user_id: int, username: str, profile_keys: dict) -> None:
     st.session_state[USER_KEY] = {"id": user_id, "username": username}
     _apply_profile(accounts.load_profile(_con(), user_id), profile_keys)
@@ -111,18 +115,12 @@ def _anonymous_box(profile_keys: dict) -> None:
         login_forms(profile_keys)
 
 
-def login_forms(profile_keys: dict) -> None:
-    """Onglets « Connexion » et « Créer un compte » (barre latérale ou page Mon espace)."""
-    # T93 (essai) : « S'inscrire » dans la barre du haut ouvre directement le 2e onglet
-    signup = st.query_params.get("mode") == "inscription"
-    tab_in, tab_up = st.tabs(
-        ["Connexion", "Créer un compte"], default="Créer un compte" if signup else "Connexion"
-    )
-
-    with tab_in, st.form("compte_connexion", clear_on_submit=True, border=False):
+def login_form(profile_keys: dict, go: str | None = None) -> None:
+    """Formulaire « Se connecter » (T93 : page à part). `go` : page ouverte une fois connecté."""
+    with st.form("compte_connexion", clear_on_submit=True, border=False):
         username = st.text_input("Identifiant")
         password = st.text_input("Mot de passe", type="password")
-        if st.form_submit_button("Se connecter", width="stretch"):
+        if st.form_submit_button("Se connecter", type="primary", width="stretch"):
             try:
                 user_id = accounts.authenticate(_con(), username, password)
             except accounts.AccountLocked as e:
@@ -132,9 +130,14 @@ def login_forms(profile_keys: dict) -> None:
                 if user_id is None:
                     st.error("Identifiant ou mot de passe incorrect.")
                 else:
+                    if go:
+                        st.session_state[GO_PAGE_KEY] = go
                     _log_in(user_id, accounts.normalize_username(username), profile_keys)
 
-    with tab_up, st.form("compte_creation", clear_on_submit=True, border=False):
+
+def signup_form(profile_keys: dict, go: str | None = None) -> None:
+    """Formulaire « Créer un compte » (T93 : page « S'inscrire » à part)."""
+    with st.form("compte_creation", clear_on_submit=True, border=False):
         username = st.text_input("Identifiant", help="3 à 30 caractères : a-z, 0-9, . _ -")
         password = st.text_input("Mot de passe", type="password", help=accounts.PASSWORD_RULES)
         confirm = st.text_input("Confirmer le mot de passe", type="password")
@@ -145,7 +148,7 @@ def login_forms(profile_keys: dict) -> None:
             "une majuscule, un chiffre, un caractère spécial (! ? @ # …)\n"
             "- ni ton identifiant, ni un mot de passe trop courant"
         )
-        if st.form_submit_button("Créer mon compte", width="stretch"):
+        if st.form_submit_button("Créer mon compte", type="primary", width="stretch"):
             if password != confirm:
                 st.error("Les deux mots de passe ne correspondent pas.")
             else:
@@ -155,7 +158,18 @@ def login_forms(profile_keys: dict) -> None:
                     st.error(str(e))
                 else:
                     accounts.save_profile(_con(), user_id, _current_settings(profile_keys))
+                    if go:
+                        st.session_state[GO_PAGE_KEY] = go
                     _log_in(user_id, accounts.normalize_username(username), profile_keys)
+
+
+def login_forms(profile_keys: dict) -> None:
+    """Onglets « Connexion » et « Créer un compte » (barre latérale des tests, ancienne page)."""
+    tab_in, tab_up = st.tabs(["Connexion", "Créer un compte"])
+    with tab_in:
+        login_form(profile_keys)
+    with tab_up:
+        signup_form(profile_keys)
 
 
 def _connected_box(user: dict, profile_keys: dict) -> None:
@@ -215,7 +229,8 @@ def _validated_user() -> dict | None:
 
 def _relaunch_and_go(params: dict, profile_keys: dict) -> None:
     _apply_profile(params, profile_keys)
-    st.session_state[GO_EXPLORER_KEY] = True
+    # T93 (essai) : la page de résultats est ouverte par app/streamlit_app.py (GO_PAGE_KEY)
+    st.session_state[GO_PAGE_KEY] = "recherche"
 
 
 def _badges(values: list) -> str:
@@ -265,32 +280,12 @@ def _delete_account_box(con, user: dict) -> None:
 
 
 def _anonymous_page(saved_keys: dict, favorites_section, searches_section, keys: dict) -> None:
-    """Sans compte : à gauche ce qu'apporte un compte, à droite la connexion."""
-    signup = st.query_params.get("mode") == "inscription"  # T93 : lien « S'inscrire »
-    hero(
-        "Créer un compte" if signup else "Se connecter",
-        "Ton compte garde tes compétences, tes favoris et tes recherches.",
-        compact=True,
-    )
-    left, right = st.columns([1, 1], gap="large")
-    with left:
-        st.markdown("#### Pourquoi créer un compte ?")
-        for icon, title, text in (
-            ("star", "Garder tes favoris", "entreprises et offres, d'une visite à l'autre."),
-            ("send", "Suivre tes candidatures", "envoyée, relancée, entretien, réponse."),
-            ("history", "Retrouver tes recherches", "et les relancer en un clic."),
-            ("badge", "Garder tes compétences", "tirées de ton CV."),
-        ):
-            st.markdown(f":material/{icon}: **{title}** : {text}")
-        st.caption("Radar marche aussi sans compte : dans ce cas, rien n'est enregistré.")
-    with right, st.container(border=True, key="espace_connexion"):
-        login_forms(saved_keys)
-    if favorites_section is not None:
-        st.divider()
-        favorites_section()
-    if searches_section is not None:
-        st.subheader("Mes recherches")
-        searches_section(keys)
+    """Sans compte (T93) : seulement le formulaire « Se connecter » (l'inscription a sa page)."""
+    hero("Se connecter", "Ton compte garde tes compétences, tes favoris et tes recherches.",
+         compact=True)  # fmt: skip
+    _, mid, _ = st.columns([1, 1.4, 1])
+    with mid, st.container(border=True, key="espace_connexion"):
+        login_form(saved_keys, go="compte")
 
 
 def account_page(

@@ -107,10 +107,20 @@ _CSS = """
 
 [data-testid="stTab"] p {{ font-size: 1rem; font-weight: 650; }}
 
-/* T93 : notre barre du haut (app/entete.py) */
-.st-key-entete {{ padding: .2rem 0 .6rem 0; margin-bottom: .6rem;
-                 border-bottom: 1px solid rgba(59, 91, 219, .15); }}
-.entete-logo svg {{ height: 2.6rem; width: auto; display: block; }}
+/* T93 : notre barre du haut (app/entete.py), posée sur la ligne de la barre de Streamlit
+   (celle des « ⋮ ») : fixe en haut, en laissant la place du menu à droite. */
+.st-key-entete {{ position: fixed; top: 0; left: 0; right: 3.6rem; height: 3.75rem;
+                 z-index: 999991; padding: 0 1.2rem; display: flex; align-items: center; }}
+.st-key-entete > div {{ width: 100%; }}
+/* Logo = lien vers l'accueil (même session) ; texte remplacé par l'image */
+[class*="st-key-entete_logo_"] [data-testid="stPageLink"] a {{
+    width: 10rem; height: 2.4rem; background: center left / contain no-repeat;
+    padding: 0 !important; }}
+[class*="st-key-entete_logo_"] [data-testid="stPageLink"] a * {{ opacity: 0; }}
+.st-key-entete_logo_clair [data-testid="stPageLink"] a {{
+    background-image: url("app/static/logo-compass-clair.svg"); }}
+.st-key-entete_logo_sombre [data-testid="stPageLink"] a {{
+    background-image: url("app/static/logo-compass-sombre.svg"); }}
 .st-key-entete [data-testid="stPageLink"] a {{ border-radius: 999px; padding: .25rem .8rem; }}
 .st-key-entete_inscription [data-testid="stPageLink"] a {{
     background: linear-gradient(135deg, #3B5BDB, #15AABF); }}

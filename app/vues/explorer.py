@@ -287,7 +287,7 @@ with right:
     kpi_tiles(tiles)
     if spontaneous.empty and not FILES["scores"].exists():
         st.caption("Équipe : `scores.parquet` manquant (lancer `scripts/build_all.py`).")
-    temp_banner(PAGES_DIR / "mon_espace.py")  # favoris temporaires (anonyme, T54)
+    temp_banner(PAGES_DIR / "inscription.py")  # favoris temporaires (anonyme, T54)
     if not (view.empty and spontaneous.empty):
         st_folium(
             build_map(view, spontaneous, place, rayon if place is not None else None),

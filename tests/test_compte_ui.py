@@ -307,3 +307,35 @@ def test_profile_skills_one_by_one(tmp_path, monkeypatch):
     assert at.selectbox(key="competence_ajout").value is None  # le champ se vide
     assert "Excel" in [b.label for b in at.button]
     st.cache_resource.clear()
+
+
+def test_login_and_signup_pages_are_separate(tmp_path, monkeypatch):
+    """T93 (essai) : « Se connecter » et « S'inscrire » sont deux pages ; la connexion mène à
+    Mon compte et on reste connecté en revenant à l'accueil."""
+    from pathlib import Path
+
+    monkeypatch.setattr(accounts, "DB_PATH", tmp_path / "radar.db")
+    monkeypatch.syspath_prepend("app")
+    st.cache_resource.clear()
+    accounts.create_user(accounts.connect(), "emma", "Radar-Demo-2026")
+    vues = Path(__file__).resolve().parents[1] / "app" / "vues"
+    at = AppTest.from_file(str(vues.parent / "streamlit_app.py"), default_timeout=120)
+    at.run()
+    at.switch_page(str(vues / "connexion.py"))
+    at.run()
+    assert not at.exception, at.exception
+    assert not at.tabs  # pas d'onglet « Créer un compte » sur la page de connexion
+    assert [b.label for b in at.button] == ["Se connecter"]
+    at.text_input[0].input("emma")
+    at.text_input[1].input("Radar-Demo-2026")
+    at.button[0].click()
+    at.run()
+    assert at.session_state["compte_user"]["username"] == "emma"
+    assert "Mon compte" in [p.label for p in at.get("page_link")]
+    at.switch_page(str(vues / "accueil.py"))
+    at.run()
+    assert "compte_user" in at.session_state  # toujours connecté
+    at.switch_page(str(vues / "inscription.py"))
+    at.run()
+    assert not at.exception, at.exception
+    st.cache_resource.clear()

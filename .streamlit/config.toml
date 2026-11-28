@@ -23,3 +23,7 @@ borderColor = "#2A3349"
 
 [client]
 toolbarMode = "viewer"
+
+[server]
+# T93 : sert app/static/ (logo de la barre du haut, en image de fond CSS)
+enableStaticServing = true

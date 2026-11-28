@@ -8,8 +8,8 @@ l'autre) et un lien « Chercher par entreprise ».
 from __future__ import annotations
 
 import streamlit as st
-from commun import CONTRATS, DOMAINES, DOMAINS, PAGES_DIR, RAYONS, get_communes
-from entete import logo_svg
+from commun import CONTRATS, DOMAINES, DOMAINS, RAYONS, get_communes
+from entete import go, logo_svg, page
 
 SLOGAN = "Oser l'audace, fini l'impasse"
 PITCH = "Trouver les offres avant qu'elles paraissent"
@@ -35,11 +35,18 @@ with mid:
         c1.segmented_control("Contrat", CONTRATS, key="contrat", required=True)
         c2.selectbox("Domaine", DOMAINES, key="domaine", format_func=lambda k: DOMAINS[k].label)
         c3.selectbox("Rayon", RAYONS, key="rayon", format_func=lambda r: f"{r} km")
-        if st.button("Rechercher", type="primary", icon=":material/search:", width="stretch"):
-            st.switch_page(st.Page(PAGES_DIR / "explorer.py"))
+        # Rappel : la page de résultats s'ouvre au passage suivant (app/streamlit_app.py)
+        st.button(
+            "Rechercher",
+            type="primary",
+            icon=":material/search:",
+            width="stretch",
+            on_click=go,
+            args=("recherche",),
+        )
     with st.container(key="lien_entreprise"):
         st.page_link(
-            st.Page(PAGES_DIR / "entreprises.py"),
+            page("entreprises"),
             label="Chercher par entreprise",
             icon=":material/apartment:",
         )

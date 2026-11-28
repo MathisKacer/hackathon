@@ -17,7 +17,7 @@ from pathlib import Path
 import streamlit as st
 from commun import PAGES_DIR, init_defaults, persist_widget_state
 from compte import _con, current_user
-from entete import header
+from entete import GO_PAGE_KEY, PAGES_KEY, header
 from style import inject_css
 
 from radar import admin
@@ -46,10 +46,10 @@ pages = {
     "accueil": st.Page(PAGES_DIR / "accueil.py", title="Accueil", default=True),
     "recherche": st.Page(PAGES_DIR / "explorer.py", title="Recherche", url_path="recherche"),
     "entreprises": st.Page(PAGES_DIR / "entreprises.py", title="Entreprises"),
-    "compte": st.Page(
-        PAGES_DIR / "mon_espace.py",
-        title="Mon compte" if user else "Se connecter",
-        url_path="mon-espace",
+    "compte": st.Page(PAGES_DIR / "mon_espace.py", title="Mon compte", url_path="mon-espace"),
+    "connexion": st.Page(PAGES_DIR / "connexion.py", title="Se connecter", url_path="connexion"),
+    "inscription": st.Page(
+        PAGES_DIR / "inscription.py", title="S'inscrire", url_path="inscription"
     ),
 }
 # T79 (D39) : page Administration, seulement pour les administrateurs (membres de l'équipe).
@@ -57,7 +57,16 @@ if is_admin:
     pages["admin"] = st.Page(
         PAGES_DIR / "administration.py", title="Administration", url_path="administration"
     )
+st.session_state[PAGES_KEY] = pages  # pour les liens des pages (app/entete.py › page)
 page = st.navigation(list(pages.values()), position="hidden")
+# Rappels de bouton (« Rechercher », connexion réussie) : ouvrir la page demandée
+target = st.session_state.pop(GO_PAGE_KEY, None)
+if user and target in ("connexion", "inscription"):
+    target = "compte"
+if target in pages and pages[target] != page:
+    st.switch_page(pages[target])
+if user and page in (pages["connexion"], pages["inscription"]):
+    st.switch_page(pages["compte"])  # déjà connecté
 current = next(k for k, p in pages.items() if p == page)
 header(pages, current, user, is_admin)
 page.run()
