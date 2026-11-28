@@ -322,3 +322,10 @@
 - Qwen 2.5 7B sur CPU : trop lent (~35 s/NAF) et notes fausses (banques data 0). Qwen 2.5 14B sur T4 Colab : bon. Consignes v1 (trop de 3) → v2 (cœur de métier sous-noté) → **v3** (retenue). 360 NAF (95 % des établissements) en ~1 h 50 ; les 358 autres en cours.
 - Branchement (D45) : la note remplace les indicatrices NAF dans le v1. Validation temporelle : note LLM − témoin +0,025 AUC (significatif), NAF − témoin +0,010 (non) ; LLM − NAF +0,013 (bruit). `docs/EVAL_SCORE.md` mis à jour.
 - À faire : relecture à l'aveugle (`data/relecture_grille.csv`), remplacer la grille par les 718 NAF, partager le fichier, afficher la note dans la fiche (@maxence), étendre aux 5 domaines (D21).
+
+## 2026-11-28 — T94 (partie score) : paliers plus sélectifs, carte allégée (D47)
+
+- Diagnostic : score orange = moyenne de rangs centiles (médiane ~0,6), paliers relatifs → 370 « prioritaires » à Rennes, 1 055 à Lyon ; besoin réel très concentré (50 entreprises = 62 % du besoin à Rennes).
+- `radar/paliers.py` : seuil absolu de besoin attendu par palier (0,2 / 0,05 / 0,01). `app/carte.py` : `spontaneous_on_map`, paliers 1–2 d'abord, 150 au plus, 20 au moins. Tests dans `tests/test_paliers.py`.
+- Après : Rennes 56 prioritaires (carte 145 points, 79 % du besoin), Lyon 195, Guéret 0.
+- À faire : valider les seuils avec Celia ; bouton « Voir plus » (Emma) ; piste « classement par besoin attendu en log » si le temps le permet.

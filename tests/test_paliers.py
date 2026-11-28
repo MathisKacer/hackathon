@@ -60,3 +60,28 @@ def test_score_gradient_goes_from_light_to_dark():
     assert (
         text_color_on(score_color(0.1)) == "#111111" and text_color_on(score_color(1)) == "#ffffff"
     )
+
+
+def test_need_floor_is_absolute():
+    """D47 : sans besoin attendu suffisant, même la meilleure n'est pas « prioritaire »."""
+    s = pd.Series(np.linspace(1, 0.61, 100))
+    weak = assign_tiers(s, pd.Series(0.0, index=s.index))
+    assert set(weak) == {4}
+    need = pd.Series([0.5] * 5 + [0.06] * 5 + [0.0] * 90)  # 5 fortes, 5 moyennes
+    t = assign_tiers(s, need)
+    assert t.iloc[:5].eq(1).all() and t.iloc[5:10].eq(2).all() and t.iloc[10:].eq(4).all()
+    df = add_tiers(pd.DataFrame({"score": [0.9, 0.8], "besoin_attendu": [0.01, 0.3]}))
+    assert df["palier"].tolist() == [3, 3]  # 0,9 manque de besoin ; 0,8 pas dans les 10 %
+    assert "besoin attendu" in rule_text()
+
+
+def test_map_keeps_best_tiers_first():
+    import sys
+
+    sys.path.insert(0, "app")
+    from carte import MIN_SPONTANEOUS_ON_MAP, spontaneous_on_map
+
+    df = pd.DataFrame({"palier": [4, 4, 2, 1, 3] + [4] * 50})
+    assert spontaneous_on_map(df)["palier"].tolist()[:2] == [1, 2]
+    weak = pd.DataFrame({"palier": [4] * 50})
+    assert len(spontaneous_on_map(weak)) == MIN_SPONTANEOUS_ON_MAP  # jamais de carte vide

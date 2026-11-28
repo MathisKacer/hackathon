@@ -24,7 +24,12 @@ from radar.spontaneous import COMPONENTS, LBB_SOURCE
 
 FRANCE_CENTER = (46.6, 2.4)
 MAX_OFFERS_IN_POPUP = 25
-MAX_SPONTANEOUS_ON_MAP = 300  # au-delà, la carte devient illisible (la liste garde tout)
+# D47 : la carte ne montre par défaut que les « Cibles prioritaires » et « Bonnes cibles »
+# (paliers à seuil absolu de besoin attendu), au plus 150 ; au moins les 20 meilleures pour
+# qu'une zone faible ne donne pas une carte vide. La liste garde toutes les entreprises.
+MAX_SPONTANEOUS_ON_MAP = 150
+MIN_SPONTANEOUS_ON_MAP = 20
+MAP_MAX_TIER = 2
 
 
 def _popup_html(group: pd.DataFrame) -> str:
@@ -200,6 +205,18 @@ def _score_breakdown_html(r: pd.Series) -> str:
     return "<table style='font-size:12px;color:#333;margin:4px 0'>" + "".join(rows) + "</table>"
 
 
+def spontaneous_on_map(spontaneous: pd.DataFrame) -> pd.DataFrame:
+    """Entreprises orange à placer sur la carte (dans l'ordre de la liste), D47."""
+    if "palier" not in spontaneous:
+        return spontaneous.head(MAX_SPONTANEOUS_ON_MAP)
+    # meilleurs paliers d'abord (tri stable : l'ordre de la liste départage)
+    ranked = spontaneous.sort_values("palier", kind="stable")
+    best = ranked[ranked["palier"].le(MAP_MAX_TIER)]
+    if len(best) < MIN_SPONTANEOUS_ON_MAP:
+        return ranked.head(MIN_SPONTANEOUS_ON_MAP)
+    return best.head(MAX_SPONTANEOUS_ON_MAP)
+
+
 def build_map(
     offers: pd.DataFrame,
     spontaneous: pd.DataFrame | None = None,
@@ -233,7 +250,7 @@ def build_map(
 
     if spontaneous is not None and not spontaneous.empty:
         orange = folium.FeatureGroup(name="🟠 Candidature spontanée", show=True)
-        shown = spontaneous.head(MAX_SPONTANEOUS_ON_MAP)
+        shown = spontaneous_on_map(spontaneous)
         # Dégradé étalé sur les points affichés (en ville, les 300 premiers ont tous un score
         # de 0,8 à 1 : en absolu ils auraient la même couleur) : clair = le moins bon affiché.
         lo, hi = float(shown["score"].min()), float(shown["score"].max())
