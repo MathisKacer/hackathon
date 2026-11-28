@@ -8,8 +8,10 @@
 Parcours (compte « moussaillon » déjà connecté, hors vidéo) :
 1. accueil déjà rempli (Rennes, stage, data) → « Rechercher » → carte ;
 2. zoom sur Rennes, clic sur un point orange (fenêtre de l'entreprise) ;
-3. « Entreprises » (en haut à droite) → « Apple » → résultats ;
-4. « Mon compte » (en haut à droite) : les candidatures (statuts variés, une à relancer).
+3. « Entreprises » (en haut à droite) → « Apple » → résultats → clic sur la 1re fiche ;
+4. « Mon compte » (en haut à droite) : les candidatures (statuts variés, une à relancer) ;
+5. outro (scripts/demo_outro.js) : le « O » boussole du logo grossit, monte dans un bateau,
+   l'aiguille se fixe quand le bateau démarre, puis logo et slogan.
 """
 
 from __future__ import annotations
@@ -28,6 +30,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from demo_video import INIT_JS, Demo, H, W, fill, launch  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
+OUTRO_JS = Path(__file__).with_name("demo_outro.js")
+LOGO_SVG = ROOT / "app" / "static" / "logo-compass-clair.svg"
 DEMO_DIR = ROOT / "data" / "demo"
 CRED_FILE = DEMO_DIR / ".compte_demo"
 ORANGE_JS = """
@@ -98,7 +102,10 @@ def main() -> None:
     p.add_argument("--pause-accueil", type=float, default=2)
     p.add_argument("--pause-carte", type=float, default=4, help="avant le zoom")
     p.add_argument("--pause-point", type=float, default=7, help="fenêtre de l'entreprise")
-    p.add_argument("--pause-entreprises", type=float, default=5)
+    p.add_argument("--pause-entreprises", type=float, default=3, help="liste des résultats")
+    p.add_argument("--ligne", type=int, default=0, help="ligne cliquée dans les résultats")
+    p.add_argument("--pause-fiche", type=float, default=6, help="fiche de l'entreprise")
+    p.add_argument("--sans-outro", action="store_true")
     p.add_argument("--essai", action="store_true", help="captures d'écran seulement")
     a = p.parse_args()
     if not CRED_FILE.exists():
@@ -165,6 +172,22 @@ def main() -> None:
         d.pause(0.8)
         d.snap("entreprises")
         d.pause(a.pause_entreprises)
+        grid = page.locator('[data-testid="stDataFrame"]').first
+        box = grid.bounding_box()
+        y = 35 + 35 * (a.ligne + 0.5)  # tableau sur canvas : en-tête et lignes ~35 px
+        d.click(grid, dx=min(160 / box["width"], 0.3), dy=min(y / box["height"], 0.95))
+        dialog = page.get_by_role("dialog")
+        dialog.wait_for(timeout=60_000)
+        d.idle()
+        d.snap("fiche")
+        d.pause(a.pause_fiche)
+        page.keyboard.press("Escape")
+        try:
+            dialog.wait_for(state="hidden", timeout=5_000)
+        except Exception:  # noqa: BLE001 — sinon, la croix de la fenêtre
+            dialog.get_by_role("button").first.click()
+            dialog.wait_for(state="hidden", timeout=10_000)
+        d.idle()
         # 4. Mon compte : les candidatures
         d.click(page.get_by_role("link", name="Mon compte").first)
         page.get_by_text("Où en sont tes candidatures").first.wait_for(timeout=60_000)
@@ -175,6 +198,14 @@ def main() -> None:
             d.move_to(cards.nth(i), 0.3, 0.5)
             d.pause(a.pause_compte / 3)
         d.pause(1.0)
+        if not a.sans_outro:  # 5. outro
+            page.mouse.move(-50, -50)
+            logo = LOGO_SVG.read_text(encoding="utf-8")
+            logo = logo.replace('width="1022" height="216"', 'height="100%"')
+            page.evaluate(OUTRO_JS.read_text(encoding="utf-8"), logo)
+            for i, sec in enumerate((1.3, 1.4, 1.4, 1.4, 1.6, 2.4)):  # ~9,5 s
+                d.pause(sec)
+                d.snap(f"outro_{i}")
         raw = None if a.essai else Path(page.video.path())
         ctx.close()
         browser.close()

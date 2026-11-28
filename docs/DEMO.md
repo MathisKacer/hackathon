@@ -34,7 +34,7 @@ uv run --with playwright --with imageio-ffmpeg python scripts/demo_video.py
 
 Récupérer la vidéo : clic droit sur `data/demo/demo.mp4` dans l'explorateur de VS Code › Download.
 
-**Version « parcours complet »** (intro → accueil rempli → Rechercher → zoom sur la carte et clic sur un point orange → Entreprises › « Apple » → **Mon compte** « Moussaillon » avec 6 candidatures) : `data/demo/demo_complet.mp4`, ~51 s.
+**Version « parcours complet »** (intro → accueil rempli → Rechercher → zoom sur la carte et clic sur un point orange → Entreprises › « Apple » → fiche Apple Retail France → **Mon compte** « Moussaillon » avec 6 candidatures → **outro** : le « O » boussole du logo grossit, monte dans un bateau, l'aiguille se fixe quand le bateau démarre, puis logo et slogan) : `data/demo/demo_complet.mp4`, ~71 s. Animation de l'outro : `scripts/demo_outro.js` ; `--sans-outro` pour l'enlever ; raccourcir avec `--pause-compte`, `--pause-fiche`, `--pause-point`.
 ```bash
 uv run python scripts/demo_compte.py   # compte « moussaillon » + candidatures (identifiants dans data/demo/.compte_demo, hors Git)
 uv run --with playwright --with imageio-ffmpeg python scripts/demo_video_complet.py
