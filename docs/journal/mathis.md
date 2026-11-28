@@ -356,3 +356,7 @@
 ## 2026-11-28 — T61 : scénario de démo
 
 - `docs/DEMO.md` : 3 actes en 5 min (Rennes stage : SPIKEELABS opportunité cachée, Hellowork sans aucune offre, IFIP/MGEN hors ESN ; Lyon alternance ; diapo validation AUC 0,92), checklist, chiffres pour le jury, pièges (Guéret, Paris, scores en alternance), plan B.
+
+## 2026-11-28 — T62 : vidéo de démo automatique
+
+- `scripts/demo_video.py` : Playwright sans écran (Chromium + dépendances système installées sur le pod), passage à blanc pour chauffer les caches, curseur visible injecté, rognage et MP4 via imageio-ffmpeg. Résultat `data/demo/demo.mp4` (55 s) : accueil rempli → carte → Entreprises › Hellowork → fiche du site (Cible prioritaire, aucune offre publiée).

@@ -23,6 +23,19 @@ La démo est **toujours une vidéo enregistrée à l'avance**, jamais l'appli en
 
 ## Enregistrer
 
+**Automatique (recommandé)** : `scripts/demo_video.py` pilote un navigateur sans écran sur le pod et produit `data/demo/demo.mp4` (55 s, 1080p, H.264, muette, curseur visible). L'appli doit tourner sur le port 8501.
+
+```bash
+uv run --with playwright playwright install chromium        # une fois par pod
+uv run --with playwright playwright install-deps chromium   # une fois par pod (sudo)
+uv run --with playwright --with imageio-ffmpeg python scripts/demo_video.py
+# --essai : captures d'écran de chaque étape ; --pause-carte / --pause-fiche : caler sur l'orateur
+```
+
+Récupérer la vidéo : clic droit sur `data/demo/demo.mp4` dans l'explorateur de VS Code › Download.
+
+**À la main** (si besoin) :
+
 - **Outil** : Windows `Win + G` (Xbox Game Bar) ou `Win + Alt + R` ; macOS `Cmd + Shift + 5` ; ou OBS Studio. Enregistrer **la fenêtre du navigateur seule**, en **1080p**, MP4.
 - Faire **3 ou 4 prises** en lisant le texte à voix haute pour le rythme, garder la meilleure.
 - **Montage minimal** (Clipchamp sous Windows, iMovie sous macOS, ou l'éditeur de Canva) : couper le début et la fin, accélérer les attentes (frappe de « Hellowork », chargement), viser **55 à 60 s**. Facultatif : un zoom sur la phrase « Recommandée car… » de la fiche.
@@ -33,10 +46,10 @@ La démo est **toujours une vidéo enregistrée à l'avance**, jamais l'appli en
 
 | Temps | Action | Ce qu'on dit (≈ 130 mots en tout) |
 |---|---|---|
-| 0:00 – 0:10 | Accueil déjà rempli → **Rechercher** | « Je suis à l'ENSAI, je cherche un stage data autour de Rennes. » |
-| 0:10 – 0:25 | Montrer la carte, sans cliquer | « En bleu, les offres publiées : ce que tout le monde voit. En orange, ce que personne ne voit : des entreprises qui ont un besoin data, mais aucune offre de stage. Sur 4 000 entreprises autour de Rennes, Compass garde les meilleures cibles. » |
-| 0:25 – 0:50 | Barre du haut › **Entreprises** → taper **Hellowork** → ouvrir la fiche du site de Rennes (●●● Cible prioritaire) | « Hellowork : aucune offre data publiée. Pourtant c'est une cible prioritaire : 250 à 499 salariés, dans un secteur qui recrute énormément de profils data. Chaque recommandation est expliquée en une phrase. » |
-| 0:50 – 1:00 | Rester sur la fiche | « Une candidature spontanée bien ciblée, c'est une offre qu'on trouve avant qu'elle paraisse. » |
+| 0:00 – 0:05 | Accueil déjà rempli → **Rechercher** | « Je suis à l'ENSAI, je cherche un stage data autour de Rennes. » |
+| 0:05 – 0:24 | La carte s'affiche, le curseur survole un point orange (info-bulle « Cible prioritaire ») | « En bleu, les offres publiées : ce que tout le monde voit. En orange, ce que personne ne voit : des entreprises qui ont un besoin data, mais aucune offre de stage. Sur 4 000 entreprises autour de Rennes, Compass garde les meilleures cibles. » |
+| 0:24 – 0:45 | Barre du haut › **Entreprises** → **Hellowork**, Rennes → fiche du site de Rennes (●●● Cible prioritaire) | « Hellowork : aucune offre data publiée. Pourtant c'est une cible prioritaire : 250 à 499 salariés, dans un secteur qui recrute énormément de profils data. Chaque recommandation est expliquée en une phrase. » |
+| 0:45 – 0:55 | Fiche : décomposition du score, « aucune offre du domaine observée » | « Une candidature spontanée bien ciblée, c'est une offre qu'on trouve avant qu'elle paraisse. » |
 
 **Variante si Hellowork n'est plus en « Cible prioritaire »** au moment d'enregistrer : onglet **Candidatures spontanées**, ouvrir la 1ʳᵉ ligne (**SPIKEELABS** : 6 offres d'emploi data, aucun stage) et dire « elle recrute en data, mais n'a jamais publié de stage ».
 
