@@ -98,6 +98,8 @@
 
 ## 🔵 En cours
 
+- [ ] T95 — **Harmoniser l'apparence** des pages Entreprises, Mon compte, Se connecter et S'inscrire avec l'accueil et la page de la carte (plus de bandeau en dégradé, chiffres de Mon compte plus sobres) et rendre le logo visible en mode sombre — @celia (branche `celia/interface`)
+
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
 - _…_
 

@@ -8,8 +8,7 @@ from compte import signup_form
 from entete import page
 from style import hero
 
-hero("S'inscrire", "Crée ton compte pour garder tes compétences, tes favoris et tes recherches.",
-     compact=True)  # fmt: skip
+hero("S'inscrire", "Crée ton compte pour garder tes compétences, tes favoris et tes recherches.")
 left, right = st.columns([1, 1], gap="large")
 with left:
     st.markdown("#### Pourquoi créer un compte ?")

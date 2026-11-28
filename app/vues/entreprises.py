@@ -35,19 +35,27 @@ def _search(query: str, commune: str) -> pd.DataFrame:
 hero(
     "Entreprises",
     "Cherche une entreprise pour voir sa fiche : activité, taille, sites, offres, situation.",
-    compact=True,
 )
 
-c1, c2 = st.columns([3, 1], vertical_alignment="bottom")
-query = c1.text_input(
-    "Entreprise",
-    key="recherche_entreprise",
-    placeholder="Nom de l'entreprise, SIREN ou SIRET",
-)
-commune = c2.text_input("Ville ou code postal", key="recherche_commune", placeholder="Facultatif")
+# T95 : recherche centrée dans une carte, comme sur l'accueil
+_, mid, _ = st.columns([1, 3, 1])
+with mid, st.container(border=True, key="espace_recherche_entreprise"):
+    c1, c2 = st.columns([2.2, 1], vertical_alignment="bottom")
+    query = c1.text_input(
+        "Entreprise",
+        key="recherche_entreprise",
+        placeholder="Nom de l'entreprise, SIREN ou SIRET",
+    )
+    commune = c2.text_input(
+        "Ville ou code postal", key="recherche_commune", placeholder="Facultatif"
+    )
 
 if not query.strip():
-    st.write("Exemples : Orange, Crédit Agricole, Sopra Steria, Insee…")
+    st.markdown(
+        "<div class='page-head'><p>Exemples : Orange, Crédit Agricole, Sopra Steria, Insee…"
+        "</p></div>",
+        unsafe_allow_html=True,
+    )
     st.stop()
 
 hits = _search(query.strip(), commune.strip())
@@ -87,26 +95,29 @@ table = pd.DataFrame(
 if table["Situation"].isna().all():
     table = table.drop(columns="Situation")
 
-n_comp = int(is_company.sum())
-st.write(
-    (f"{n_comp} entreprise{'s' if n_comp > 1 else ''} et " if n_comp else "")
-    + f"{len(hits)} site{'s' if len(hits) > 1 else ''}"
-    + (" (les 50 plus proches de ta recherche)" if len(hits) == 50 else "")
-    + " — clique sur un nom pour ouvrir la fiche."
-)
-version = st.session_state.get("_liste_version", 0)
-event = st.dataframe(
-    # T72 : le nom ressemble à un lien ; un clic sur le nom ouvre la fiche
-    table.style.map(lambda _: LINK_STYLE, subset=["Entreprise"]),
-    hide_index=True,
-    width="stretch",
-    on_select="rerun",
-    selection_mode="single-cell",
-    key=f"liste_entreprises_{version}",
-    column_config={
-        "Entreprise": st.column_config.TextColumn(help="Clique sur le nom pour ouvrir la fiche.")
-    },
-)
+with st.container(border=True, key="espace_resultats_entreprises"):
+    n_comp = int(is_company.sum())
+    st.write(
+        (f"{n_comp} entreprise{'s' if n_comp > 1 else ''} et " if n_comp else "")
+        + f"{len(hits)} site{'s' if len(hits) > 1 else ''}"
+        + (" (les 50 plus proches de ta recherche)" if len(hits) == 50 else "")
+        + " — clique sur un nom pour ouvrir la fiche."
+    )
+    version = st.session_state.get("_liste_version", 0)
+    event = st.dataframe(
+        # T72 : le nom ressemble à un lien ; un clic sur le nom ouvre la fiche
+        table.style.map(lambda _: LINK_STYLE, subset=["Entreprise"]),
+        hide_index=True,
+        width="stretch",
+        on_select="rerun",
+        selection_mode="single-cell",
+        key=f"liste_entreprises_{version}",
+        column_config={
+            "Entreprise": st.column_config.TextColumn(
+                help="Clique sur le nom pour ouvrir la fiche."
+            )
+        },
+    )
 cells = event.selection.cells if event is not None else []
 if cells and cells[0][1] == "Entreprise":
     r = rows_all.iloc[cells[0][0]]

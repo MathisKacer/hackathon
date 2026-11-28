@@ -1,4 +1,4 @@
-"""Apparence de l'app (T70) : CSS commun, bandeau d'en-tête, tuiles de chiffres, cartes.
+"""Apparence de l'app (T70) : CSS commun, en-tête de page, chiffres de Mon compte, cartes.
 
 Le thème de base (couleurs, police) est dans .streamlit/config.toml. Ici : ce que le thème
 ne sait pas faire. Les blocs stylés sont des `st.container(key=...)` : Streamlit leur donne la
@@ -6,11 +6,12 @@ classe CSS `st-key-<clé>`, plus stable que les classes internes.
 
     inject_css()                         # une fois, dans app/streamlit_app.py
     hero("Radar", "Trouve les entreprises…")
-    kpi_tiles([Tile("3 755", "entreprises à contacter", ORANGE, "domain"), …])
+    stat_bar([Stat("4", "candidatures"), Stat("1", "à relancer", alert=True)])
 """
 
 from __future__ import annotations
 
+import base64
 import html
 from dataclasses import dataclass
 from pathlib import Path
@@ -47,41 +48,31 @@ _CSS = """
     box-shadow: 0 10px 28px {shadow}; transform: translateY(-1px); transition: all .15s;
 }}
 
-/* Bandeau d'en-tête : dégradé indigo → bleu → turquoise, radar animé à droite */
-.radar-hero {{
-    background: linear-gradient(115deg, #1B2A6B 0%, #3B5BDB 55%, #15AABF 100%);
-    color: #fff; border-radius: 22px; padding: 1.9rem 2rem 3.4rem 2rem;
-    margin-bottom: -2.2rem; position: relative; overflow: hidden;
-}}
-.radar-hero h1 {{ color: #fff; font-size: 2.3rem; font-weight: 800; margin: 0 0 .35rem 0;
-                 padding: 0; letter-spacing: -.02em; }}
-.radar-hero p {{ color: rgba(255,255,255,.9); font-size: 1.05rem; margin: 0; max-width: 40rem; }}
-.radar-hero .badges {{ margin-top: .8rem; display: flex; gap: .5rem; flex-wrap: wrap; }}
-.radar-hero .badges span {{ background: rgba(255,255,255,.16); border: 1px solid
-    rgba(255,255,255,.25); border-radius: 999px; padding: .2rem .7rem; font-size: .82rem; }}
-.radar-hero svg.compass {{ position: absolute; right: 2rem; top: 50%; width: 170px;
-    height: 170px; transform: translateY(-50%); opacity: .95;
-    filter: drop-shadow(0 6px 18px rgba(0,0,0,.25)); }}
-@media (max-width: 900px) {{ .radar-hero svg.compass {{ display: none; }} }}
-.radar-hero.compact {{ padding: 1.3rem 1.7rem; margin-bottom: 1rem; }}
-.radar-hero.compact h1 {{ font-size: 1.7rem; }}
-.radar-hero.compact svg.compass {{ width: 96px; height: 96px; right: 1.5rem; }}
+/* En-tête des pages (T95) : comme l'accueil — titre centré, trait orange, phrase grise */
+.page-head {{ text-align: center; margin: .8rem 0 1.5rem 0; }}
+.page-head h1 {{ font-size: 2rem; font-weight: 800; color: inherit; margin: 0; padding: 0;
+                letter-spacing: -.02em; }}
+.page-head h1::after {{ content: ""; display: block; width: 3rem; height: 3px;
+                       border-radius: 2px; background: #E4572E; margin: .55rem auto; }}
+.page-head p {{ color: {muted}; font-size: 1.1rem; margin: 0; }}
+.page-avatar {{ display: inline-flex; width: 3.2rem; height: 3.2rem; border-radius: 50%;
+               align-items: center; justify-content: center; font-size: 1.4rem;
+               font-weight: 800; background: rgba(59, 91, 219, {tint}); margin-bottom: .4rem; }}
+.st-key-page_compte {{ width: 100%; max-width: 64rem; margin: 0 auto; }}
 
 .st-key-carte_recherche {{ position: relative; z-index: 2; }}
 
-/* Tuiles de chiffres : icône dans une pastille teintée, grand chiffre */
-.radar-tiles {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-               gap: .9rem; margin: .6rem 0 1.1rem 0; }}
-.radar-tile {{ background: {card}; border-radius: 16px; padding: 1rem 1.1rem;
-              display: flex; gap: .85rem; align-items: center;
-              box-shadow: 0 1px 2px {shadow}, 0 8px 22px {shadow};
-              border-top: 4px solid var(--c); }}
-.radar-tile .i {{ flex: none; width: 2.6rem; height: 2.6rem; border-radius: 12px;
-                 display: flex; align-items: center; justify-content: center;
-                 font-size: 1.35rem; background: color-mix(in srgb, var(--c) calc({tint} * 100%),
-                 transparent); }}
-.radar-tile .v {{ font-size: 1.75rem; font-weight: 800; color: var(--c); line-height: 1.05; }}
-.radar-tile .l {{ font-size: .86rem; color: {muted}; margin-top: .15rem; }}
+/* Chiffres de Mon compte (T95) : une seule carte, séparateurs fins, texte neutre */
+.stat-bar {{ display: flex; flex-wrap: wrap; background: {card}; border-radius: 16px;
+            box-shadow: 0 1px 2px {shadow}, 0 8px 24px {shadow};
+            padding: .9rem 0; margin: .2rem 0 1.1rem 0; }}
+.stat {{ flex: 1 1 8rem; text-align: center; padding: .1rem .8rem;
+        border-left: 1px solid rgba(128, 128, 128, .25); }}
+.stat:first-child {{ border-left: none; }}
+.stat .v {{ font-size: 1.6rem; font-weight: 700; color: {title}; line-height: 1.2; }}
+.stat .l {{ font-size: .88rem; color: {muted}; }}
+.stat.alert .l::before {{ content: ""; display: inline-block; width: .5rem; height: .5rem;
+                         border-radius: 50%; background: #E4572E; margin-right: .35rem; }}
 
 /* Titre de section (« Tableau de bord ») */
 .radar-section {{ font-size: 1.15rem; font-weight: 750; color: {title}; margin: 1.1rem 0 .5rem 0;
@@ -99,11 +90,6 @@ _CSS = """
 .radar-step-n {{ display: inline-flex; width: 2.2rem; height: 2.2rem; border-radius: 12px;
                 align-items: center; justify-content: center; font-weight: 800; color: #fff;
                 background: linear-gradient(135deg, #3B5BDB, #15AABF); margin-bottom: .4rem; }}
-
-.radar-hero .who {{ display: flex; align-items: center; gap: 1rem; }}
-.radar-avatar {{ width: 3.4rem; height: 3.4rem; border-radius: 50%; flex: none;
-                display: flex; align-items: center; justify-content: center;
-                font-size: 1.5rem; font-weight: 800; color: #3B5BDB; background: #fff; }}
 
 [data-testid="stTab"] p {{ font-size: 1rem; font-weight: 650; }}
 
@@ -124,14 +110,22 @@ header[data-testid="stHeader"] button, header[data-testid="stHeader"] a,
 .st-key-entete [data-testid="stElementContainer"],
 .st-key-entete [data-testid="stPageLink"] {{ margin: 0 !important; }}
 /* Logo = lien vers l'accueil (même session) ; texte remplacé par l'image */
-[class*="st-key-entete_logo_"] [data-testid="stPageLink"] a {{
-    width: 10rem; height: 2.4rem; background: center left / contain no-repeat;
+.st-key-entete_logo [data-testid="stPageLink"] {{ position: relative; width: 10rem; }}
+.st-key-entete_logo [data-testid="stPageLink"] a {{ width: 10rem; height: 2.4rem;
     padding: 0 !important; }}
-[class*="st-key-entete_logo_"] [data-testid="stPageLink"] a * {{ opacity: 0; }}
-.st-key-entete_logo_clair [data-testid="stPageLink"] a {{
-    background-image: url("app/static/logo-compass-clair.svg"); }}
-.st-key-entete_logo_sombre [data-testid="stPageLink"] a {{
-    background-image: url("app/static/logo-compass-sombre.svg"); }}
+.st-key-entete_logo [data-testid="stPageLink"] a * {{ opacity: 0; }}
+/* T95 : le logo est dessiné dans la couleur du texte du thème (masque), l'aiguille orange
+   par-dessus : visible en clair comme en sombre sans deviner le thème ; les clics passent */
+.st-key-entete_logo [data-testid="stPageLink"]::before,
+.st-key-entete_logo [data-testid="stPageLink"]::after {{
+    content: ""; position: absolute; left: 0; top: 0; width: 10rem; height: 2.4rem;
+    pointer-events: none; }}
+.st-key-entete_logo [data-testid="stPageLink"]::before {{
+    background-color: currentColor;
+    -webkit-mask: url("{logo_texte}") left center / contain no-repeat;
+    mask: url("{logo_texte}") left center / contain no-repeat; }}
+.st-key-entete_logo [data-testid="stPageLink"]::after {{
+    background: url("{logo_aiguille}") left center / contain no-repeat; }}
 .st-key-entete [data-testid="stPageLink"] a {{ border-radius: 999px; padding: .25rem .8rem; }}
 .st-key-entete_inscription [data-testid="stPageLink"] a {{
     background: linear-gradient(135deg, #3B5BDB, #15AABF); }}
@@ -180,14 +174,27 @@ img[data-testid="stLogo"], [data-testid="stHeaderLogo"] img {{
 </style>
 """
 
-# Boussole du bandeau (T93) : le C-boussole d'Emma en version claire (blanc + aiguille orange),
-# lisible sur le dégradé ; lue une fois dans app/static/.
-_ICON_FILE = Path(__file__).resolve().parent / "static" / "icone-compass-sombre.svg"
-COMPASS_SVG = (
-    _ICON_FILE.read_text(encoding="utf-8").replace("<svg ", "<svg class='compass' ", 1)
-    if _ICON_FILE.exists()
-    else ""
-)
+# Logo « Compass » (SVG d'Emma) découpé en deux images pour la barre du haut (T95) : tout sauf
+# l'aiguille orange (utilisé comme masque, coloré par le thème), et l'aiguille orange seule.
+_LOGO_FILE = Path(__file__).resolve().parent / "static" / "logo-compass-clair.svg"
+LOGO_NAVY, LOGO_ORANGE = "#14213D", "#E4572E"
+
+
+def _data_uri(svg: str) -> str:
+    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")
+
+
+def _logo_layers() -> dict[str, str]:
+    if not _LOGO_FILE.exists():
+        return {"logo_texte": "", "logo_aiguille": ""}
+    svg = _LOGO_FILE.read_text(encoding="utf-8")
+    return {
+        "logo_texte": _data_uri(svg.replace(LOGO_ORANGE, "none")),
+        "logo_aiguille": _data_uri(svg.replace(LOGO_NAVY, "none")),
+    }
+
+
+LOGO_LAYERS = _logo_layers()
 
 
 def _palette() -> dict[str, str]:
@@ -199,33 +206,29 @@ def _palette() -> dict[str, str]:
     return PALETTES.get(mode, PALETTES["light"])
 
 
-CSS = _CSS.format(**PALETTES["light"])  # version claire, pour qui l'importe directement
+CSS = _CSS.format(
+    **PALETTES["light"], **LOGO_LAYERS
+)  # version claire, pour qui l'importe directement
 
 
 def inject_css() -> None:
-    st.markdown(_CSS.format(**_palette()), unsafe_allow_html=True)
+    st.markdown(_CSS.format(**_palette(), **LOGO_LAYERS), unsafe_allow_html=True)
 
 
-def hero(title: str, tagline: str, compact: bool = False, badges: list[str] = ()) -> None:
-    """Bandeau d'en-tête coloré (titre + accroche + radar animé, pastilles facultatives)."""
-    cls = "radar-hero compact" if compact else "radar-hero"
-    tags = "".join(f"<span>{html.escape(b)}</span>" for b in badges)
+def hero(title: str, tagline: str) -> None:
+    """En-tête d'une page (T95) : titre centré et phrase, dans le style de l'accueil."""
     st.markdown(
-        f"<div class='{cls}'>{COMPASS_SVG}<h1>{html.escape(title)}</h1>"
-        f"<p>{html.escape(tagline)}</p>"
-        + (f"<div class='badges'>{tags}</div>" if tags else "")
-        + "</div>",
+        f"<div class='page-head'><h1>{html.escape(title)}</h1><p>{html.escape(tagline)}</p></div>",
         unsafe_allow_html=True,
     )
 
 
 def profile_header(username: str, tagline: str) -> None:
-    """Bandeau de Mon espace : initiale dans un rond, « Bonjour … » et une phrase."""
+    """En-tête de Mon compte : initiale dans un rond, « Bonjour … » et une phrase."""
     initial = html.escape(username[:1].upper() or "?")
     st.markdown(
-        f"<div class='radar-hero compact'><div class='who'><span class='radar-avatar'>{initial}"
-        f"</span><div><h1>Bonjour {html.escape(username)}</h1><p>{html.escape(tagline)}</p>"
-        "</div></div></div>",
+        f"<div class='page-head'><span class='page-avatar'>{initial}</span>"
+        f"<h1>Bonjour {html.escape(username)}</h1><p>{html.escape(tagline)}</p></div>",
         unsafe_allow_html=True,
     )
 
@@ -248,23 +251,21 @@ def fiche_header(title: str, subtitle: str, chips: list[str]) -> None:
 
 
 @dataclass(frozen=True)
-class Tile:
+class Stat:
     value: str
     label: str
-    color: str
-    icon: str = ""  # T93 : emoji dans une pastille teintée
+    alert: bool = False  # point orange : quelque chose à faire
 
 
-def kpi_tiles(tiles: list[Tile]) -> None:
-    """Rangée de tuiles : un grand chiffre coloré et un libellé."""
+def stat_bar(stats: list[Stat]) -> None:
+    """Les chiffres d'une page, dans une seule carte."""
     cells = "".join(
-        f"<div class='radar-tile' style='--c:{t.color}'>"
-        + (f"<div class='i'>{html.escape(t.icon)}</div>" if t.icon else "")
-        + f"<div><div class='v'>{html.escape(t.value)}</div>"
-        f"<div class='l'>{html.escape(t.label)}</div></div></div>"
-        for t in tiles
+        f"<div class='stat{' alert' if s.alert else ''}'>"
+        f"<div class='v'>{html.escape(s.value)}</div>"
+        f"<div class='l'>{html.escape(s.label)}</div></div>"
+        for s in stats
     )
-    st.markdown(f"<div class='radar-tiles'>{cells}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='stat-bar'>{cells}</div>", unsafe_allow_html=True)
 
 
 def pill(text: str, color: str) -> str:

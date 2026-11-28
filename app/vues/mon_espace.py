@@ -86,7 +86,7 @@ def favorites_section() -> None:
     with tab_c:
         for f in companies:
             d = f["details"]
-            with st.container(border=True):
+            with st.container(border=True, key=f"espace_favori_e_{f['ref'].replace(':', '_')}"):
                 left, b1, b2 = st.columns([4, 1, 1], vertical_alignment="center")
                 left.markdown(f"**{f['label']}**")
                 left.caption(
@@ -116,7 +116,7 @@ def favorites_section() -> None:
         online = set(o["source"].astype(str) + ":" + o["offre_id"].astype(str))
         for f in offers_fav:
             d = f["details"]
-            with st.container(border=True):
+            with st.container(border=True, key=f"espace_favori_o_{f['ref'].replace(':', '_')}"):
                 left, b1, b2 = st.columns([4, 1, 1], vertical_alignment="center")
                 left.markdown(f"**{f['label']}**")
                 bits = [d.get("commune"), (d.get("contrat") or "").capitalize() or None]

@@ -8,7 +8,7 @@ from compte import login_form
 from entete import page
 from style import hero
 
-hero("Se connecter", "Retrouve tes compétences, tes favoris et tes recherches.", compact=True)
+hero("Se connecter", "Retrouve tes compétences, tes favoris et tes recherches.")
 _, mid, _ = st.columns([1, 1.4, 1])
 with mid:
     with st.container(border=True, key="espace_connexion"):

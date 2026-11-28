@@ -23,7 +23,7 @@ from zoneinfo import ZoneInfo
 
 import streamlit as st
 from admin_ui import must_change_banner, password_change_box
-from style import NAVY, Tile, hero, kpi_tiles, profile_header
+from style import Stat, hero, profile_header, stat_bar
 
 from radar import accounts
 
@@ -281,8 +281,7 @@ def _delete_account_box(con, user: dict) -> None:
 
 def _anonymous_page(saved_keys: dict, favorites_section, searches_section, keys: dict) -> None:
     """Sans compte (T93) : seulement le formulaire « Se connecter » (l'inscription a sa page)."""
-    hero("Se connecter", "Ton compte garde tes compétences, tes favoris et tes recherches.",
-         compact=True)  # fmt: skip
+    hero("Se connecter", "Ton compte garde tes compétences, tes favoris et tes recherches.")
     _, mid, _ = st.columns([1, 1.4, 1])
     with mid, st.container(border=True, key="espace_connexion"):
         login_form(saved_keys, go="compte")
@@ -318,6 +317,18 @@ def account_page(
         _anonymous_page(saved_keys, favorites_section, searches_section, profile_keys)
         return
 
+    with st.container(key="page_compte"):  # T95 : même largeur de lecture que l'accueil
+        _connected_page(
+            user, profile_keys, labels, saved_keys, favorites_section,
+            candidatures_section, searches_section, profile_editor,
+        )  # fmt: skip
+
+
+def _connected_page(
+    user, profile_keys, labels, saved_keys, favorites_section,
+    candidatures_section, searches_section, profile_editor,
+) -> None:  # fmt: skip
+    """Mon compte, une fois connecté : en-tête, chiffres, onglets."""
     con = _con()
     profile_header(user["username"], "Où en sont tes candidatures ?")
     _, right = st.columns([5, 1])
@@ -332,18 +343,18 @@ def account_page(
     n_due = sum(accounts.a_relancer(f) for f in applied)  # T90
     searches = accounts.list_saved_searches(con, user["id"])
     counts = (
-        (len(applied), "candidature", "#1a56db"),
-        (interviews, "entretien", "#6d28d9"),
-        (len(favs), "favori", "#e8590c"),
-        (len(searches), "recherche enregistrée", NAVY),
+        (len(applied), "candidature"),
+        (interviews, "entretien"),
+        (len(favs), "favori"),
+        (len(searches), "recherche enregistrée"),
     )
-    tiles = [
-        Tile(str(n), " ".join(w + ("s" if n > 1 else "") for w in words.split()), color)
-        for n, words, color in counts
+    stats = [
+        Stat(str(n), " ".join(w + ("s" if n > 1 else "") for w in words.split()))
+        for n, words in counts
     ]
-    if n_due:  # T90 : tuile affichée seulement quand il y a quelque chose à faire
-        tiles.insert(0, Tile(str(n_due), "à relancer", "#c2410c"))
-    kpi_tiles(tiles)
+    if n_due:  # T90 : affiché seulement quand il y a quelque chose à faire
+        stats.insert(0, Stat(str(n_due), "à relancer", alert=True))
+    stat_bar(stats)
 
     names = [":material/send: Mes candidatures", ":material/star: Mes favoris"]
     names += [":material/history: Mes recherches", ":material/person: Mon profil"]
@@ -358,7 +369,7 @@ def account_page(
         if searches_section is not None:
             searches_section(profile_keys)
     with tab_profile:
-        _profile_section(con, user, saved_keys, labels, profile_editor)
-        st.divider()
+        with st.container(border=True, key="espace_profil"):
+            _profile_section(con, user, saved_keys, labels, profile_editor)
         password_change_box(con, user)  # T79 (D39)
         _delete_account_box(con, user)

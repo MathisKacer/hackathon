@@ -18,14 +18,13 @@ import streamlit as st
 STATIC = Path(__file__).resolve().parent / "static"
 
 
-def _mode() -> str:
-    return "sombre" if getattr(st.context.theme, "type", None) == "dark" else "clair"
-
-
 def logo_svg() -> str:
-    """Le mot « Compass » (SVG d'Emma), clair ou sombre selon le thème, à insérer en HTML."""
-    f = STATIC / f"logo-compass-{_mode()}.svg"
-    return f.read_text(encoding="utf-8") if f.exists() else "<b>Compass</b>"
+    """Le mot « Compass » (SVG d'Emma) à insérer en HTML, dans la couleur du texte du thème
+    (l'aiguille reste orange)."""
+    f = STATIC / "logo-compass-clair.svg"
+    if not f.exists():
+        return "<b>Compass</b>"
+    return f.read_text(encoding="utf-8").replace("#14213D", "currentColor")
 
 
 PAGES_KEY = "_pages"
@@ -49,8 +48,8 @@ def header(pages: dict, current: str, user: dict | None, is_admin: bool = False)
         left, _, right = st.columns([2.2, 3, 4.2], vertical_alignment="center")
         if current != "accueil":
             # Le logo est un lien Streamlit (même session : on reste connecté), dont le texte
-            # est remplacé par l'image en CSS (app/static/, servi par Streamlit).
-            with left, st.container(key=f"entete_logo_{_mode()}"):
+            # est remplacé par le logo en CSS (app/style.py).
+            with left, st.container(key="entete_logo"):
                 st.page_link(pages["accueil"], label="Compass")
         with right, st.container(horizontal=True, horizontal_alignment="right", gap="small"):
             if current != "accueil":
