@@ -5,9 +5,13 @@ Entrées : entreprises.parquet (T20), offres.parquet rapprochées (T13 + T21),
 data/raw/offres_raw/adzuna_couverture.json (couverture de la collecte par région).
 
 Composantes (v0, D13) :
-- c_intensite : rang centile de l'intensité a posteriori (offres du domaine / 100 salariés) ;
+- c_intensite : intensité a posteriori (offres du domaine / 100 salariés) en **échelle log
+                absolue** (D48) : 0 à la médiane nationale, 1 au 99,5e centile ;
 - c_embauche  : La Bonne Boîte d'abord (`lbb_potentiel`), puis le proxy « besoin attendu »
-                (intensité × effectif local) pour les autres → `c_embauche_source` (T28, D27) ;
+                (intensité × effectif local, même échelle log) pour les autres →
+                `c_embauche_source` (T28, D27) ;
+- rang_intensite, rang_embauche : les anciens rangs centiles (0 à 1), gardés pour les phrases
+                (« plus que 92 % des entreprises ») et le modèle de réponse simulé ;
 - c_dynamisme : 0,5 (neutre) tant que les finances ne sont pas chargées (T22) →
                 `c_dynamisme_disponible`.
 Les établissements d'agences d'intérim / de placement (NAF 78.*) ne sont pas notés.
@@ -52,6 +56,21 @@ def load_coverage(path=COVERAGE_FILE) -> dict[str, float]:
 
 def pct_rank(s: pd.Series) -> pd.Series:
     return s.rank(pct=True, method="average")
+
+
+# D48 : bornes de l'échelle log (quantiles nationaux du domaine). Un rang centile écrasait tout :
+# en ville presque toutes les entreprises sont au-dessus de la médiane nationale (score médian
+# ~0,6 à Rennes, 300 entreprises au-dessus de 0,8) ; en log, un besoin ×10 se voit.
+LOG_SCALE_QUANTILES = (0.5, 0.995)
+
+
+def log_scale(x: pd.Series, ref: pd.Series | None = None) -> pd.Series:
+    """log10(x) ramené dans [0, 1] : 0 au quantile 50 % de `ref`, 1 au quantile 99,5 %."""
+    ref = x if ref is None else ref
+    lo, hi = np.log10(ref.quantile(list(LOG_SCALE_QUANTILES)).clip(lower=1e-9).to_numpy())
+    if hi <= lo:
+        return pd.Series(0.5, index=x.index)
+    return ((np.log10(x.astype(float).clip(lower=1e-9)) - lo) / (hi - lo)).clip(0, 1)
 
 
 def _dedupe_postings(o: pd.DataFrame, key: str) -> pd.DataFrame:
@@ -178,7 +197,8 @@ def build_scores(
         counts = ["n_offres", "n_offres_domaine", "n_stage_domaine", "n_alternance_domaine"]
         s[counts] = s[counts].fillna(0).astype(int)
         s["domaine"] = domain
-        s["c_intensite"] = pct_rank(s["intensite_post"])
+        s["rang_intensite"] = pct_rank(s["intensite_post"])
+        s["c_intensite"] = log_scale(s["intensite_post"])
         # Besoin attendu au niveau de l'ÉTABLISSEMENT (intensité de l'entreprise × effectif local) :
         # au niveau entreprise, chaque bureau de La Poste hériterait de 250 000 salariés.
         s["besoin_attendu"] = s["intensite_post"] * s["effectif_estime"].fillna(0) / 100.0

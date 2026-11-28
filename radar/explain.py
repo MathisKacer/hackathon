@@ -89,7 +89,8 @@ def reasons(row, contrat: str = "tous") -> list[tuple[str, str, float]]:
             )
         )
 
-    c_int = _num(row, "c_intensite")
+    c_int = _num(row, "rang_intensite")  # rang centile (D48) ; anciens fichiers : c_intensite
+    c_int = _num(row, "c_intensite") if c_int is None else c_int
     if c_int is not None and c_int >= 0.5:
         top = max(1, round((1 - c_int) * 100))
         secteur = row.get("naf_libelle")

@@ -19,7 +19,11 @@ def _s():
 def test_without_lbb_keeps_proxy_order():
     out = embauche_component(_s(), None)
     assert (out["c_embauche_source"] == SOURCE_PROXY).all()
-    assert out.sort_values("c_embauche")["siret"].tolist() == ["C", "B", "E", "A", "D"]
+    # D48 : rang centile gardé dans `rang_embauche` ; `c_embauche` (échelle log) suit le même
+    # ordre, mais tout ce qui est sous la médiane vaut 0 (ex æquo)
+    assert out.sort_values("rang_embauche")["siret"].tolist() == ["C", "B", "E", "A", "D"]
+    ordered = out.set_index("siret").loc[["C", "B", "E", "A", "D"], "c_embauche"]
+    assert ordered.is_monotonic_increasing and ordered.iloc[-1] > ordered.iloc[0]
     assert out["c_embauche"].between(0, 1).all()
 
 
@@ -92,3 +96,16 @@ def test_collect_paginates_and_deduplicates():
     assert ("Bretagne", 2) in client.calls and ("Bretagne", 3) not in client.calls
     best = lbb.best_by_siret(pd.concat([df, df.assign(rome="M1405", lbb_potentiel=999.0)]), "data")
     assert len(best) == 150 and (best["lbb_potentiel"] == 999.0).all()  # max sur les métiers
+
+
+def test_log_scale_spreads_the_top():
+    """D48 : 0 à la médiane, 1 au 99,5e centile, et un besoin ×10 se voit (pas un rang)."""
+    import numpy as np
+
+    from radar.score.build import log_scale
+
+    x = pd.Series(np.logspace(-4, 1, 1001))
+    c = log_scale(x)
+    assert c.iloc[:500].eq(0).all() and c.iloc[-5:].eq(1).all()
+    assert c.is_monotonic_increasing
+    assert 0.4 < c.iloc[800] < 0.7  # 80e centile : bien en dessous de 0,8 (un rang donnerait 0,8)

@@ -78,10 +78,10 @@ def candidature_facts(
             "besoin estimé d'après le secteur et la taille."
         )
     lignes = []
-    need = level_words(_get(row, "c_intensite", default=None))
+    need = level_words(_get(row, "rang_intensite", "c_intensite", default=None))  # D48
     if need:
         lignes.append(f"Besoin en {domaine_label} : {need}.")
-    hire = level_words(_get(row, "c_embauche", default=None))
+    hire = level_words(_get(row, "rang_embauche", "c_embauche", default=None))
     if hire:
         lignes.append(f"Besoin attendu {site_phrase} (selon sa taille) : {hire}.")
     if recruteur_lba and c in ("alternance", "tous"):

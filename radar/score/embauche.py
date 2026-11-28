@@ -24,6 +24,12 @@ def _pct(s: pd.Series) -> pd.Series:
     return s.rank(pct=True, method="average")
 
 
+def _log(s: pd.Series) -> pd.Series:
+    from radar.score.build import log_scale  # import local : build importe ce module
+
+    return log_scale(s)
+
+
 def embauche_component(s: pd.DataFrame, lbb_best: pd.DataFrame | None) -> pd.DataFrame:
     """Ajoute `lbb_potentiel`, `c_embauche`, `c_embauche_source` à `s` (une ligne par siret).
 
@@ -39,10 +45,14 @@ def embauche_component(s: pd.DataFrame, lbb_best: pd.DataFrame | None) -> pd.Dat
     has = out["lbb_potentiel"].notna()
     share_proxy = 1.0 - has.mean()  # part de l'échelle laissée aux établissements sans LBB
     c = pd.Series(np.nan, index=out.index, dtype=float)
+    rang = pd.Series(np.nan, index=out.index, dtype=float)
     if (~has).any():
-        c[~has] = share_proxy * _pct(out.loc[~has, "besoin_attendu"].fillna(0.0))
+        besoin = out.loc[~has, "besoin_attendu"].fillna(0.0)
+        rang[~has] = share_proxy * _pct(besoin)
+        c[~has] = share_proxy * _log(besoin)  # D48 : échelle log absolue
     if has.any():
-        c[has] = share_proxy + (1.0 - share_proxy) * _pct(out.loc[has, "lbb_potentiel"])
+        rang[has] = c[has] = share_proxy + (1.0 - share_proxy) * _pct(out.loc[has, "lbb_potentiel"])
     out["c_embauche"] = c
+    out["rang_embauche"] = rang  # ancien rang centile : phrases et modèle de réponse simulé
     out["c_embauche_source"] = np.where(has, SOURCE_LBB, SOURCE_PROXY)
     return out

@@ -329,3 +329,9 @@
 - `radar/paliers.py` : seuil absolu de besoin attendu par palier (0,2 / 0,05 / 0,01). `app/carte.py` : `spontaneous_on_map`, paliers 1–2 d'abord, 150 au plus, 20 au moins. Tests dans `tests/test_paliers.py`.
 - Après : Rennes 56 prioritaires (carte 145 points, 79 % du besoin), Lyon 195, Guéret 0.
 - À faire : valider les seuils avec Celia ; bouton « Voir plus » (Emma) ; piste « classement par besoin attendu en log » si le temps le permet.
+
+## 2026-11-28 — Score orange plus discriminant (D48)
+
+- `c_intensite` et `c_embauche` (proxy) en échelle log absolue (0 = médiane nationale, 1 = 99,5e centile) au lieu de rangs centiles. Rangs gardés dans `rang_intensite` / `rang_embauche` pour les phrases et le modèle de réponse simulé (rapport inchangé).
+- Rennes 20 km : médiane 0,60 → 0,21 ; ≥ 0,8 : 289 → 59. Lyon ≥ 0,8 : 1 353 → 191. Tests : `tests/test_embauche.py`.
+- ⚠️ Chacun doit relancer `scripts/build_all.py` (scores.parquet hors Git).

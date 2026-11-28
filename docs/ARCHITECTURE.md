@@ -106,7 +106,7 @@ Le score final **n'est pas stocké** : l'app le calcule à la volée, `score = �
 ## Modèle de score (détail)
 
 **v1 (D33, en production)** : `radar/score/covariates.py`. k_i ~ BinNeg(μ_i E_i, φ) avec log μ_i = x_i·β (Poisson + offset log E, φ par moments), a posteriori Gamma(1/φ + k_i, 1/(φ μ_i) + E_i). Covariables dans `radar/score/features.py` : division NAF, taille, nb d'établissements, âge, modifications de capital (BODACC), densité d'entreprises data à 3 km, catégorie, ESS, mission. Repli automatique sur **v0 (D13)** (`radar/score/intensity.py`, a priori par secteur seulement) si les caractéristiques manquent ; `score_version` dans `scores.parquet`.
-- **Composantes** dans [0, 1] par rangs centiles : `c_intensite` (λ a posteriori), `c_embauche` (La Bonne Boîte d'abord, sinon besoin attendu de l'établissement, D27), `c_dynamisme` (neutre 0,5 en attendant T22).
+- **Composantes** dans [0, 1] (D48 : `c_intensite` et la part proxy de `c_embauche` en **échelle log absolue**, 0 à la médiane nationale, 1 au 99,5e centile ; anciens rangs centiles gardés dans `rang_intensite` / `rang_embauche` pour les phrases et le modèle de réponse simulé ; à l'origine rangs centiles) : `c_intensite` (λ a posteriori), `c_embauche` (La Bonne Boîte d'abord, sinon besoin attendu de l'établissement, D27), `c_dynamisme` (neutre 0,5 en attendant T22).
 - **Évaluation** : `scripts/eval_score.py` → `docs/EVAL_SCORE.md` (validation temporelle, besoin caché, AUC à taille comparable).
 
 ## Explication des recommandations (T32, D29)

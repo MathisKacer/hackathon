@@ -7,11 +7,11 @@ Règle **mixte** : une entreprise atteint un palier si elle est à la fois
 - au-dessus d'un **score minimal** (garde-fou : dans une zone ou pour un contrat où toutes les
   entreprises sont faibles, la meilleure n'est pas annoncée « prioritaire » pour autant) ;
 - au-dessus d'un **besoin attendu minimal** (D47, valeur absolue : offres du domaine attendues
-  sur la période observée, intensité a posteriori × effectif). Le score étant fait de rangs
-  centiles, sa médiane vaut ~0,6 : sans ce seuil, 10 % d'une grande ville (1 000 entreprises à
+  sur la période observée, intensité a posteriori × effectif). Le score était fait de rangs
+  centiles (médiane ~0,6 avant D48) : sans ce seuil, 10 % d'une grande ville (1 000 entreprises à
   Lyon) étaient « prioritaires ». Avec lui, Rennes 20 km ≈ 55 cibles prioritaires, Lyon ≈ 190,
   Guéret aucune (zone sans besoin data mesurable : c'est la vérité à montrer).
-Le score est une moyenne pondérée de rangs centiles, pas une probabilité : les libellés parlent
+Le score est une moyenne pondérée de composantes dans [0, 1] (D48), pas une probabilité : les libellés parlent
 de **priorité**, jamais de « chance » (la chance de réponse simulée est affichée à part, D23).
 """
 

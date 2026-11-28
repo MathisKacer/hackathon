@@ -48,6 +48,10 @@ def candidate_pool(scores: pd.DataFrame, ent: pd.DataFrame) -> pd.DataFrame:
     """Établissements susceptibles de recevoir une candidature (domaine data, géolocalisés)."""
     s = scores[(scores["domaine"] == DOMAIN) & ~scores["volume_suspect"].fillna(False)]
     pool = s.merge(ent[["siret", "lat", "lon"]], on="siret").dropna(subset=["lat", "lon"])
+    # D48 : le modèle simulé garde les rangs centiles (params.yaml est calibré dessus)
+    for c in ("intensite", "embauche"):
+        if f"rang_{c}" in pool:
+            pool[f"c_{c}"] = pool[f"rang_{c}"]
     pool = pool.assign(
         log10_effectif=np.log10(pool["effectif_estime"].clip(lower=1).fillna(10)),
         a_offre_domaine=(pool["n_offres_domaine_siren"] > 0).astype(float),
