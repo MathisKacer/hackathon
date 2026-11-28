@@ -1,53 +1,37 @@
-# Scénario de démo (T61) — 5 minutes
+# Scénario de démo (T61) — 1 minute (dans un pitch de 3 minutes)
 
-> Testé le 28/11 vers 06 h sur les données du jour (collecte Adzuna France entière, D50 ; poids 2 / 4, D48 bis). Les rangs et les scores ci-dessous peuvent bouger un peu si on relance `build_all.py` : **refaire un passage complet en répétition (H+22)** et corriger ce fichier si besoin.
+> Testé le 28/11 vers 06 h sur les données du jour (collecte Adzuna France entière, D50 ; poids 2 / 4, D48 bis). Les rangs peuvent bouger un peu si on relance `build_all.py` : **rejouer la minute en répétition (H+22), chronomètre en main**.
 
-## Le fil rouge
+## Une seule idée à faire passer
 
-Une étudiante de l'ENSAI cherche un **stage data à Rennes**. Les sites d'offres lui montrent les offres publiées ; **Compass lui montre en plus les entreprises qui ont un besoin data mais pas d'offre de stage visible**, classées par un score qu'on sait expliquer et qu'on a validé.
+**Les sites d'offres montrent les offres publiées ; Compass montre les entreprises qui ont un besoin data mais aucune offre visible.** Une recherche, une carte, une fiche. La méthode et la validation (AUC 0,92) sont dans les **diapos**, pas dans la démo.
 
-Trois idées à faire passer, une par acte :
-1. **Les deux couches** : 🔵 offres réelles, 🟠 candidatures spontanées.
-2. **Pourquoi cette entreprise** : chaque recommandation est expliquée en une phrase.
-3. **Ça marche ailleurs et ça se valide** : hors Bretagne, et une validation sur des offres « futures ».
+## Avant de monter sur scène (checklist)
 
-## Avant de commencer (checklist)
+- [ ] `git pull`, `uv run python scripts/build_all.py` (~2 min), puis **redémarrer** Streamlit (recharger la page ne suffit pas).
+- [ ] Faire la recherche Rennes une première fois (cache chaud : tout s'affiche en moins d'une seconde).
+- [ ] Laisser l'appli sur la **page d'accueil**, avec **Rennes**, **Stage**, **Data**, **20 km** déjà remplis : la démo commence par un seul clic.
+- [ ] Thème clair, zoom navigateur 110 %, notifications coupées.
+- [ ] Vidéo de secours d'une minute (T62) prête dans un onglet.
 
-- [ ] `git pull`, puis `uv run python scripts/build_all.py` (~2 min), puis **redémarrer** Streamlit (recharger la page ne suffit pas).
-- [ ] Ouvrir l'appli, faire une recherche Rennes une première fois (met les données en cache : la démo sera fluide).
-- [ ] Un **compte de démo** déjà créé (identifiant et mot de passe partagés en message privé, jamais dans le dépôt).
-- [ ] Un **CV PDF** de démo sur le bureau, avec Python, SQL, machine learning.
-- [ ] Thème clair (lisible au vidéoprojecteur), zoom navigateur à 110 %.
-- [ ] Vidéo de secours (T62) prête dans un onglet.
+## La minute
 
-## Acte 1 — La recherche (≈ 1 min 30)
+| Temps | Action | Ce qu'on dit (≈ 130 mots en tout) |
+|---|---|---|
+| 0:00 – 0:10 | Accueil déjà rempli → **Rechercher** | « Je suis à l'ENSAI, je cherche un stage data autour de Rennes. » |
+| 0:10 – 0:25 | Montrer la carte, sans cliquer | « En bleu, les offres publiées : ce que tout le monde voit. En orange, ce que personne ne voit : des entreprises qui ont un besoin data, mais aucune offre de stage. Sur 4 000 entreprises autour de Rennes, Compass garde les meilleures cibles. » |
+| 0:25 – 0:50 | Barre du haut › **Entreprises** → taper **Hellowork** → ouvrir la fiche du site de Rennes (●●● Cible prioritaire) | « Hellowork : aucune offre data publiée. Pourtant c'est une cible prioritaire : 250 à 499 salariés, dans un secteur qui recrute énormément de profils data. Chaque recommandation est expliquée en une phrase. » |
+| 0:50 – 1:00 | Rester sur la fiche | « Une candidature spontanée bien ciblée, c'est une offre qu'on trouve avant qu'elle paraisse. » |
 
-| Action | Ce qu'on dit |
-|---|---|
-| Page d'accueil : **Rennes**, contrat **Stage**, domaine **Data**, rayon **20 km** → **Rechercher** | « Je suis en M2 à l'ENSAI, je cherche un stage data autour de Rennes. » |
-| Montrer la carte : points **bleus** et **orange** | « En bleu, les offres publiées : ce que tout le monde voit. En orange, ce que personne ne voit : des entreprises qui ont un besoin data, mais **aucune offre de stage**. » |
-| Lire la légende sous la carte : « ~135 entreprises sur la carte (meilleures cibles) sur ~4 300 » | « Il y a plus de 4 000 sites d'entreprises dans le rayon. On n'en montre que les meilleures cibles, et la liste garde tout. » |
-| Filtres › Classement › curseur **« Score minimal sur la carte »** : passer à **≥ 0,80** puis revenir à **Auto** | « L'étudiante choisit combien elle en veut. » |
+**Si la recherche Entreprises traîne** : fermer, onglet **Candidatures spontanées**, ouvrir la 1ʳᵉ ligne (**SPIKEELABS** : 6 offres d'emploi data, aucun stage) et dire « elle recrute en data, mais n'a jamais publié de stage ».
 
-## Acte 2 — Pourquoi cette entreprise ? (≈ 2 min)
+**Ce qu'on ne montre pas en démo** (trop long pour une minute, à garder pour les questions) : curseur de score de la carte, dépôt du CV et correspondance, favoris et suivi des candidatures, Lyon en alternance (EXALT LYON, 3ᵉ ; La Compagnie des animaux, ~80ᵉ, aucune offre data), France entière sans ville.
 
-| Action | Ce qu'on dit |
-|---|---|
-| Onglet **Candidatures spontanées** : la 1ʳᵉ ligne est **SPIKEELABS** (●●● Cible prioritaire) → ouvrir la **fiche** | « Premier cas : l'**opportunité cachée**. Elle publie 6 offres d'emploi data, mais aucun stage. Elle a le besoin, elle n'a juste pas pensé à un stagiaire. » Lire la phrase « Recommandée car… ». |
-| Page **Entreprises** (barre du haut) : chercher **Hellowork** → fiche du site de Rennes (●●● Cible prioritaire) | « Deuxième cas, le plus fort : **aucune offre data du tout**. Mais 250 à 499 salariés dans un secteur qui recrute énormément de profils data. Notre modèle estime son besoin d'après les entreprises qui lui ressemblent. » |
-| Revenir à la liste : montrer **IFIP – Institut du porc** (Pacé, ~24ᵉ) ou **MGEN** (Cesson-Sévigné, ~33ᵉ) | « Et pas seulement des ESN : la recherche agronomique, l'assurance… des endroits où on n'aurait pas pensé à candidater. » |
-| Filtres › **Ton CV** : déposer le CV de démo → colonne **Correspondance** | « Si je dépose mon CV, Compass compare mes compétences à celles que demande le secteur. Ça ne change pas le score : c'est une information en plus. » |
-| Cliquer ⭐ (favori) sur une fiche, puis **Mon compte** → Candidatures : statut « Envoyée », rappel de relance à 15 jours | « Je suis mes candidatures, Compass me rappelle de relancer. » (Se connecter avec le compte de démo juste avant, ou montrer que les favoris sont gardés à la connexion.) |
+## Pour les diapos (les 2 minutes hors démo)
 
-## Acte 3 — Hors Bretagne, et est-ce que ça marche ? (≈ 1 min 30)
-
-| Action | Ce qu'on dit |
-|---|---|
-| Changer la ville : **Lyon**, contrat **Alternance** | « Toute la France est couverte : on a collecté les offres de toutes les régions. » |
-| Ouvrir **EXALT LYON** (3ᵉ) ou **La Compagnie des animaux** (~80ᵉ, aucune offre data, 100–199 salariés) | Même lecture que l'acte 2, en une phrase. |
-| Diapo **validation** (pas dans l'appli) | « On a vérifié le score sans tricher. On l'a calculé avec les offres publiées **avant le 13 novembre** seulement, puis on a regardé quelles entreprises ont publié une offre data **après**. Le classement que voit l'étudiant place une entreprise qui a publié ensuite devant une qui n'a rien publié **dans 92 % des cas** (AUC 0,92), et 95 % sur l'ensemble des entreprises. » |
-
-**Phrase de fin :** « Compass ne remplace pas les sites d'offres : il montre les portes qui ne sont pas encore ouvertes. »
+- **Validation, en une phrase** : « Calculé avec les seules offres d'avant le 13 novembre, notre classement place une entreprise qui a publié une offre data ensuite devant une qui n'a rien publié dans **92 % des cas**. »
+- **Le LLM, en une phrase** : « Un LLM open source note les secteurs, jamais les entreprises ; ça améliore le score de façon significative. »
+- **Phrase de fin** : « Compass ne remplace pas les sites d'offres : il montre les portes qui ne sont pas encore ouvertes. »
 
 ## Chiffres à avoir en tête (si le jury demande)
 
@@ -72,5 +56,5 @@ Trois idées à faire passer, une par acte :
 
 ## Plan B
 
-- Réseau ou appli en panne → vidéo de secours (T62).
+- Réseau ou appli en panne → vidéo de secours d'une minute (T62), lancée sans commentaire de transition.
 - Une entreprise citée ici a changé de rang → prendre la 1ʳᵉ ligne « ●●● Cible prioritaire » de la liste et lire sa phrase « Recommandée car… » : la démo ne dépend pas d'un nom précis.
