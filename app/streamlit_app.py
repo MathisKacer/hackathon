@@ -17,24 +17,17 @@ from pathlib import Path
 import streamlit as st
 from commun import PAGES_DIR, init_defaults, persist_widget_state
 from compte import _con, current_user
+from entete import header
 from style import inject_css
 
 from radar import admin
 
-# T93 (essai, branche emma/interface-riche) : logos « Compass » d'Emma (app/static/), en version
-# claire ou sombre selon le thème : le mot « Compass » en permanence dans la barre du haut,
-# le C-boussole pour l'onglet du navigateur et les petits écrans.
+# T93 (essai, branche emma/interface-riche) : logos « Compass » d'Emma (app/static/) : le mot
+# dans notre barre du haut (app/entete.py) et en grand sur l'accueil, le C-boussole pour l'onglet.
 STATIC = Path(__file__).resolve().parent / "static"
-_mode = "sombre" if getattr(st.context.theme, "type", None) == "dark" else "clair"
 st.set_page_config(
     page_title="Compass", page_icon=str(STATIC / "icone-compass-clair.svg"), layout="wide"
 )
-st.logo(
-    str(STATIC / f"logo-compass-{_mode}.svg"),
-    size="large",
-    icon_image=str(STATIC / f"icone-compass-{_mode}.svg"),
-)
-
 inject_css()  # apparence commune (T70, app/style.py)
 init_defaults()
 persist_widget_state()  # garde la recherche quand on change de page
@@ -46,24 +39,25 @@ if n_fav:
     st.toast(f"{n_fav} favori{s} enregistré{s} dans ton compte.")
 if n_lost := st.session_state.pop("_toast_recherches_perdues", 0):
     st.toast(f"{n_lost} recherche(s) non reprise(s) : tu as atteint le maximum.")
-pages = [
-    st.Page(PAGES_DIR / "explorer.py", title="Explorer", icon=":material/explore:", default=True),
-    st.Page(PAGES_DIR / "entreprises.py", title="Entreprises", icon=":material/apartment:"),
-    st.Page(
+# T93 (essai) : page d'accueil, page de résultats, entreprises, compte ; navigation de
+# Streamlit masquée, remplacée par notre barre du haut (app/entete.py).
+is_admin = bool(user and admin.is_admin(_con(), user["id"]))
+pages = {
+    "accueil": st.Page(PAGES_DIR / "accueil.py", title="Accueil", default=True),
+    "recherche": st.Page(PAGES_DIR / "explorer.py", title="Recherche", url_path="recherche"),
+    "entreprises": st.Page(PAGES_DIR / "entreprises.py", title="Entreprises"),
+    "compte": st.Page(
         PAGES_DIR / "mon_espace.py",
-        title=f"Mon espace ({user['username']})" if user else "Se connecter",
-        icon=":material/person:",
+        title="Mon compte" if user else "Se connecter",
         url_path="mon-espace",
     ),
-]
+}
 # T79 (D39) : page Administration, seulement pour les administrateurs (membres de l'équipe).
-if user and admin.is_admin(_con(), user["id"]):
-    pages.append(
-        st.Page(
-            PAGES_DIR / "administration.py",
-            title="Administration",
-            icon=":material/admin_panel_settings:",
-            url_path="administration",
-        )
+if is_admin:
+    pages["admin"] = st.Page(
+        PAGES_DIR / "administration.py", title="Administration", url_path="administration"
     )
-st.navigation(pages, position="top").run()
+page = st.navigation(list(pages.values()), position="hidden")
+current = next(k for k, p in pages.items() if p == page)
+header(pages, current, user, is_admin)
+page.run()

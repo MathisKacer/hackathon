@@ -107,6 +107,34 @@ _CSS = """
 
 [data-testid="stTab"] p {{ font-size: 1rem; font-weight: 650; }}
 
+/* T93 : notre barre du haut (app/entete.py) */
+.st-key-entete {{ padding: .2rem 0 .6rem 0; margin-bottom: .6rem;
+                 border-bottom: 1px solid rgba(59, 91, 219, .15); }}
+.entete-logo svg {{ height: 2.6rem; width: auto; display: block; }}
+.st-key-entete [data-testid="stPageLink"] a {{ border-radius: 999px; padding: .25rem .8rem; }}
+.st-key-entete_inscription [data-testid="stPageLink"] a {{
+    background: linear-gradient(135deg, #3B5BDB, #15AABF); }}
+.st-key-entete_inscription [data-testid="stPageLink"] a p {{ color: #fff !important;
+    font-weight: 700; }}
+
+/* T93 : page d'accueil — logo en grand, slogan à côté, phrase, recherche centrée */
+.accueil-head {{ display: flex; align-items: center; justify-content: center; gap: 1.6rem;
+                flex-wrap: wrap; margin: 2.2rem 0 .4rem 0; }}
+.accueil-logo svg {{ height: 7rem; width: auto; display: block; }}
+.accueil-slogan {{ font-size: 1.35rem; font-style: italic; font-weight: 600; color: {muted};
+                  border-left: 3px solid #E4572E; padding-left: 1rem; max-width: 16rem;
+                  line-height: 1.3; }}
+.accueil-pitch {{ text-align: center; font-size: 1.15rem; color: {title};
+                 margin: .4rem 0 1.8rem 0; }}
+.st-key-carte_recherche_accueil {{ background: {card}; border-radius: 18px !important;
+    box-shadow: 0 1px 2px {shadow}, 0 12px 32px {shadow}; padding: .6rem .4rem; }}
+.st-key-lien_entreprise {{ display: flex; align-items: center; }}
+.st-key-lien_entreprise [data-testid="stPageLink"] {{ margin: .6rem auto 0 auto; }}
+.st-key-lien_entreprise [data-testid="stPageLink"] p {{ text-decoration: underline; }}
+
+/* T93 : titre du bloc de recherche (page de résultats) */
+.radar-block-title {{ font-size: 1.1rem; font-weight: 750; color: {title}; margin-bottom: .2rem; }}
+
 /* Logo « Compass » de la barre du haut, un peu plus grand que la taille « large » de Streamlit */
 img[data-testid="stLogo"], [data-testid="stHeaderLogo"] img {{
     height: 2.4rem !important; max-height: 2.4rem !important; width: auto !important; }}

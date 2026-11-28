@@ -167,11 +167,21 @@ def test_full_app_runs_with_account_box(tmp_path, monkeypatch):
     at = AppTest.from_file(str(app_dir / "streamlit_app.py"), default_timeout=60)
     at.run()
     assert not at.exception, at.exception
-    # Page Explorer par défaut, recherche en haut (plus de barre latérale)
-    assert any("<h1>Où candidater ?</h1>" in m.value for m in at.markdown)  # bandeau (T70)
+    # T93 (essai) : page d'accueil par défaut (logo, slogan, recherche centrée)
+    assert any("Oser l'audace, fini l'impasse" in m.value for m in at.markdown)
     assert at.segmented_control(key="contrat").value == "Tous"
-    assert at.slider(key="max_age").value == 60  # dans le panneau « Filtres »
+    assert [p.label for p in at.get("page_link")] == [
+        "Se connecter",
+        "S'inscrire",
+        "Chercher par entreprise",
+    ]
     assert not at.warning  # pas d'avertissement « valeur par défaut + session_state »
+    # Page de résultats : filtres à gauche (dans des sections dépliables)
+    at.switch_page(str(app_dir / "vues" / "explorer.py"))
+    at.run()
+    assert not at.exception, at.exception
+    assert at.slider(key="max_age").value == 60
+    assert not at.warning
 
     # Connecté : rien n'est enregistré tout seul (T84) ; Mon espace s'affiche
     uid = accounts.create_user(accounts.connect(), "celia", "Radar-Demo-2026")
@@ -183,6 +193,7 @@ def test_full_app_runs_with_account_box(tmp_path, monkeypatch):
     at.run()
     assert not at.exception, at.exception
     assert any("<h1>Bonjour celia</h1>" in m.value for m in at.markdown)
+    assert "Mon compte" in [p.label for p in at.get("page_link")]  # barre du haut, connecté
     assert any(s.value == "Mes compétences" for s in at.subheader)  # T81 : profil = compétences
     st.cache_data.clear()
     st.cache_resource.clear()

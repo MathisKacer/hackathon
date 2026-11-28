@@ -1,4 +1,7 @@
-"""Page « Explorer » : où candidater autour de soi.
+"""Page de résultats (« Explorer ») : où candidater autour de soi.
+
+T93 (essai) : deux blocs (recherche et filtres à gauche, carte à droite), puis la liste des
+entreprises et le tableau de bord ; on y arrive depuis la page d'accueil (app/vues/accueil.py).
 
 Recherche en haut (où, contrat, domaine, rayon) + bouton « Filtres » ; carte ; onglets
 Candidatures spontanées / Offres ; clic sur une entreprise → fiche dans une fenêtre (T43).
@@ -6,8 +9,6 @@ Logique de classement inchangée : radar/spontaneous.py (T40, T41, T42, T23), T3
 """
 
 from __future__ import annotations
-
-import html
 
 import pandas as pd
 import streamlit as st
@@ -48,7 +49,7 @@ from favoris import favorite_refs, offer_ref, sync_offers_editor, temp_banner
 from fiche_ui import open_fiche
 from recherches import save_button
 from streamlit_folium import st_folium
-from style import GREEN, LINK_STYLE, Tile, fmt_int, hero, kpi_tiles, pill
+from style import GREEN, LINK_STYLE, Tile, fmt_int, kpi_tiles
 from tableau_bord import dashboard
 
 from radar.collect.sirene import tranche_display
@@ -62,7 +63,6 @@ from radar.paliers import (
     score_color,
     text_color_on,
     tier_color,
-    tier_text,
 )
 from radar.response.predict import add_p_reponse
 from radar.spontaneous import COMPONENTS, haversine_km, rank_spontaneous, signaled_by_lbb
@@ -81,25 +81,6 @@ def _pl(n: int, word: str) -> str:
     return word + ("s" if n > 1 else "")
 
 
-def _n_filters_on() -> int:
-    """Nombre de filtres modifiés (affiché sur le bouton « Filtres »)."""
-    ss = st.session_state
-    return sum(
-        [
-            bool(str(ss.get("query", "")).strip()),
-            ss.get("max_age", 60) != 60,
-            not ss.get("only_data", True),
-            bool(ss.get("tailles")),
-            bool(ss.get("secteurs")),
-            bool(ss.get("show_liquidation")),
-            ss.get("tri") in (TRI_P, TRI_MATCH),
-            bool(ss.get("une_par_entreprise")),
-            bool(ss.get("niveaux")),
-            bool(ss.get("competences")),
-        ]
-    )
-
-
 offers = get_offers()
 if offers.empty:
     st.title("Radar")
@@ -110,36 +91,27 @@ if offers.empty:
 PROFILE_KEYS = profile_keys()
 
 # ------------------------------------------------------------------ recherche
-hero(
-    "Où candidater ?",
-    "Les offres publiées autour de toi, et surtout les entreprises qui recrutent dans ton "
-    "domaine sans avoir publié d'offre pour ton contrat : les meilleures cibles de candidature "
-    "spontanée.",
-    badges=["🇫🇷 France entière", "🔓 Données ouvertes", "🎓 Stage · Alternance · Emploi"],
-)
-
-with st.container(border=True, key="carte_recherche"):
-    c1, c2 = st.columns([3, 2], vertical_alignment="bottom")
+# T93 (essai) : page de résultats en deux blocs — à gauche la recherche et tous les filtres,
+# à droite la carte ; en dessous, la liste des entreprises puis le tableau de bord.
+left, right = st.columns([1, 2.1], gap="large")
+with left, st.container(border=True, key="carte_recherche"):
+    st.markdown("<div class='radar-block-title'>Ta recherche</div>", unsafe_allow_html=True)
     # Suggesteur de ville (T55) : on tape le début du nom (ou un code postal) et on choisit
     # « Ville (codes postaux) ». index=None : la croix permet d'effacer pour changer de ville.
-    ville = c1.selectbox(
+    ville = st.selectbox(
         "Où ?",
         get_communes()["label"].tolist(),
         index=None,
         key="ville",
-        placeholder="Tape le nom de ta ville ou un code postal…",
+        placeholder="Toute la France (ou tape ta ville)",
     )
-    contrat = c2.segmented_control("Contrat", CONTRATS, key="contrat", required=True) or "Tous"
-    c3, c4, c5 = st.columns([3, 1, 1], vertical_alignment="bottom")
+    contrat = st.segmented_control("Contrat", CONTRATS, key="contrat", required=True) or "Tous"
+    c3, c4 = st.columns([2, 1], vertical_alignment="bottom")
     domaine = c3.selectbox(
         "Domaine", DOMAINES, key="domaine", format_func=lambda k: DOMAINS[k].label
     )
     rayon = c4.selectbox("Rayon", RAYONS, key="rayon", format_func=lambda r: f"{r} km")
-    n_on = _n_filters_on()
-    with c5.popover(
-        f"Filtres ({n_on})" if n_on else "Filtres", width="stretch", icon=":material/tune:"
-    ):
-        st.markdown("**Offres**")
+    with st.expander("Offres", icon=":material/work:"):
         query = st.text_input("Mot-clé", key="query", placeholder="ex. python, Arkéa…")
         max_age = st.slider("Publiées il y a moins de (jours)", 7, 60, step=7, key="max_age")
         only_data = st.toggle("Seulement les offres du domaine", key="only_data")
@@ -157,7 +129,7 @@ with st.container(border=True, key="carte_recherche"):
             key="niveau_inconnu",
             disabled=not niveaux,
         )
-        st.markdown("**Entreprises**")
+    with st.expander("Entreprises", icon=":material/apartment:"):
         tailles = st.multiselect(
             "Taille", list(TAILLES), key="tailles", placeholder="Toutes les tailles"
         )
@@ -180,14 +152,15 @@ with st.container(border=True, key="carte_recherche"):
             help="Garde seulement le site le mieux classé de chaque entreprise "
             "(les autres sites restent visibles dans sa fiche).",
         )
-        st.markdown("**Ton CV**")
+    with st.expander("Ton CV", icon=":material/description:"):
         competences = cv_and_skills("cv_fichier")  # T45, T83 : CV + compétences (saisie libre)
-        st.markdown("**Classement**")
+    with st.expander("Classement", icon=":material/tune:"):
         tri = st.radio("Classer par", TRIS, key="tri", horizontal=True)
         st.caption("Importance de chaque critère dans le score (0 = ignoré) :")
         for c, (label, help_) in COMPONENTS.items():
             st.slider(label, 0, WEIGHT_MAX, key=WEIGHT_KEYS[c], help=help_)
         st.button("Revenir aux réglages par défaut", on_click=reset_weights, width="stretch")
+    save_button(PROFILE_KEYS)  # T84 : garder les réglages de cette recherche
 weights = current_weights()
 
 # ------------------------------------------------------------------ calculs
@@ -262,33 +235,7 @@ contrat_txt = {
     "Alternance": " en alternance",
     "Emploi": " en emploi",
 }[contrat]
-if place is None and spontaneous.empty:
-    # Comment ça marche, en 3 cartes
-    steps = [
-        (":material/location_on:", "Choisis ta ville", "et le contrat que tu vises, en haut."),
-        (
-            ":material/map:",
-            "Repère sur la carte",
-            "Bleu : les offres en ligne. Orange : les entreprises qui recrutent dans ton domaine "
-            + {
-                "Stage": "mais n'ont publié aucune offre de stage",
-                "Alternance": "mais n'ont publié aucune offre d'alternance",
-                "Emploi": "mais n'ont publié aucune offre d'emploi",
-            }.get(contrat, "sans offre en ligne")
-            + " : idéales pour une candidature spontanée.",
-        ),
-        (
-            ":material/apartment:",
-            "Ouvre une fiche",
-            "pour savoir pourquoi l'entreprise est recommandée et préparer ta candidature.",
-        ),
-    ]
-    for col, (n, (icon, title, text)) in zip(st.columns(3), enumerate(steps, 1), strict=True):
-        with col.container(border=True, key=f"etape_{n}"):
-            st.markdown(f"<span class='radar-step-n'>{n}</span>", unsafe_allow_html=True)
-            st.markdown(f"**{icon} {title}**")
-            st.caption(text)
-else:
+with right:
     # T57 : entreprises (SIREN distincts) et sites ; les sites masqués par l'option comptent aussi
     n_ent = spontaneous["_siren"].nunique() if not spontaneous.empty else 0
     if une_par_entreprise and not spontaneous.empty:
@@ -338,55 +285,16 @@ else:
             Tile(f"{d:.1f} km".replace(".", ","), "distance médiane des cibles", "#1098AD", "📍")
         )
     kpi_tiles(tiles)
-    dashboard(spontaneous)  # T93 (essai) : graphiques de la recherche
     if spontaneous.empty and not FILES["scores"].exists():
         st.caption("Équipe : `scores.parquet` manquant (lancer `scripts/build_all.py`).")
-
-if place is not None:
-    save_button(PROFILE_KEYS)  # T84 : garder les réglages de cette recherche
-temp_banner(PAGES_DIR / "mon_espace.py")  # favoris temporaires (anonyme, T54)
-
-if not (view.empty and spontaneous.empty):
-    st_folium(
-        build_map(view, spontaneous, place, rayon if place is not None else None),
-        height=520,
-        use_container_width=True,
-        returned_objects=[],
-    )
-
-# ------------------------------------------------------------------ meilleures cibles
-if not spontaneous.empty:
-    st.markdown("#### :material/workspace_premium: Les meilleures cibles")
-    top = spontaneous.head(4)
-    for col, (i, r) in zip(st.columns(len(top)), top.iterrows(), strict=True):
-        with col.container(border=True, key=f"cible_{i}"):
-            rank = r.get("palier")
-            if pd.notna(rank):
-                st.markdown(pill(tier_text(rank, False), tier_color(rank)), unsafe_allow_html=True)
-            etab = r.get("nom_etablissement")
-            name = (
-                f"{etab} ({r['nom']})"
-                if isinstance(etab, str) and etab and etab != r["nom"]
-                else str(r["nom"])
-            )
-            sub_bits = [
-                str(r.get("commune") or "").title(),
-                f"{r['distance_km']:.1f} km" if pd.notna(r["distance_km"]) else "",
-                tranche_display(r.get("tranche_effectif")),
-            ]
-            sub_txt = " · ".join(b for b in sub_bits if b)
-            st.markdown(
-                f"<div class='radar-card-title'>{html.escape(name)}</div>"
-                f"<div class='radar-card-sub'>{html.escape(sub_txt)}</div>",
-                unsafe_allow_html=True,
-            )
-            if st.button(
-                "Voir la fiche",
-                key=f"voir_cible_{i}",
-                icon=":material/open_in_new:",
-                width="stretch",
-            ):
-                open_fiche(r["siret"], r, domaine)
+    temp_banner(PAGES_DIR / "mon_espace.py")  # favoris temporaires (anonyme, T54)
+    if not (view.empty and spontaneous.empty):
+        st_folium(
+            build_map(view, spontaneous, place, rayon if place is not None else None),
+            height=620,
+            use_container_width=True,
+            returned_objects=[],
+        )
 
 # ------------------------------------------------------------------ listes
 tab_spont, tab_offers = st.tabs(
@@ -590,3 +498,7 @@ st.caption(
 )
 
 __all__ = ["PROFILE_LABELS"]
+
+
+# ------------------------------------------------------------------ tableau de bord (T93)
+dashboard(spontaneous)

@@ -14,8 +14,10 @@
 
 - **Candidatures spontanées sans ville** (demande d'Emma, sur la branche seulement) : `load_top` (`radar/spontaneous.py`, 5 000 meilleurs établissements de France au score D13, DuckDB) + `get_top` (`app/commun.py`) ; `rank_spontaneous(df, None, None, None, …)` : pas de distance, proximité ignorée ; Explorer affiche tuiles, tableau de bord, meilleures cibles, carte et liste « Partout en France » (colonne Distance masquée). Rennes inchangé. La chance de réponse n'est pas affichée sans ville (le modèle dépend de la distance).
 
+- **Nouvelle structure** (demande d'Emma) : page d'**accueil** (`app/vues/accueil.py` : logo en grand, slogan « Oser l'audace, fini l'impasse », « Trouver les offres avant qu'elles paraissent », recherche centrée + « Rechercher », lien « Chercher par entreprise ») ; **barre du haut maison** (`app/entete.py`, navigation Streamlit masquée) : logo à gauche (lien vers l'accueil, sauf sur l'accueil), à droite « Entreprises », « Se connecter » / « S'inscrire » (ouvre l'onglet « Créer un compte » via `?mode=inscription`) ou « Mon compte » (+ « Administration ») ; **page de résultats** en deux blocs : recherche et filtres à gauche (sections dépliables Offres, Entreprises, Ton CV, Classement), tuiles + carte à droite, puis la liste, puis le tableau de bord. Retirés de la page : bandeau, « Comment ça marche », « Les meilleures cibles ».
+
 **Fichiers touchés :**
-- `.streamlit/config.toml`, `app/style.py`, `app/tableau_bord.py` (nouveau), `app/vues/explorer.py`, `app/commun.py`, `app/carte.py`, `app/fiche_ui.py`, `radar/spontaneous.py`, `tests/test_weights.py`, `docs/journal/emma.md`
+- `.streamlit/config.toml`, `app/style.py`, `app/tableau_bord.py` (nouveau), `app/vues/explorer.py`, `app/vues/accueil.py` (nouveau), `app/entete.py` (nouveau), `app/streamlit_app.py`, `app/compte.py`, `app/commun.py`, `app/carte.py`, `app/fiche_ui.py`, `radar/spontaneous.py`, `tests/test_weights.py`, `tests/test_compte_ui.py`, `docs/journal/emma.md`
 
 **Résultats / chiffres clés :**
 - Rennes, compétences Python/SQL/Statistiques : 4 graphiques affichés, pas d'erreur sur les 3 pages ; 384 tests passent. Pas de navigateur sur le pod : rendu à regarder par Emma.

@@ -113,7 +113,11 @@ def _anonymous_box(profile_keys: dict) -> None:
 
 def login_forms(profile_keys: dict) -> None:
     """Onglets « Connexion » et « Créer un compte » (barre latérale ou page Mon espace)."""
-    tab_in, tab_up = st.tabs(["Connexion", "Créer un compte"])
+    # T93 (essai) : « S'inscrire » dans la barre du haut ouvre directement le 2e onglet
+    signup = st.query_params.get("mode") == "inscription"
+    tab_in, tab_up = st.tabs(
+        ["Connexion", "Créer un compte"], default="Créer un compte" if signup else "Connexion"
+    )
 
     with tab_in, st.form("compte_connexion", clear_on_submit=True, border=False):
         username = st.text_input("Identifiant")
@@ -262,7 +266,12 @@ def _delete_account_box(con, user: dict) -> None:
 
 def _anonymous_page(saved_keys: dict, favorites_section, searches_section, keys: dict) -> None:
     """Sans compte : à gauche ce qu'apporte un compte, à droite la connexion."""
-    hero("Mon espace", "Ton compte, tes favoris et tes recherches.", compact=True)
+    signup = st.query_params.get("mode") == "inscription"  # T93 : lien « S'inscrire »
+    hero(
+        "Créer un compte" if signup else "Se connecter",
+        "Ton compte garde tes compétences, tes favoris et tes recherches.",
+        compact=True,
+    )
     left, right = st.columns([1, 1], gap="large")
     with left:
         st.markdown("#### Pourquoi créer un compte ?")
