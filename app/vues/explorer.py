@@ -14,7 +14,6 @@ import pandas as pd
 import streamlit as st
 from carte import build_map
 from commun import (
-    BLUE,
     CHANCE_HELP,
     CONTRATS,
     DOMAINES,
@@ -22,7 +21,6 @@ from commun import (
     FILES,
     MATCH_HELP,
     NIVEAUX,
-    ORANGE,
     PAGES_DIR,
     PROFILE_LABELS,
     RAYONS,
@@ -49,8 +47,7 @@ from favoris import favorite_refs, offer_ref, sync_offers_editor, temp_banner
 from fiche_ui import open_fiche
 from recherches import save_button
 from streamlit_folium import st_folium
-from style import GREEN, LINK_STYLE, Tile, fmt_int, kpi_tiles
-from tableau_bord import dashboard
+from style import LINK_STYLE, fmt_int
 
 from radar.collect.sirene import tranche_display
 from radar.competences import MATCH_COLORS, NO_MATCH_MESSAGE, add_match, match_skills
@@ -229,62 +226,7 @@ else:
 
 
 # ------------------------------------------------------------------ résultat
-contrat_txt = {
-    "Tous": "",
-    "Stage": " en stage",
-    "Alternance": " en alternance",
-    "Emploi": " en emploi",
-}[contrat]
 with right:
-    # T57 : entreprises (SIREN distincts) et sites ; les sites masqués par l'option comptent aussi
-    n_ent = spontaneous["_siren"].nunique() if not spontaneous.empty else 0
-    if une_par_entreprise and not spontaneous.empty:
-        n_sites = int(spontaneous["_autres_sites"].add(1).sum())
-    else:
-        n_sites = len(spontaneous)
-    n_off = len(view)
-    n_prio = int((spontaneous.get("palier", pd.Series(dtype=int)) == 1).sum())
-    if place is not None:
-        st.caption(f"Autour de **{place.label}** · {rayon} km{contrat_txt}")
-    else:
-        st.caption(
-            f"**Partout en France**{contrat_txt} · les {fmt_int(len(spontaneous))} meilleures "
-            "entreprises. Choisis ta ville pour voir celles qui sont proches de toi."
-        )
-    tiles = [
-        Tile(
-            fmt_int(n_ent),
-            f"{_pl(n_ent, 'entreprise')} à démarcher sans offre publiée"
-            + (f" ({fmt_int(n_sites)} sites)" if n_sites != n_ent else ""),
-            ORANGE,
-            "🏢",
-        ),
-        Tile(
-            fmt_int(n_off),
-            f"{_pl(n_off, 'offre')} {'publiées' if n_off > 1 else 'publiée'}",
-            BLUE,
-            "📄",
-        ),
-        Tile(
-            fmt_int(n_prio),
-            f"{_pl(n_prio, 'cible')} {'prioritaires' if n_prio > 1 else 'prioritaire'}",
-            GREEN,
-            "🎯",
-        ),
-    ]
-    # T93 (essai) : correspondance forte avec le CV, distance médiane
-    if (
-        "correspondance_palier" in spontaneous
-        and spontaneous["correspondance_palier"].notna().any()
-    ):
-        n_forte = int((spontaneous["correspondance_palier"] == "Forte").sum())
-        tiles.append(Tile(fmt_int(n_forte), "en correspondance forte avec ton CV", "#7048E8", "🧩"))
-    if not spontaneous.empty and spontaneous["distance_km"].notna().any():
-        d = float(spontaneous["distance_km"].median())
-        tiles.append(
-            Tile(f"{d:.1f} km".replace(".", ","), "distance médiane des cibles", "#1098AD", "📍")
-        )
-    kpi_tiles(tiles)
     if spontaneous.empty and not FILES["scores"].exists():
         st.caption("Équipe : `scores.parquet` manquant (lancer `scripts/build_all.py`).")
     temp_banner(PAGES_DIR / "inscription.py")  # favoris temporaires (anonyme, T54)
@@ -498,7 +440,3 @@ st.caption(
 )
 
 __all__ = ["PROFILE_LABELS"]
-
-
-# ------------------------------------------------------------------ tableau de bord (T93)
-dashboard(spontaneous)

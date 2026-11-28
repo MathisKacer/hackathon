@@ -107,11 +107,19 @@ _CSS = """
 
 [data-testid="stTab"] p {{ font-size: 1rem; font-weight: 650; }}
 
-/* T93 : notre barre du haut (app/entete.py), posée sur la ligne de la barre de Streamlit
-   (celle des « ⋮ ») : fixe en haut, en laissant la place du menu à droite. */
-.st-key-entete {{ position: fixed; top: 0; left: 0; right: 3.6rem; height: 3.75rem;
-                 z-index: 999991; padding: 0 1.2rem; display: flex; align-items: center; }}
-.st-key-entete > div {{ width: 100%; }}
+/* T93 : notre barre du haut (app/entete.py), sur la même ligne que le menu « ⋮ » de
+   Streamlit : la barre de Streamlit devient transparente (seul le menu reste cliquable) et la
+   page remonte, pour que nos liens soient centrés à la hauteur des « ⋮ ». */
+header[data-testid="stHeader"] {{ background: transparent; pointer-events: none; }}
+header[data-testid="stHeader"] [data-testid="stToolbar"],
+header[data-testid="stHeader"] button {{ pointer-events: auto; }}
+.block-container, [data-testid="stMainBlockContainer"] {{ padding-top: .5rem !important; }}
+.st-key-entete {{ min-height: 2.75rem; padding-right: 3.4rem; margin-bottom: .8rem;
+                 display: flex; align-items: center; }}
+.st-key-entete > div, .st-key-entete [data-testid="stHorizontalBlock"] {{ width: 100%;
+    align-items: center; }}
+.st-key-entete [data-testid="stElementContainer"],
+.st-key-entete [data-testid="stPageLink"] {{ margin: 0 !important; }}
 /* Logo = lien vers l'accueil (même session) ; texte remplacé par l'image */
 [class*="st-key-entete_logo_"] [data-testid="stPageLink"] a {{
     width: 10rem; height: 2.4rem; background: center left / contain no-repeat;
