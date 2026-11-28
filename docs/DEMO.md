@@ -34,6 +34,13 @@ uv run --with playwright --with imageio-ffmpeg python scripts/demo_video.py
 
 Récupérer la vidéo : clic droit sur `data/demo/demo.mp4` dans l'explorateur de VS Code › Download.
 
+**Version « parcours complet »** (intro → Mon compte avec 6 candidatures → logo Compass → Rechercher → zoom sur la carte et clic sur un point orange → Entreprises › « Apple ») : `data/demo/demo_complet.mp4`, ~54 s.
+```bash
+uv run python scripts/demo_compte.py   # compte « demo.compass » + candidatures (identifiants dans data/demo/.compte_demo, hors Git)
+uv run --with playwright --with imageio-ffmpeg python scripts/demo_video_complet.py
+# --essai (captures), --entreprise, --zoom, --pause-compte / --pause-point / --pause-entreprises ; intro = data/demo/intro.mp4
+```
+
 **Ajouter une vidéo d'intro** : la déposer dans `data/demo/` (glisser-déposer dans VS Code), puis
 ```bash
 uv run --with imageio-ffmpeg python scripts/video_intro.py data/demo/intro.mp4 --fondu 0.5

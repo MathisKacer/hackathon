@@ -360,3 +360,7 @@
 ## 2026-11-28 — T62 : vidéo de démo automatique
 
 - `scripts/demo_video.py` : Playwright sans écran (Chromium + dépendances système installées sur le pod), passage à blanc pour chauffer les caches, curseur visible injecté, rognage et MP4 via imageio-ffmpeg. Résultat `data/demo/demo.mp4` (55 s) : accueil rempli → carte → Entreprises › Hellowork → fiche du site (Cible prioritaire, aucune offre publiée).
+
+## 2026-11-28 — T62 : vidéo « parcours complet »
+
+- `scripts/demo_compte.py` (compte de démo, 6 candidatures aux statuts variés, une à relancer) et `scripts/demo_video_complet.py` (intro → Mon compte → logo → Rechercher → zoom + point orange → Entreprises « Apple »). Résultat `data/demo/demo_complet.mp4`, 54 s.
