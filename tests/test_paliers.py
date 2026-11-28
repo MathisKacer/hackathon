@@ -85,3 +85,16 @@ def test_map_keeps_best_tiers_first():
     assert spontaneous_on_map(df)["palier"].tolist()[:2] == [1, 2]
     weak = pd.DataFrame({"palier": [4] * 50})
     assert len(spontaneous_on_map(weak)) == MIN_SPONTANEOUS_ON_MAP  # jamais de carte vide
+
+
+def test_map_threshold_chosen_by_student():
+    """D49 : avec un seuil, toutes celles qui l'atteignent (meilleures d'abord), parfois aucune."""
+    import sys
+
+    sys.path.insert(0, "app")
+    from carte import spontaneous_on_map
+
+    df = pd.DataFrame({"score": [0.3, 0.9, 0.55, 0.5], "palier": [4, 1, 2, 3]})
+    assert spontaneous_on_map(df, 0.5)["score"].tolist() == [0.9, 0.55, 0.5]
+    assert spontaneous_on_map(df, 0.95).empty
+    assert spontaneous_on_map(df.iloc[:0], 0.5).empty

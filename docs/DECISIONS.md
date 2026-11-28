@@ -14,6 +14,11 @@
 
 ---
 
+### D49 — Curseur « Score minimal sur la carte » (2026-11-28, @mathis)
+**Contexte :** demande de Mathis : choisir soi-même combien d'entreprises orange apparaissent sur la carte. Un seuil fixe par défaut ne convient pas : score ≥ 0,5 (tous contrats, 20 km) = 175 entreprises à Rennes, ~1 000 à Lyon, ~7 000 à Paris, 0 à Guéret.
+**Décision :** curseur `seuil_carte` dans Filtres › Classement : **« Auto »** par défaut (meilleures cibles, D47 : paliers 1–2, 20 au moins, 150 au plus) ou « ≥ 0,30 … ≥ 0,90 » (toutes celles qui atteignent le seuil, meilleures d'abord, 300 au plus, éventuellement aucune). Légende sous la carte : « N entreprises sur la carte (règle) sur M : la liste les garde toutes ». Réglage gardé dans les recherches enregistrées (pas dans le profil, D41). `app/commun.py` (`SEUILS_CARTE`, `seuil_label`), `app/carte.py › spontaneous_on_map(df, min_score)`, `app/vues/explorer.py`.
+**Conséquences :** la liste et les compteurs des onglets ne changent pas (le « Voir plus » de la liste reste à faire, T94).
+
 ### D48 — Composantes intensité et besoin en échelle log absolue (au lieu de rangs centiles) (2026-11-28, @mathis)
 **Contexte :** le score orange s'entassait près de 1 : `c_intensite` et `c_embauche` étaient des rangs centiles **nationaux**, or en ville presque toutes les entreprises sont au-dessus de la médiane nationale. Rennes 20 km (stage) : médiane 0,60, 289 entreprises ≥ 0,8 ; Lyon : 0,66 et 1 353 ; Paris : 0,73 et 10 168. Un rang écrase aussi l'écart entre « un peu au-dessus de la moyenne » et « 50 fois la moyenne ».
 **Décision :** `c = clip((log10 x − log10 q50) / (log10 q99,5 − log10 q50), 0, 1)`, quantiles nationaux du domaine, pour `intensite_post` (`c_intensite`) et `besoin_attendu` (part proxy de `c_embauche` ; les établissements La Bonne Boîte restent en tête, D27). `radar/score/build.py › log_scale`. Les anciens rangs restent dans `rang_intensite` et `rang_embauche` : phrases « plus que 92 % des entreprises » (`explain.py`, `candidature.py`) et modèle de réponse simulé (`simulate.candidate_pool`, rapport inchangé).

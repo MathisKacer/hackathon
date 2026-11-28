@@ -485,3 +485,13 @@ Code : `radar/accounts.py` (`RELANCE_DELAY`, `a_relancer`, colonnes `envoyee_le`
 
 Dans **Mon espace › Mes candidatures**, « Télécharger mes candidatures » donne un fichier CSV (`candidatures_AAAA-MM-JJ.csv`) : nom, type, statut, envoyée le, relancée le, ville, note, lien de l'offre. Séparateur « ; » et UTF-8 avec BOM (colonnes et accents corrects dans Excel en français). Une cellule qui commencerait comme une formule est précédée d'une apostrophe (injection CSV). Code : `radar/export.py` ; tests : `tests/test_export.py`.
 
+
+## Score et carte des candidatures spontanées (D47, D48, D49)
+
+**Ce que voit l'utilisateur.** Sur la carte, par défaut, seules les **meilleures cibles** (« Cible prioritaire » et « Bonne cible ») : au moins les 20 meilleures, 150 au plus. Le curseur **« Score minimal sur la carte »** (Filtres › Classement) permet de choisir un seuil (de 0,30 à 0,90) : toutes les entreprises qui l'atteignent, 300 au plus. Une ligne sous la carte dit combien sont affichées ; la **liste garde toujours toutes les entreprises**.
+
+**Comment lire le score.** Moyenne pondérée de critères dans [0, 1]. L'intensité data et le besoin attendu sont sur une **échelle logarithmique** (0 = médiane des entreprises françaises, 1 = les 0,5 % les plus fortes) : **0,5 est déjà un bon score**. En alternance, le maximum tourne autour de 0,7 (le critère « recruteur d'alternants » vaut 0 pour la plupart des entreprises).
+
+**Paliers.** « Cible prioritaire » demande d'être dans les 10 % meilleures de la recherche, un score ≥ 0,60 **et** un besoin attendu ≥ 0,2 offre du domaine sur la période observée (≈ 2 mois) ; « Bonne cible » : 30 %, 0,45 et 0,05 ; « À considérer » : 60 %, 0,30 et 0,01. Une zone sans besoin data (ex. Guéret) n'a donc aucune cible prioritaire.
+
+**Réglages.** Seuils de paliers : `TIERS` dans `radar/paliers.py`. Bornes de l'échelle log : `LOG_SCALE_QUANTILES` dans `radar/score/build.py` (puis `scripts/build_all.py`). Carte : `MAX_SPONTANEOUS_ON_MAP*`, `MIN_SPONTANEOUS_ON_MAP` dans `app/carte.py` ; choix du curseur : `SEUILS_CARTE` dans `app/commun.py`.

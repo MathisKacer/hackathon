@@ -33,6 +33,16 @@ PAGES_DIR = (
 BLUE = "#1f6feb"  # offres publiées (carte)
 ORANGE = "#e8590c"  # candidatures spontanées (carte)
 RAYONS = [5, 10, 20, 30, 50, 75, 100]
+# Seuil de score des candidatures spontanées sur la carte (D49) : « auto » = meilleures cibles
+# (paliers 1–2, D47) ; sinon score minimal. La liste garde toujours toutes les entreprises.
+SEUIL_AUTO = "auto"
+SEUILS_CARTE = [SEUIL_AUTO] + [round(0.30 + 0.05 * i, 2) for i in range(13)]  # 0,30 … 0,90
+
+
+def seuil_label(v) -> str:
+    return "Auto" if v == SEUIL_AUTO else f"≥ {v:.2f}".replace(".", ",")
+
+
 CONTRATS = ["Tous", "Stage", "Alternance", "Emploi"]
 # Curseurs de poids du score orange (T42) : composante → clé du widget (enregistrée au profil).
 WEIGHT_KEYS = {c: "poids_" + c.removeprefix("c_") for c in COMPONENTS}
@@ -75,6 +85,7 @@ WIDGET_KEYS = [
     "niveau_inconnu",
     "competences",
     "tri",
+    "seuil_carte",
     *WEIGHT_KEYS.values(),
 ]
 
@@ -216,6 +227,7 @@ def profile_keys() -> dict[str, list | None]:
         "secteurs": list(SECTIONS),
         **{key: list(range(WEIGHT_MAX + 1)) for key in WEIGHT_KEYS.values()},
         "tri": TRIS,
+        "seuil_carte": SEUILS_CARTE,
         "show_liquidation": [True, False],
         "une_par_entreprise": [True, False],
         "niveaux": NIVEAUX,
@@ -249,6 +261,7 @@ PROFILE_LABELS = {
     "secteurs": "Secteur",
     **{key: f"Poids {COMPONENTS[c][0].lower()}" for c, key in WEIGHT_KEYS.items()},
     "tri": "Classement",
+    "seuil_carte": "Score minimal sur la carte",
     "show_liquidation": "Avec liquidations",
     "une_par_entreprise": "Une ligne par entreprise",
     "niveaux": "Niveau d'études",
@@ -266,6 +279,7 @@ def init_defaults() -> None:
     st.session_state.setdefault("max_age", 60)
     st.session_state.setdefault("only_data", True)
     st.session_state.setdefault("tri", TRI_SCORE)
+    st.session_state.setdefault("seuil_carte", SEUIL_AUTO)
     st.session_state.setdefault("show_liquidation", False)
     st.session_state.setdefault("une_par_entreprise", False)
     st.session_state.setdefault("niveaux", [])

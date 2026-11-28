@@ -30,6 +30,8 @@ MAX_OFFERS_IN_POPUP = 25
 MAX_SPONTANEOUS_ON_MAP = 150
 MIN_SPONTANEOUS_ON_MAP = 20
 MAP_MAX_TIER = 2
+# D49 : seuil choisi par l'étudiant (curseur « Score minimal sur la carte ») : au plus 300 points
+MAX_SPONTANEOUS_ON_MAP_MANUAL = 300
 
 
 def _popup_html(group: pd.DataFrame) -> str:
@@ -205,8 +207,19 @@ def _score_breakdown_html(r: pd.Series) -> str:
     return "<table style='font-size:12px;color:#333;margin:4px 0'>" + "".join(rows) + "</table>"
 
 
-def spontaneous_on_map(spontaneous: pd.DataFrame) -> pd.DataFrame:
-    """Entreprises orange à placer sur la carte (dans l'ordre de la liste), D47."""
+def spontaneous_on_map(spontaneous: pd.DataFrame, min_score: float | None = None) -> pd.DataFrame:
+    """Entreprises orange à placer sur la carte (dans l'ordre de la liste).
+
+    `min_score` None : automatique (meilleurs paliers, D47) ; sinon toutes celles dont le score
+    atteint le seuil (D49), les meilleures d'abord, 300 au plus — éventuellement aucune.
+    """
+    if spontaneous.empty:
+        return spontaneous
+    if min_score is not None:
+        keep = spontaneous[pd.to_numeric(spontaneous["score"], errors="coerce") >= min_score]
+        return keep.sort_values("score", ascending=False, kind="stable").head(
+            MAX_SPONTANEOUS_ON_MAP_MANUAL
+        )
     if "palier" not in spontaneous:
         return spontaneous.head(MAX_SPONTANEOUS_ON_MAP)
     # meilleurs paliers d'abord (tri stable : l'ordre de la liste départage)
@@ -222,6 +235,7 @@ def build_map(
     spontaneous: pd.DataFrame | None = None,
     place: Place | None = None,
     radius_km: float | None = None,
+    min_score: float | None = None,
 ) -> folium.Map:
     if place is not None:
         center = (place.lat, place.lon)
@@ -248,9 +262,9 @@ def build_map(
                 dash_array="6",
             ).add_to(m)
 
-    if spontaneous is not None and not spontaneous.empty:
+    shown = None if spontaneous is None else spontaneous_on_map(spontaneous, min_score)
+    if shown is not None and not shown.empty:
         orange = folium.FeatureGroup(name="🟠 Candidature spontanée", show=True)
-        shown = spontaneous_on_map(spontaneous)
         # Dégradé étalé sur les points affichés (en ville, les 300 premiers ont tous un score
         # de 0,8 à 1 : en absolu ils auraient la même couleur) : clair = le moins bon affiché.
         lo, hi = float(shown["score"].min()), float(shown["score"].max())

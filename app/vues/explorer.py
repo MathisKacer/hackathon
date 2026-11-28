@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pandas as pd
 import streamlit as st
-from carte import build_map
+from carte import build_map, spontaneous_on_map
 from commun import (
     CHANCE_HELP,
     CONTRATS,
@@ -24,6 +24,8 @@ from commun import (
     PAGES_DIR,
     PROFILE_LABELS,
     RAYONS,
+    SEUIL_AUTO,
+    SEUILS_CARTE,
     TRI_MATCH,
     TRI_P,
     TRIS,
@@ -41,6 +43,7 @@ from commun import (
     get_top,
     profile_keys,
     reset_weights,
+    seuil_label,
 )
 from cv_ui import cv_and_skills
 from favoris import favorite_refs, offer_ref, sync_offers_editor, temp_banner
@@ -153,6 +156,17 @@ with left, st.container(border=True, key="carte_recherche"):
         competences = cv_and_skills("cv_fichier")  # T45, T83 : CV + compétences (saisie libre)
     with st.expander("Classement", icon=":material/tune:"):
         tri = st.radio("Classer par", TRIS, key="tri", horizontal=True)
+        # D49 : combien d'entreprises orange sur la carte (la liste les garde toutes)
+        seuil_carte = st.select_slider(
+            "Score minimal sur la carte",
+            SEUILS_CARTE,
+            key="seuil_carte",
+            format_func=seuil_label,
+            help="Candidatures spontanées affichées sur la carte. « Auto » : les cibles "
+            "prioritaires et les bonnes cibles (au moins les 20 meilleures, 150 au plus). "
+            "Sinon : toutes les entreprises dont le score atteint le seuil (300 au plus). "
+            "La liste sous la carte garde toutes les entreprises.",
+        )
         st.caption("Importance de chaque critère dans le score (0 = ignoré) :")
         for c, (label, help_) in COMPONENTS.items():
             st.slider(label, 0, WEIGHT_MAX, key=WEIGHT_KEYS[c], help=help_)
@@ -232,10 +246,30 @@ with right:
     temp_banner(PAGES_DIR / "inscription.py")  # favoris temporaires (anonyme, T54)
     if not (view.empty and spontaneous.empty):
         st_folium(
-            build_map(view, spontaneous, place, rayon if place is not None else None),
+            build_map(
+                view,
+                spontaneous,
+                place,
+                rayon if place is not None else None,
+                min_score=None if seuil_carte == SEUIL_AUTO else seuil_carte,
+            ),
             height=620,
             use_container_width=True,
             returned_objects=[],
+        )
+    if not spontaneous.empty:  # D49 : dire ce que montre la carte (le seuil peut tout cacher)
+        n_map = len(
+            spontaneous_on_map(spontaneous, None if seuil_carte == SEUIL_AUTO else seuil_carte)
+        )
+        rule = (
+            "meilleures cibles"
+            if seuil_carte == SEUIL_AUTO
+            else f"score {seuil_label(seuil_carte)}"
+        )
+        st.caption(
+            f"🟠 {n_map} entreprise{'s' if n_map > 1 else ''} sur la carte ({rule}) "
+            f"sur {len(spontaneous)} : la liste les garde toutes. Seuil réglable dans "
+            "Filtres › Classement."
         )
 
 # ------------------------------------------------------------------ listes

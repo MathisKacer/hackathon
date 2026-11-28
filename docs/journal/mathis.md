@@ -335,3 +335,8 @@
 - `c_intensite` et `c_embauche` (proxy) en échelle log absolue (0 = médiane nationale, 1 = 99,5e centile) au lieu de rangs centiles. Rangs gardés dans `rang_intensite` / `rang_embauche` pour les phrases et le modèle de réponse simulé (rapport inchangé).
 - Rennes 20 km : médiane 0,60 → 0,21 ; ≥ 0,8 : 289 → 59. Lyon ≥ 0,8 : 1 353 → 191. Tests : `tests/test_embauche.py`.
 - ⚠️ Chacun doit relancer `scripts/build_all.py` (scores.parquet hors Git).
+
+## 2026-11-28 — Curseur « Score minimal sur la carte » (D49) + note à l'équipe
+
+- `seuil_carte` (Auto ou ≥ 0,30 … 0,90) dans Filtres › Classement, légende sous la carte ; `spontaneous_on_map(df, min_score)`. Vérifié dans l'app (AppTest, Rennes) : Auto 108 points, ≥ 0,60 107 points, sur 4 281.
+- Note « 📣 À lire » en tête de `docs/TACHES.md` (D47–D49, qui doit faire quoi) ; § « Score et carte » dans `docs/GUIDE.md`.
