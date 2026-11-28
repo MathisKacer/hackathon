@@ -67,13 +67,15 @@ hackathon/
 │   │   ├── model.py            # entraîne le modèle de réponse, calibration, paramètres retrouvés
 │   │   └── predict.py          # T37 : P(réponse) dans l'app (lecture DuckDB des SIRET affichés + effet de la distance, D23)
 │   └── llm/letter.py           # génération de lettre (bonus)
-├── app/streamlit_app.py        # point d'entrée : navigation en haut, 3 pages (D30)
-├── app/vues/                   # explorer.py (carte, listes), entreprises.py (recherche), mon_espace.py (compte)
+├── app/streamlit_app.py        # point d'entrée : pages, redirections ; barre du haut maison (D46)
+├── app/entete.py               # T93 : barre du haut (logo, liens, compte), page(nom), go(nom)
+├── app/vues/                   # accueil.py, explorer.py (Recherche : filtres | carte, listes), entreprises.py, connexion.py, inscription.py, mon_espace.py (Mon compte)
+├── app/static/                 # logos Compass (SVG, servis par Streamlit) ; app/tableau_bord.py : graphiques (non appelé)
 ├── app/commun.py, carte.py     # données et réglages partagés ; carte folium + popup
 ├── app/fiche_ui.py, compte.py  # fiche entreprise (fenêtre) ; comptes et historique
 ├── app/cv_ui.py                # T45, T83 : dépôt du CV + liste des compétences (saisie libre), Explorer et Mon espace (D42)
 ├── app/favoris.py              # T54 : favoris (étoile), temporaires en anonyme, repris à la connexion
-├── app/style.py                # T70 : CSS commun, bandeau d'en-tête, tuiles de chiffres, pastilles
+├── app/style.py                # T70, T93 : CSS commun (thèmes clair / sombre), bandeau, tuiles, pastilles
 ├── scripts/                    # points d'entrée : collect_all.py, build_all.py, make_fake_data.py
 ├── notebooks/                  # exploration (sorties vidées avant commit)
 ├── tests/

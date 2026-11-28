@@ -30,42 +30,33 @@
 
 ---
 
-## 0. L'interface : 3 pages (T56, D30)
+## 0. L'interface « Compass » (T93, D46 ; avant : 3 pages, D30)
 
-**Navigation.** Une barre en haut de l'écran avec trois pages (plus de barre latérale) :
+**Pages et barre du haut.** Notre barre (`app/entete.py`) remplace la navigation de Streamlit : logo « Compass » à gauche (retour à l'accueil, on reste connecté ; absent sur l'accueil), à droite « Entreprises », « Se connecter » et « S'inscrire », ou « Mon compte » une fois connecté (+ « Administration »). Elle est alignée sur le menu « ⋮ » de Streamlit.
 
 | Page | Pour quoi faire | Fichier |
 |---|---|---|
-| **Explorer** (page d'accueil) | Chercher où candidater autour de soi | `app/vues/explorer.py` |
+| **Accueil** | Logo, slogan « Oser l'audace, fini l'impasse », « Trouver les offres avant qu'elles paraissent », recherche centrée (ville, contrat, domaine, rayon) + « Rechercher » ; lien « Chercher par entreprise » | `app/vues/accueil.py` |
+| **Recherche** (résultats) | À gauche la recherche et tous les filtres (sections Offres, Entreprises, Ton CV, Classement, « Enregistrer cette recherche ») ; à droite la carte ; en dessous les onglets « Candidatures spontanées » et « Offres » | `app/vues/explorer.py` |
 | **Entreprises** | Chercher une entreprise précise et voir sa fiche | `app/vues/entreprises.py` |
-| **Se connecter** / **Mon espace (prénom)** | Compte facultatif, profil, historique des recherches | `app/vues/mon_espace.py` |
+| **Se connecter** / **S'inscrire** | Deux pages séparées, chacune avec un lien vers l'autre ; S'inscrire rappelle à quoi sert un compte | `app/vues/connexion.py`, `inscription.py` |
+| **Mon compte** | Candidatures, favoris, recherches enregistrées, profil (compétences) | `app/vues/mon_espace.py` |
 
-**Explorer, de haut en bas :**
-1. **La recherche** : « Où ? » (suggesteur de ville, T55 : on tape le début du nom et on choisit « Ville (code postal) »), « Contrat » (Tous / Stage / Alternance / Emploi), « Domaine », « Rayon ».
-2. **Le bouton « Filtres »** : un panneau avec les régions, le mot-clé, l'ancienneté des offres, le **niveau d'études** (avec « Garder les offres sans niveau précisé », section 15), la taille et le secteur des entreprises, « Afficher aussi les entreprises en liquidation », le classement (score ou chance de réponse) et l'importance de chaque critère du score. Le bouton affiche le nombre de filtres actifs (« Filtres (2) »).
-3. **Une phrase de résultat** : « Autour de Rennes (35000) (20 km) : 42 entreprises pourraient t'accueillir en alternance sans avoir publié d'offre, et 18 offres sont publiées. » Sans ville : un « Comment ça marche » en 3 étapes.
-4. **La carte** : offres en bleu, candidatures spontanées en orange (`app/carte.py`, inchangé).
-5. **Deux onglets** : « Candidatures spontanées » (Entreprise, Lieu, Distance, Autres sites, Taille, Situation, La Bonne Boîte ✔, Score, **Chance de réponse** — estimation issue de réponses simulées, expliquée en info-bulle, D31) et « Offres » (niveau d'études, lien vers chaque annonce).
-6. **La liste n'affiche que les 500 premières entreprises** du classement (T71 : au-delà, la mise en couleur plantait sur les grandes villes) ; une mention le signale.
-7. **Un clic sur le nom d'une entreprise** (en bleu souligné, comme un lien) dans « Candidatures spontanées » ouvre la **fiche dans une fenêtre** (T72 ; plus de case à cocher) par-dessus la page (section 10). Fermer la fenêtre permet d'en ouvrir une autre.
+**Sans ville**, la page Recherche montre les meilleures candidatures spontanées de France entière (5 000 présélectionnées puis classées ; pas de distance ni de proximité, pas de chance de réponse). Avec une ville, celles du rayon.
 
 **Principes.**
-- Textes courts, en français simple : pas de numéros de tâches, de noms de fichiers ni de commandes à l'écran (ils restent dans les commentaires du code).
-- Peu d'emojis : seulement les drapeaux d'alerte et le ✔ La Bonne Boîte.
-- **Les réglages sont conservés quand on change de page** (`persist_widget_state` dans `app/commun.py`).
-- **Thème sobre** (`.streamlit/config.toml`) : bleu nuit `#1D3557`, fond `#FAFAF7`, police Inter ; le bleu et l'orange restent réservés à la carte.
-- **Apparence (T70, `app/style.py`)** :
-  - un **bandeau d'en-tête** bleu nuit (dégradé, cercles « radar » discrets) sur chaque page ; sur Explorer, la carte de recherche est posée dessus ;
-  - sans ville : **3 cartes « Comment ça marche »** numérotées ; avec une ville : des **tuiles de chiffres** colorées (entreprises à démarcher en orange, offres publiées en bleu, cibles prioritaires en vert ; les entreprises en difficulté ne sont signalées que dans la liste et la fiche) ;
-  - **« Les meilleures cibles »** : les 4 premières entreprises en cartes (palier de priorité en pastille, ville, distance, taille, bouton « Voir la fiche ») au-dessus des onglets ;
-  - **icônes Material** (`:material/…:`) au lieu des emojis : navigation, bouton « Filtres », onglets, boutons de Mon espace ;
-  - le CSS cible nos blocs par leur **clé** (`st.container(key=...)` → classe `st-key-…`), plus stable que les identifiants internes de Streamlit. La fiche n'a pas encore été retravaillée (T67 en cours sur la fiche).
+- Textes courts, en français simple : pas de numéros de tâches, de noms de fichiers ni de commandes à l'écran.
+- **Les réglages sont conservés quand on change de page** (`persist_widget_state`), y compris de l'accueil vers la recherche.
+- **Thème** (`.streamlit/config.toml`) : indigo, clair et sombre (menu ⋮ › Settings) ; CSS adapté au thème actif (`app/style.py`, `PALETTES`). Le bleu (offres) et l'orange (candidatures spontanées) restent réservés à la carte.
+- **Logos** (`app/static/`, fournis par Emma) : `logo-compass-{clair,sombre}.svg` (le mot), `icone-compass-{clair,sombre}.svg` (le C-boussole : onglet, bandeaux).
+- Le CSS cible nos blocs par leur **clé** (`st.container(key=...)` → classe `st-key-…`).
 
 **Organisation du code.**
 
 | Fichier | Rôle |
 |---|---|
-| `app/streamlit_app.py` | point d'entrée : configuration, navigation |
+| `app/streamlit_app.py` | point d'entrée : configuration, pages, redirections (`entete.go`) |
+| `app/entete.py` | barre du haut, registre des pages (`page(nom)`), `go(nom)` |
 | `app/commun.py` | constantes, chargement des données (mis en cache), réglages du profil (`WIDGET_KEYS`, `profile_keys()`, `PROFILE_LABELS`, `init_defaults()`) |
 | `app/carte.py` | carte folium et popup des entreprises |
 | `app/fiche_ui.py` | fiche entreprise (`open_fiche` : fenêtre) |

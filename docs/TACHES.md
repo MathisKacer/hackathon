@@ -87,11 +87,11 @@
 ## 🔵 En cours
 
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
-- [ ] T93 — **Essais d'une interface plus riche** (moins épurée que D30), sur la branche `emma/interface-riche` : rien n'est fusionné dans `main` sans accord de l'équipe (@celia : apparence, T70) — @emma
 - _…_
 
 ## ✅ Fait
 
+- [x] T93 — **Interface « Compass »** (essais sur `emma/interface-riche`, fusionnés dans `main` à la demande d'Emma) — @emma → D46 : accueil (logo, slogan, recherche centrée), barre du haut maison (Se connecter / S'inscrire ou Mon compte, logo qui garde la session), page Recherche en deux blocs (filtres | carte) puis listes, pages connexion et inscription séparées, thème clair/sombre, logos d'Emma ; candidatures spontanées sans ville (France entière) ; retirés de la page de résultats : bandeau, « Comment ça marche », tuiles, meilleures cibles, tableau de bord. ⚠️ À valider avec l'équipe : nom Compass, éléments retirés (@celia T70/T85)
 - [x] T91 — **Télécharger ses candidatures** — @celia : bouton dans « Mes candidatures » → CSV (nom, type, statut, envoyée le, relancée le, ville, note, lien de l'offre), lisible dans Excel en français ; formules neutralisées (`radar/export.py`)
 - [x] T90 — **Rappels de relance** — @celia : cocher « Candidaté » note la date d'envoi ; « **À relancer** » après **15 jours** au statut Envoyée ou Relancée (candidature en tête, message, tuile affichée seulement s'il y en a) ; bouton « J'ai relancé » (statut Relancée, le compte repart de zéro). Candidatures cochées avant : date de mise en favori, indiquée « ajoutée aux favoris le … »
 - [x] T89 — **Fiche plus claire** — @celia : en-tête (initiale, nom, pastilles lieu / taille / priorité, ou sites / taille / catégorie pour l'entreprise), alerte, lien vers l'entreprise ; une ligne de boutons (étoile, site web, page recrutement, LinkedIn) ; onglets **Résumé, Offres, Infos** (fiche entreprise : + **Sites (N)**). Présentation seulement : blocs de T76, T78, T80 inchangés. ℹ️ @maxence @emma : vos blocs sont dans l'onglet « Résumé »
