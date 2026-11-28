@@ -92,7 +92,7 @@
   - **Recherche d'entreprises** sur ~406 000 établissements, fautes de frappe tolérées ; **fiche entreprise** (toute l'entreprise, SIREN) et **fiche site** (SIRET) reliées ; limite : filiales d'un groupe non reliées (L24, T26).
   - **Effectifs honnêtes** : SIRENE ne donne que des fourchettes ; on affiche la taille officielle de l'entreprise et celle de chaque site, sans inventer de total (T73).
   - **Favoris** avec case « Candidaté » et note : premier pas vers un suivi de candidatures qui fournirait un jour de **vraies réponses** pour remplacer les simulées.
-- [ ] T61 — Scénario de démo (2 ou 3 recherches qui montrent de bons résultats, dont une hors Bretagne)
+- [x] T61 — ✅ @mathis → `docs/DEMO.md` (Rennes stage, Hellowork, Lyon alternance, diapo validation ; à rejouer en répétition) — Scénario de démo (2 ou 3 recherches qui montrent de bons résultats, dont une hors Bretagne)
 - [ ] T62 — 🔗H+18 Cache de démo figé + vidéo de secours
 - [ ] T63 — Répétition chronométrée
 

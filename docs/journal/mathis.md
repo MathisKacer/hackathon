@@ -352,3 +352,7 @@
 - `eval_score` : lignes « score affiché » (mélange des composantes, plusieurs poids et plafonds). Choix : plafond 99,9 %, poids 2 / 4 → AUC 0,921 / 0,948, top 200 futur 72 (41 avant).
 - GBM : Poisson sur le nombre d'offres + log E ; comparé en volume (0,885 / 0,899).
 - Après : Rennes 20 km stage, 49 cibles prioritaires, carte 135 points (80 % du besoin) ; Lyon carte 54 % (49 %), Paris 31 % (24 %).
+
+## 2026-11-28 — T61 : scénario de démo
+
+- `docs/DEMO.md` : 3 actes en 5 min (Rennes stage : SPIKEELABS opportunité cachée, Hellowork sans aucune offre, IFIP/MGEN hors ESN ; Lyon alternance ; diapo validation AUC 0,92), checklist, chiffres pour le jury, pièges (Guéret, Paris, scores en alternance), plan B.
