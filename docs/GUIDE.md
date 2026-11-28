@@ -490,6 +490,8 @@ Dans **Mon espace › Mes candidatures**, « Télécharger mes candidatures » d
 
 ## Score et carte des candidatures spontanées (D47, D48, D49)
 
+**Fenêtre d'une entreprise sur la carte.** Clic sur un point orange → fenêtre (priorité, « Recommandée car… », décomposition du score) terminée par **« Voir la fiche de l'entreprise → »** : ouvre la même fiche que la page Entreprises (l'Annuaire des entreprises est dans l'onglet *Infos* de la fiche). Fonctionnement : la carte est dans l'iframe de streamlit-folium, qui expose `window.Streamlit` ; le lien envoie `{fiche: SIRET, t: horodatage}` comme valeur du composant (`app/carte.py › _fiche_link_html`), lue après `st_folium` dans `app/vues/explorer.py`, qui appelle `open_fiche` une seule fois par clic. Pas de lien classique : recharger la page ferait perdre la session.
+
 **Ce que voit l'utilisateur.** Sur la carte, par défaut, seules les **meilleures cibles** (« Cible prioritaire » et « Bonne cible ») : au moins les 20 meilleures, 150 au plus. Le curseur **« Score minimal sur la carte »** (Filtres › Classement) permet de choisir un seuil (de 0,30 à 0,90) : toutes les entreprises qui l'atteignent, 300 au plus. Une ligne sous la carte dit combien sont affichées ; la **liste garde toujours toutes les entreprises**.
 
 **Comment lire le score.** Moyenne pondérée de critères dans [0, 1]. L'intensité data et le besoin attendu sont sur une **échelle logarithmique** (0 = médiane des entreprises françaises, 1 = les 0,1 % les plus fortes) : **0,5 est déjà un bon score**. Poids par défaut : intensité 2, besoin attendu (potentiel d'embauche) 4, choisis par validation temporelle (D48 bis). En alternance, le maximum tourne autour de 0,7 (le critère « recruteur d'alternants » vaut 0 pour la plupart des entreprises).

@@ -368,3 +368,7 @@
 - Ajouts : clic sur la fiche Apple Retail France dans Entreprises ; outro animée (`scripts/demo_outro.js` : « O » du logo → bateau, aiguille qui se fixe au départ, logo + slogan). 71 s avec l'intro.
 - Vidéo : recherche « AVISIA » ; outro avec le « O » en personnage qui saute dans le bateau. 74 s.
 - Correction page Entreprises (`radar/recherche.py › with_companies`) : les lignes « toute l'entreprise » passaient toutes devant, une correspondance exacte à un seul site (AVISIA) se retrouvait 11e derrière AVIS LOCATION, PICOTY… ; maintenant tout est classé par ressemblance, l'entreprise juste avant ses sites. Test ajouté.
+
+## 2026-11-28 — Carte : « Voir la fiche » dans la fenêtre d'une entreprise
+
+- Lien qui renvoie le SIRET via `window.Streamlit.setComponentValue` (iframe streamlit-folium) ; `explorer.py` ouvre `open_fiche` une fois par clic (horodatage). Testé avec Playwright : bonne fiche, pas de réouverture au rerun suivant.

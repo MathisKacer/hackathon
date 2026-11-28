@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pandas as pd
 import streamlit as st
-from carte import build_map, spontaneous_on_map
+from carte import FICHE_REQUEST_KEY, build_map, spontaneous_on_map
 from commun import (
     CHANCE_HELP,
     CONTRATS,
@@ -245,7 +245,7 @@ with right:
         st.caption("Équipe : `scores.parquet` manquant (lancer `scripts/build_all.py`).")
     temp_banner(PAGES_DIR / "inscription.py")  # favoris temporaires (anonyme, T54)
     if not (view.empty and spontaneous.empty):
-        st_folium(
+        map_value = st_folium(
             build_map(
                 view,
                 spontaneous,
@@ -257,6 +257,13 @@ with right:
             use_container_width=True,
             returned_objects=[],
         )
+        # « Voir la fiche » dans la fenêtre d'une entreprise de la carte (app/carte.py) : le clic
+        # renvoie {fiche: SIRET, t: horodatage} ; on n'ouvre la fiche qu'une fois par clic.
+        req = map_value.get(FICHE_REQUEST_KEY) if isinstance(map_value, dict) else None
+        if req and map_value.get("t") != st.session_state.get("_fiche_carte_t"):
+            st.session_state["_fiche_carte_t"] = map_value.get("t")
+            match = spontaneous[spontaneous["siret"].astype(str) == str(req)]
+            open_fiche(str(req), match.iloc[0] if len(match) else None, domaine)
     if not spontaneous.empty:  # D49 : dire ce que montre la carte (le seuil peut tout cacher)
         n_map = len(
             spontaneous_on_map(spontaneous, None if seuil_carte == SEUIL_AUTO else seuil_carte)

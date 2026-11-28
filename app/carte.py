@@ -8,12 +8,14 @@ from __future__ import annotations
 
 import html
 import math
+import re
 
 import folium
 import pandas as pd
 import streamlit as st
 from commun import BLUE, ORANGE, WEIGHT_KEYS
 from folium.plugins import MarkerCluster
+from style import LINK_STYLE
 
 from radar.competences import MATCH_COLORS, match_summary
 from radar.familles import family_signal
@@ -98,7 +100,6 @@ def _company_popup(r: pd.Series) -> str:
     if pd.notna(r.get("tranche_effectif")):
         lines.append(f"Effectif : {html.escape(str(r['tranche_effectif']))}")
     signal = offer_signal(r)
-    url = html.escape(r["url_annuaire"], quote=True)
     return (
         f"<div style='font-family:sans-serif;font-size:13px'>"
         f"<b>{title}</b><br><span style='color:#555'>{'<br>'.join(lines)}</span><br>"
@@ -110,7 +111,28 @@ def _company_popup(r: pd.Series) -> str:
         f"{_family_html(r)}"
         f"{_p_reponse_html(r)}"
         f"{_score_breakdown_html(r)}"
-        f'<a href="{url}" target="_blank" rel="noopener">Annuaire des entreprises</a></div>'
+        f"{_fiche_link_html(r)}</div>"
+    )
+
+
+# Lien « Voir la fiche » de la fenêtre d'une entreprise : la carte est dans l'iframe du composant
+# streamlit-folium, qui expose `window.Streamlit` ; le clic renvoie le SIRET à Python (valeur du
+# composant, lue par app/vues/explorer.py), qui ouvre la même fiche que la page Entreprises.
+# Pas de lien classique : recharger la page ferait perdre la session (recherche, connexion).
+FICHE_REQUEST_KEY = "fiche"
+
+
+def _fiche_link_html(r: pd.Series) -> str:
+    siret = re.sub(r"\D", "", str(r.get("siret") or ""))  # chiffres seulement (dans du JS)
+    if not siret:
+        return ""
+    js = (
+        f"window.Streamlit&&window.Streamlit.setComponentValue("
+        f"{{{FICHE_REQUEST_KEY}:'{siret}',t:Date.now()}});return false;"
+    )
+    return (
+        f'<a href="#" onclick="{js}" style="{LINK_STYLE};cursor:pointer">'
+        "Voir la fiche de l'entreprise →</a>"
     )
 
 
