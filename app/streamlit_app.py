@@ -12,6 +12,8 @@ app/fiche_ui.py (fiche entreprise), app/compte.py (comptes).
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import streamlit as st
 from commun import PAGES_DIR, init_defaults, persist_widget_state
 from compte import _con, current_user
@@ -19,7 +21,16 @@ from style import inject_css
 
 from radar import admin
 
-st.set_page_config(page_title="Radar", page_icon="🧭", layout="wide")
+# T93 (essai, branche emma/interface-riche) : logo « Compass » (app/static/), version claire
+# ou sombre selon le thème ; icône de l'onglet du navigateur.
+STATIC = Path(__file__).resolve().parent / "static"
+st.set_page_config(page_title="Compass", page_icon=str(STATIC / "compass_icone.svg"), layout="wide")
+_dark = getattr(st.context.theme, "type", None) == "dark"
+st.logo(
+    str(STATIC / ("compass_logo_sombre.svg" if _dark else "compass_logo.svg")),
+    size="large",
+    icon_image=str(STATIC / "compass_icone.svg"),
+)
 
 inject_css()  # apparence commune (T70, app/style.py)
 init_defaults()
