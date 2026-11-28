@@ -60,7 +60,6 @@
 
 
 
-- [ ] T90 — **Rappels de relance** : dans « Mes candidatures », date d'envoi et alerte **« À relancer »** après 15 jours sans réponse — @celia
 - [ ] T92 — 🔗T88 **Adresses des sites web des entreprises** (à retravailler) : nos données n'en contiennent aucune (SIRENE n'en publie pas ; `site_web` de La bonne alternance est vide), la fiche ne propose que des recherches pré-remplies. Trouver une source ouverte (ex. Wikidata par SIREN, annuaires publics), mesurer la couverture, puis afficher un lien direct quand il est connu
 
 ## 🟢 P3 — Bonus (seulement si le P2 est fini)
@@ -87,6 +86,7 @@
 
 ## 🔵 En cours
 
+- [ ] T90 — **Rappels de relance** : dans « Mes candidatures », date d'envoi et alerte **« À relancer »** après 15 jours sans réponse — @celia
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
 - [ ] T93 — **Essais d'une interface plus riche** (moins épurée que D30), sur la branche `emma/interface-riche` : rien n'est fusionné dans `main` sans accord de l'équipe (@celia : apparence, T70) — @emma
 - _…_
