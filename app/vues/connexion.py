@@ -13,4 +13,5 @@ _, mid, _ = st.columns([1, 1.4, 1])
 with mid:
     with st.container(border=True, key="espace_connexion"):
         login_form(saved_profile_keys(), go="compte")
-    st.page_link(page("inscription"), label="Pas encore de compte ? S'inscrire")
+    with st.container(key="lien_autre_page"):
+        st.page_link(page("inscription"), label="Si vous n'avez pas de compte, inscrivez-vous")

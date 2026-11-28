@@ -111,8 +111,11 @@ _CSS = """
    Streamlit : la barre de Streamlit devient transparente (seul le menu reste cliquable) et la
    page remonte, pour que nos liens soient centrés à la hauteur des « ⋮ ». */
 header[data-testid="stHeader"] {{ background: transparent; pointer-events: none; }}
-header[data-testid="stHeader"] [data-testid="stToolbar"],
-header[data-testid="stHeader"] button {{ pointer-events: auto; }}
+header[data-testid="stHeader"] * {{ pointer-events: none; }}
+/* Seuls les boutons du menu restent cliquables : la zone de la barre (toute la largeur)
+   laisse passer les clics vers nos liens. */
+header[data-testid="stHeader"] button, header[data-testid="stHeader"] a,
+[data-testid="stMainMenu"], [data-testid="stMainMenu"] * {{ pointer-events: auto; }}
 .block-container, [data-testid="stMainBlockContainer"] {{ padding-top: .5rem !important; }}
 .st-key-entete {{ min-height: 2.75rem; padding-right: 3.4rem; margin-bottom: .8rem;
                  display: flex; align-items: center; }}
@@ -149,6 +152,11 @@ header[data-testid="stHeader"] button {{ pointer-events: auto; }}
 .st-key-lien_entreprise {{ display: flex; align-items: center; }}
 .st-key-lien_entreprise [data-testid="stPageLink"] {{ margin: .6rem auto 0 auto; }}
 .st-key-lien_entreprise [data-testid="stPageLink"] p {{ text-decoration: underline; }}
+
+/* T93 : lien vers l'autre page (connexion ↔ inscription), centré et souligné */
+.st-key-lien_autre_page {{ display: flex; align-items: center; }}
+.st-key-lien_autre_page [data-testid="stPageLink"] {{ margin: .5rem auto 0 auto; }}
+.st-key-lien_autre_page [data-testid="stPageLink"] p {{ text-decoration: underline; }}
 
 /* T93 : titre du bloc de recherche (page de résultats) */
 .radar-block-title {{ font-size: 1.1rem; font-weight: 750; color: {title}; margin-bottom: .2rem; }}
