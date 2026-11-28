@@ -372,3 +372,4 @@
 ## 2026-11-28 — Carte : « Voir la fiche » dans la fenêtre d'une entreprise
 
 - Lien qui renvoie le SIRET via `window.Streamlit.setComponentValue` (iframe streamlit-folium) ; `explorer.py` ouvre `open_fiche` une fois par clic (horodatage). Testé avec Playwright : bonne fiche, pas de réouverture au rerun suivant.
+- Vidéo : accueil plus long (5 s de pause), fiche ouverte depuis la fenêtre du point orange (« Voir la fiche »), étape page Entreprises supprimée. 68 s.

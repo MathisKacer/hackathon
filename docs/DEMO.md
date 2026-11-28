@@ -34,11 +34,11 @@ uv run --with playwright --with imageio-ffmpeg python scripts/demo_video.py
 
 Récupérer la vidéo : clic droit sur `data/demo/demo.mp4` dans l'explorateur de VS Code › Download.
 
-**Version « parcours complet »** (intro → accueil rempli → Rechercher → zoom sur la carte et clic sur un point orange → Entreprises › « AVISIA » → fiche AVISIA (« opportunité cachée ») → **Mon compte** « Moussaillon » avec 6 candidatures → **outro** : le « O » boussole du logo devient un petit personnage (yeux, bras, jambes), saute dans un bateau, son aiguille se fixe et il montre le cap quand le bateau démarre, puis logo et slogan) : `data/demo/demo_complet.mp4`, ~74 s. Animation de l'outro : `scripts/demo_outro.js` ; `--sans-outro` pour l'enlever ; raccourcir avec `--pause-compte`, `--pause-fiche`, `--pause-point`.
+**Version « parcours complet »** (intro → accueil rempli → Rechercher → zoom sur la carte et clic sur un point orange → « Voir la fiche de l'entreprise » dans la fenêtre du point → fiche → **Mon compte** « Moussaillon » avec 6 candidatures → **outro** : le « O » boussole du logo devient un petit personnage (yeux, bras, jambes), saute dans un bateau, son aiguille se fixe et il montre le cap quand le bateau démarre, puis logo et slogan) : `data/demo/demo_complet.mp4`, ~68 s (accueil ~6 s). Animation de l'outro : `scripts/demo_outro.js` ; `--sans-outro` pour l'enlever ; raccourcir avec `--pause-compte`, `--pause-fiche`, `--pause-point`.
 ```bash
 uv run python scripts/demo_compte.py   # compte « moussaillon » + candidatures (identifiants dans data/demo/.compte_demo, hors Git)
 uv run --with playwright --with imageio-ffmpeg python scripts/demo_video_complet.py
-# --essai (captures), --entreprise, --zoom, --pause-compte / --pause-point / --pause-entreprises ; intro = data/demo/intro.mp4
+# --essai (captures), --zoom, --pause-accueil / --pause-point / --pause-fiche / --pause-compte, --sans-outro ; intro = data/demo/intro.mp4
 ```
 
 **Ajouter une vidéo d'intro** : la déposer dans `data/demo/` (glisser-déposer dans VS Code), puis

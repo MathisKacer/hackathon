@@ -8,7 +8,7 @@
 Parcours (compte « moussaillon » déjà connecté, hors vidéo) :
 1. accueil déjà rempli (Rennes, stage, data) → « Rechercher » → carte ;
 2. zoom sur Rennes, clic sur un point orange (fenêtre de l'entreprise) ;
-3. « Entreprises » (en haut à droite) → « AVISIA » → résultats → clic sur la 1re fiche ;
+3. « Voir la fiche de l'entreprise » dans cette fenêtre → fiche de l'entreprise ;
 4. « Mon compte » (en haut à droite) : les candidatures (statuts variés, une à relancer) ;
 5. outro (scripts/demo_outro.js) : le « O » boussole du logo grossit, monte dans un bateau,
    l'aiguille se fixe quand le bateau démarre, puis logo et slogan.
@@ -96,15 +96,12 @@ def main() -> None:
     p.add_argument("--fondu", type=float, default=0.5)
     p.add_argument("--ville", default="Rennes")
     p.add_argument("--contrat", default="Stage")
-    p.add_argument("--entreprise", default="AVISIA")
     p.add_argument("--zoom", type=int, default=2, help="niveaux de zoom sur la carte")
     p.add_argument("--pause-compte", type=float, default=6)
-    p.add_argument("--pause-accueil", type=float, default=2)
+    p.add_argument("--pause-accueil", type=float, default=5)
     p.add_argument("--pause-carte", type=float, default=4, help="avant le zoom")
-    p.add_argument("--pause-point", type=float, default=7, help="fenêtre de l'entreprise")
-    p.add_argument("--pause-entreprises", type=float, default=3, help="liste des résultats")
-    p.add_argument("--ligne", type=int, default=0, help="ligne cliquée dans les résultats")
-    p.add_argument("--pause-fiche", type=float, default=6, help="fiche de l'entreprise")
+    p.add_argument("--pause-point", type=float, default=5, help="fenêtre du point orange")
+    p.add_argument("--pause-fiche", type=float, default=7, help="fiche de l'entreprise")
     p.add_argument("--sans-outro", action="store_true")
     p.add_argument("--essai", action="store_true", help="captures d'écran seulement")
     a = p.parse_args()
@@ -161,25 +158,13 @@ def main() -> None:
         d.pause(0.8)
         d.snap("point")
         d.pause(a.pause_point)
-        # 3. Entreprises → AVISIA
-        d.click(page.get_by_role("link", name="Entreprises").first)
-        d.idle()
-        d.click(page.get_by_label("Entreprise", exact=True))
-        d.type(a.entreprise)
-        page.keyboard.press("Enter")
-        d.idle()
-        page.locator('[data-testid="stDataFrame"]').first.wait_for(timeout=60_000)
-        d.pause(0.8)
-        d.snap("entreprises")
-        d.pause(a.pause_entreprises)
-        grid = page.locator('[data-testid="stDataFrame"]').first
-        box = grid.bounding_box()
-        y = 35 + 35 * (a.ligne + 0.5)  # tableau sur canvas : en-tête et lignes ~35 px
-        d.click(grid, dx=min(160 / box["width"], 0.3), dy=min(y / box["height"], 0.95))
+        # 3. « Voir la fiche de l'entreprise » dans la fenêtre du point → fiche, puis on la ferme
+        d.click(iframe.content_frame.get_by_text("Voir la fiche de l'entreprise").first)
         dialog = page.get_by_role("dialog")
         dialog.wait_for(timeout=60_000)
         d.idle()
         d.snap("fiche")
+        d.move_to(dialog, 0.35, 0.55)
         d.pause(a.pause_fiche)
         page.keyboard.press("Escape")
         try:
