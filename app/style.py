@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import html
 from dataclasses import dataclass
+from pathlib import Path
 
 import streamlit as st
 
@@ -58,15 +59,13 @@ _CSS = """
 .radar-hero .badges {{ margin-top: .8rem; display: flex; gap: .5rem; flex-wrap: wrap; }}
 .radar-hero .badges span {{ background: rgba(255,255,255,.16); border: 1px solid
     rgba(255,255,255,.25); border-radius: 999px; padding: .2rem .7rem; font-size: .82rem; }}
-.radar-hero svg.radar {{ position: absolute; right: 1.2rem; top: 50%; width: 230px;
-    height: 230px; transform: translateY(-50%); opacity: .9; }}
-.radar-hero svg .sweep {{ transform-origin: 100px 100px; animation: radar-sweep 6s linear
-    infinite; }}
-@keyframes radar-sweep {{ to {{ transform: rotate(360deg); }} }}
-@media (max-width: 900px) {{ .radar-hero svg.radar {{ display: none; }} }}
+.radar-hero svg.compass {{ position: absolute; right: 2rem; top: 50%; width: 170px;
+    height: 170px; transform: translateY(-50%); opacity: .95;
+    filter: drop-shadow(0 6px 18px rgba(0,0,0,.25)); }}
+@media (max-width: 900px) {{ .radar-hero svg.compass {{ display: none; }} }}
 .radar-hero.compact {{ padding: 1.3rem 1.7rem; margin-bottom: 1rem; }}
 .radar-hero.compact h1 {{ font-size: 1.7rem; }}
-.radar-hero.compact svg.radar {{ width: 150px; height: 150px; }}
+.radar-hero.compact svg.compass {{ width: 96px; height: 96px; right: 1.5rem; }}
 
 .st-key-carte_recherche {{ position: relative; z-index: 2; }}
 
@@ -107,31 +106,20 @@ _CSS = """
                 font-size: 1.5rem; font-weight: 800; color: #3B5BDB; background: #fff; }}
 
 [data-testid="stTab"] p {{ font-size: 1rem; font-weight: 650; }}
+
+/* Logo « Compass » de la barre du haut, un peu plus grand que la taille « large » de Streamlit */
+img[data-testid="stLogo"], [data-testid="stHeaderLogo"] img {{
+    height: 2.4rem !important; max-height: 2.4rem !important; width: auto !important; }}
 </style>
 """
 
-# Radar stylisé (SVG) du bandeau : cercles, balayage animé, points bleus (offres) et orange
-# (candidatures spontanées), comme sur la carte.
-RADAR_SVG = (
-    "<svg class='radar' viewBox='0 0 200 200' aria-hidden='true'>"
-    "<defs><radialGradient id='rg' cx='50%' cy='50%' r='50%'>"
-    "<stop offset='0%' stop-color='#fff' stop-opacity='.18'/>"
-    "<stop offset='100%' stop-color='#fff' stop-opacity='0'/></radialGradient>"
-    "<linearGradient id='sw' x1='0' y1='0' x2='1' y2='0'>"
-    "<stop offset='0%' stop-color='#fff' stop-opacity='0'/>"
-    "<stop offset='100%' stop-color='#fff' stop-opacity='.45'/></linearGradient></defs>"
-    "<circle cx='100' cy='100' r='96' fill='url(#rg)'/>"
-    + "".join(
-        f"<circle cx='100' cy='100' r='{r}' fill='none' stroke='#fff' stroke-opacity='.28'/>"
-        for r in (32, 60, 88)
-    )
-    + "<line x1='100' y1='8' x2='100' y2='192' stroke='#fff' stroke-opacity='.15'/>"
-    "<line x1='8' y1='100' x2='192' y2='100' stroke='#fff' stroke-opacity='.15'/>"
-    "<path class='sweep' d='M100 100 L188 100 A88 88 0 0 0 162 38 Z' fill='url(#sw)'/>"
-    "<circle cx='132' cy='70' r='5' fill='#FF922B'/><circle cx='70' cy='136' r='5' "
-    "fill='#FF922B'/><circle cx='150' cy='128' r='4' fill='#74C0FC'/>"
-    "<circle cx='82' cy='62' r='4' fill='#74C0FC'/><circle cx='118' cy='150' r='3.5' "
-    "fill='#FF922B'/><circle cx='100' cy='100' r='4' fill='#fff'/></svg>"
+# Boussole du bandeau (T93) : le C-boussole d'Emma en version claire (blanc + aiguille orange),
+# lisible sur le dégradé ; lue une fois dans app/static/.
+_ICON_FILE = Path(__file__).resolve().parent / "static" / "icone-compass-sombre.svg"
+COMPASS_SVG = (
+    _ICON_FILE.read_text(encoding="utf-8").replace("<svg ", "<svg class='compass' ", 1)
+    if _ICON_FILE.exists()
+    else ""
 )
 
 
@@ -156,7 +144,7 @@ def hero(title: str, tagline: str, compact: bool = False, badges: list[str] = ()
     cls = "radar-hero compact" if compact else "radar-hero"
     tags = "".join(f"<span>{html.escape(b)}</span>" for b in badges)
     st.markdown(
-        f"<div class='{cls}'>{RADAR_SVG}<h1>{html.escape(title)}</h1>"
+        f"<div class='{cls}'>{COMPASS_SVG}<h1>{html.escape(title)}</h1>"
         f"<p>{html.escape(tagline)}</p>"
         + (f"<div class='badges'>{tags}</div>" if tags else "")
         + "</div>",

@@ -21,13 +21,19 @@ from style import inject_css
 
 from radar import admin
 
-# T93 (essai, branche emma/interface-riche) : logos « Compass » d'Emma (app/static/) : le mot
-# « Compass » (O en boussole) en haut à gauche, le C-boussole pour l'onglet et les petits écrans.
+# T93 (essai, branche emma/interface-riche) : logos « Compass » d'Emma (app/static/), en version
+# claire ou sombre selon le thème : le mot « Compass » en permanence dans la barre du haut,
+# le C-boussole pour l'onglet du navigateur et les petits écrans.
 STATIC = Path(__file__).resolve().parent / "static"
-LOGO = STATIC / "compass-logo-4-o-boussole.svg"
-ICONE = STATIC / "compass-logo-5-cap.svg"
-st.set_page_config(page_title="Compass", page_icon=str(ICONE), layout="wide")
-st.logo(str(LOGO), size="large", icon_image=str(ICONE))
+_mode = "sombre" if getattr(st.context.theme, "type", None) == "dark" else "clair"
+st.set_page_config(
+    page_title="Compass", page_icon=str(STATIC / "icone-compass-clair.svg"), layout="wide"
+)
+st.logo(
+    str(STATIC / f"logo-compass-{_mode}.svg"),
+    size="large",
+    icon_image=str(STATIC / f"icone-compass-{_mode}.svg"),
+)
 
 inject_css()  # apparence commune (T70, app/style.py)
 init_defaults()
