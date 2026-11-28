@@ -64,7 +64,6 @@
 
 ## 🟢 P3 — Bonus (seulement si le P2 est fini)
 
-- [ ] T91 — _(facultatif)_ **Télécharger ses candidatures** : export d'un tableau (entreprise, statut, note) depuis « Mes candidatures »
 - [ ] T46 — Lettre de candidature spontanée générée par LLM (si on trouve une clé ; sinon, modèle à trous)
 - [ ] T15 — Collecteur ATS (Greenhouse, Lever, SmartRecruiters) pour le top des entreprises
 - [ ] T47 — Temps de trajet en transports en commun (GTFS) au lieu de la distance à vol d'oiseau
@@ -86,6 +85,7 @@
 
 ## 🔵 En cours
 
+- [ ] T91 — _(facultatif)_ **Télécharger ses candidatures** : export d'un tableau (entreprise, statut, note) depuis « Mes candidatures » — @celia
   ⚠️ Partir de la version actuelle de `main` (T57, T64 poussées) : la liste des candidatures (`app/vues/explorer.py`, colonnes « Autres sites », « Chance de réponse »), la fenêtre de la carte (`app/carte.py`) et la fiche (`app/fiche_ui.py`, fiche site et fiche entreprise) ont changé ; `git pull` avant de commencer.
 - [ ] T93 — **Essais d'une interface plus riche** (moins épurée que D30), sur la branche `emma/interface-riche` : rien n'est fusionné dans `main` sans accord de l'équipe (@celia : apparence, T70) — @emma
 - _…_
