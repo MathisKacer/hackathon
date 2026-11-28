@@ -93,7 +93,7 @@
   - **Effectifs honnêtes** : SIRENE ne donne que des fourchettes ; on affiche la taille officielle de l'entreprise et celle de chaque site, sans inventer de total (T73).
   - **Favoris** avec case « Candidaté » et note : premier pas vers un suivi de candidatures qui fournirait un jour de **vraies réponses** pour remplacer les simulées.
 - [x] T61 — ✅ @mathis → `docs/DEMO.md` (**1 minute** : Rennes stage → carte → fiche Hellowork ; validation dans les diapos ; à rejouer chronométrée en répétition) — Scénario de démo (2 ou 3 recherches qui montrent de bons résultats, dont une hors Bretagne)
-- [ ] T62 — 🔗H+18 Cache de démo figé + vidéo de secours
+- [ ] T62 — 🔗H+18 **Vidéo de démo d'1 minute, enregistrée à l'avance quoi qu'il arrive** (la démo du pitch EST la vidéo ; marche à suivre : `docs/DEMO.md`) + cache de démo figé
 - [ ] T63 — Répétition chronométrée
 
 ## 🔵 En cours
