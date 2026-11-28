@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-11-28 — T93 (essai, branche `emma/interface-riche`) : apparence plus marquée + tableau de bord
+
+**Fait :**
+- Choix d'Emma : mélange des pistes 4 (apparence) et 1 (tableau de bord). **Sur la branche seulement**, pas dans `main`.
+- Apparence : `.streamlit/config.toml` (indigo, coins plus ronds, thèmes clair **et sombre** : menu ⋮ › Settings ; barre d'outils `viewer` pour que ce menu soit visible) ; `app/style.py` : CSS selon le thème actif (`st.context.theme.type`), bandeau dégradé indigo → turquoise avec un **radar animé** (SVG, points bleus et orange comme la carte) et des pastilles (« France entière », « Données ouvertes »…), tuiles avec icône, titres de section.
+- Tableau de bord (`app/tableau_bord.py`, nouveau) sous les tuiles d'Explorer : 4 graphiques Altair (priorité, correspondance avec le CV, secteurs, tailles), barres fines, info-bulles, couleurs déjà utilisées dans la liste. Deux tuiles en plus : correspondance forte avec le CV, distance médiane.
+
+**Fichiers touchés :**
+- `.streamlit/config.toml`, `app/style.py`, `app/tableau_bord.py` (nouveau), `app/vues/explorer.py`, `docs/journal/emma.md`
+
+**Résultats / chiffres clés :**
+- Rennes, compétences Python/SQL/Statistiques : 4 graphiques affichés, pas d'erreur sur les 3 pages ; 384 tests passent. Pas de navigateur sur le pod : rendu à regarder par Emma.
+
+**Problèmes / points d'attention pour l'équipe :**
+- Touche l'apparence (@celia, D30, T70) : à montrer avant toute fusion.
+
+**Prochaine étape :**
+- Retours d'Emma sur le rendu ; éventuellement fiche plus détaillée (piste 3) ou cartes d'entreprises (piste 2).
+
+---
+
 ## 2026-11-27 — T87 : correspondance plus visible ✅
 
 **Fait :**

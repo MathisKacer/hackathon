@@ -48,6 +48,7 @@ from fiche_ui import open_fiche
 from recherches import save_button
 from streamlit_folium import st_folium
 from style import GREEN, LINK_STYLE, Tile, fmt_int, hero, kpi_tiles, pill
+from tableau_bord import dashboard
 
 from radar.collect.sirene import tranche_display
 from radar.competences import MATCH_COLORS, NO_MATCH_MESSAGE, add_match, match_skills
@@ -113,6 +114,7 @@ hero(
     "Les offres publiées autour de toi, et surtout les entreprises qui recrutent dans ton "
     "domaine sans avoir publié d'offre pour ton contrat : les meilleures cibles de candidature "
     "spontanée.",
+    badges=["🇫🇷 France entière", "🔓 Données ouvertes", "🎓 Stage · Alternance · Emploi"],
 )
 
 with st.container(border=True, key="carte_recherche"):
@@ -295,17 +297,35 @@ else:
             f"{_pl(n_ent, 'entreprise')} à démarcher sans offre publiée"
             + (f" ({fmt_int(n_sites)} sites)" if n_sites != n_ent else ""),
             ORANGE,
+            "🏢",
         ),
         Tile(
-            fmt_int(n_off), f"{_pl(n_off, 'offre')} {'publiées' if n_off > 1 else 'publiée'}", BLUE
+            fmt_int(n_off),
+            f"{_pl(n_off, 'offre')} {'publiées' if n_off > 1 else 'publiée'}",
+            BLUE,
+            "📄",
         ),
         Tile(
             fmt_int(n_prio),
             f"{_pl(n_prio, 'cible')} {'prioritaires' if n_prio > 1 else 'prioritaire'}",
             GREEN,
+            "🎯",
         ),
     ]
+    # T93 (essai) : correspondance forte avec le CV, distance médiane
+    if (
+        "correspondance_palier" in spontaneous
+        and spontaneous["correspondance_palier"].notna().any()
+    ):
+        n_forte = int((spontaneous["correspondance_palier"] == "Forte").sum())
+        tiles.append(Tile(fmt_int(n_forte), "en correspondance forte avec ton CV", "#7048E8", "🧩"))
+    if not spontaneous.empty:
+        d = float(spontaneous["distance_km"].median())
+        tiles.append(
+            Tile(f"{d:.1f} km".replace(".", ","), "distance médiane des cibles", "#1098AD", "📍")
+        )
     kpi_tiles(tiles)
+    dashboard(spontaneous)  # T93 (essai) : graphiques de la recherche
     if spontaneous.empty and not FILES["scores"].exists():
         st.caption("Équipe : `scores.parquet` manquant (lancer `scripts/build_all.py`).")
 
