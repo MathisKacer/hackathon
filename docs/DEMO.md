@@ -34,6 +34,14 @@ uv run --with playwright --with imageio-ffmpeg python scripts/demo_video.py
 
 Récupérer la vidéo : clic droit sur `data/demo/demo.mp4` dans l'explorateur de VS Code › Download.
 
+**Ajouter une vidéo d'intro** : la déposer dans `data/demo/` (glisser-déposer dans VS Code), puis
+```bash
+uv run --with imageio-ffmpeg python scripts/video_intro.py data/demo/intro.mp4 --fondu 0.5
+# → data/demo/demo_avec_intro.mp4 ; n'importe quel format ou taille (mis en 1920×1080, 30 i/s,
+#   bandes noires si besoin) ; le son de l'intro est gardé ; --fondu 0 = coupe franche
+```
+⚠️ L'intro **compte dans le temps du pitch** (3 minutes en tout) : avec 1 minute de démo, garder l'intro courte (≤ 10 s).
+
 **À la main** (si besoin) :
 
 - **Outil** : Windows `Win + G` (Xbox Game Bar) ou `Win + Alt + R` ; macOS `Cmd + Shift + 5` ; ou OBS Studio. Enregistrer **la fenêtre du navigateur seule**, en **1080p**, MP4.
